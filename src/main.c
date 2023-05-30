@@ -1,50 +1,44 @@
-#include <stddef.h>
-#include <libopencm3/cm3/nvic.h>
-#include <libopencm3/cm3/systick.h>
-#include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/rcc.h>
+#include <stdint.h>
 
-static volatile uint32_t tick_ms_count;
-
-void sleep_ms(uint32_t ms){
-
-  uint32_t current_ms = tick_ms_count;
-  while ((tick_ms_count - current_ms) < ms) {
-    continue;
-  }
-}
-
-static void gpio_setup(void){
-
-  rcc_periph_clock_enable(RCC_GPIOC);
-  gpio_set(GPIOC,GPIO13);
-  gpio_set_mode(GPIOC, GPIO_MODE_OUTPUT_50_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, GPIO13);
+#define PERIPHERAL_BASE (0X40000000UL)
 
 
-}
 
-static void systick_setup(){
+#define AHB1_BASE   (PERIPHERAL_BASE + 0X00020000UL)
+#define AHB2_BASE   (PERIPHERAL_BASE + 0X08000000UL)
+#define GPIOA_BASE (AHB2_BASE + 0x0U)
 
-  systick_set_clocksource(STK_CSR_CLKSOURCE_AHB_DIV8);
-  systick_set_reload(8999);
-  systick_interrupt_enable();
-  systick_counter_enable();
+#define RCC_BASE (AHB1_BASE + 0x1000UL)
+
+#define RCC_AHB2ENR_OFFSET (0x4CU)
+#define RCC_AHB2ENR ((volatile uint32_t*)(RCC_BASE + RCC_AHB2ENR_OFFSET))
+#define RCC_AHB2ENR_GPIOAEN (0x00U)
+
+#define GPIO_MODER_OFFSET (0x00U)
+#define GPIOA_MODER ((volatile uint32_t*) (GPIOA_BASE + GPIO_MODER_OFFSET))
+#define GPIO_MODER_MODER5 (10U)
+#define GPIO_ODR_OFFSET (0x14U)
+#define GPIOA_ODR ((volatile uint32_t*) (GPIOA_BASE + GPIO_ODR_OFFSET))
+
+#define LED_PIN 5
 
 
-}
+void main(void)
+{
 
-void sys_tick_handler(void){
-  tick_ms_count++;
-}
+  *RCC_AHB2ENR |= (1 << RCC_AHB2ENR_GPIOAEN);
 
-int main(void){
-  rcc_clock_setup_pll(&rcc_hse_configs[RCC_CLOCK_HSE8_72MHZ]);
-  gpio_setup();
-  systick_setup();
+  // Two dummy reads after enabling the peripheral clock
+  volatile uint32_t dummy;
+  dummy = *(RCC_AHB2ENR);
+  dummy = *(RCC_AHB2ENR);
 
-  while(1){
-    gpio_toggle(GPIOC,GPIO13);
-    sleep_ms(250);
+  *GPIOA_MODER |= (1 << GPIO_MODER_MODER5);
+
+  while(1)
+  {
+    *GPIOA_ODR ^= (1 << LED_PIN);
+    for (uint32_t i = 0; i < 1000000; i++);
   }
 
 }

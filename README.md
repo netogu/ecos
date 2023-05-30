@@ -1,2 +1,3 @@
-# template-bluepill-baremetal
-New blue Pill project using openlibcm3 
+# STM32G4 Minimal Project Template
+
+Minimal Template using STM32G4 CMSIS headers
