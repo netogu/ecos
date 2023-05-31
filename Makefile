@@ -163,6 +163,17 @@ clean:
 	-rm -fR $(BUILD_DIR)
   
 #######################################
+# Flash (openocd)
+#######################################
+flash:
+	openocd -f openocd.cfg -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
+
+#######################################
+# Debug (openocd)
+#######################################
+debug:
+	openocd -f openocd.cfg & gdb-multiarch -ex 'target extended-remote localhost:3333' $(BUILD_DIR)/$(TARGET).elf
+#######################################
 # dependencies
 #######################################
 -include $(wildcard $(BUILD_DIR)/*.d)
