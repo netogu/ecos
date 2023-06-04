@@ -88,7 +88,8 @@ AS_INCLUDES =
 # C includes
 C_INCLUDES =  \
 -Iexternal/CMSIS/Device/ST/STM32G4xx/Include \
--Iexternal/CMSIS/Include
+-Iexternal/CMSIS/Include \
+-Isrc/drv/
 
 
 # compile gcc flags
@@ -111,8 +112,8 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = src/drv/STM32G474RETx_FLASH.ld
-# LDSCRIPT = Src/linker_script.ld
+LDSCRIPT = src/drv/linker_stm32g474xx.ld
+
 
 # libraries
 LIBS = -lc -lm -lnosys 

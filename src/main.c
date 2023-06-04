@@ -1,11 +1,13 @@
 #include <stdint.h>
 #include "stm32g4xx.h"
+#include "rcc.h"
 
 #define LED_PIN   5
 
 
 void main(void)
 {
+
 
   RCC->AHB2ENR |= (1 << RCC_AHB2ENR_GPIOAEN_Pos);
 
@@ -22,7 +24,7 @@ void main(void)
   while(1)
   {
 
-    for (uint32_t i = 0; i < 1000000; i++)
+    for (uint32_t i = 0; i < 2000000; i++)
     {
       counter++;
     }
