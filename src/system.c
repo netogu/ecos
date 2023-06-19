@@ -19,7 +19,7 @@
   *                                 during program execution.
   *
   *   After each device reset the HSI (16 MHz) is used as system clock source.
-  *   Then SystemInit() function is called, in "startup_stm32g4xx.s" file, to
+  *   Then SystemInit() function is called, in "startup.s" file, to
   *   configure the system clock before to branch to main program.
   *
   *   This file configures the system clock as follows:

@@ -12,6 +12,11 @@ DEBUG = 1
 # optimization
 OPT = -Og
 
+#######################################
+# Debug 
+#######################################
+DEBUGER_PATH = openocd
+DEBUGER_CONF = tools/stm32g4x_openocd.cfg
 
 #######################################
 # paths
@@ -24,13 +29,21 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
-src/drv/system_stm32g4xx.c \
-src/main.c 
+src/system.c \
+src/main.c   \
+src/drv/rcc.c \
+src/drv/pwr.c \
+src/drv/flash.c
 
 # ASM sources
 ASM_SOURCES =  \
-src/drv/startup_stm32g474xx.s
+src/startup.s
 
+#######################################
+# LDFLAGS
+#######################################
+# link script
+LDSCRIPT = src/linker_script.ld
 
 #######################################
 # binaries
@@ -52,11 +65,6 @@ endif
 HEX = $(CP) -O ihex
 BIN = $(CP) -O binary -S
 
-#######################################
-# Debug 
-#######################################
-DEBUGER_PATH = openocd
-DEBUGER_CONF = tools/stm32g4x_openocd.cfg
  
 #######################################
 # CFLAGS
@@ -89,7 +97,7 @@ AS_INCLUDES =
 C_INCLUDES =  \
 -Iexternal/CMSIS/Device/ST/STM32G4xx/Include \
 -Iexternal/CMSIS/Include \
--Isrc/drv/
+-Isrc/drv/ 
 
 
 # compile gcc flags
@@ -108,11 +116,6 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 
 
 
-#######################################
-# LDFLAGS
-#######################################
-# link script
-LDSCRIPT = src/drv/linker_stm32g474xx.ld
 
 
 # libraries
