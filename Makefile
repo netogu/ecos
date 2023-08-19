@@ -16,7 +16,7 @@ OPT = -Og
 # Debug 
 #######################################
 DEBUGER_PATH = openocd
-DEBUGER_CONF = tools/stm32g4x_openocd.cfg
+DEBUGER_CONF = src/openocd.cfg
 
 #######################################
 # paths
@@ -31,9 +31,9 @@ BUILD_DIR = build
 C_SOURCES =  \
 src/system.c \
 src/main.c   \
-src/drv/rcc.c \
-src/drv/pwr.c \
-src/drv/flash.c
+src/drv/drv_rcc.c \
+src/drv/drv_pwr.c \
+src/drv/drv_flash.c
 
 # ASM sources
 ASM_SOURCES =  \
