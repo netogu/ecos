@@ -2,11 +2,13 @@
 #include "drv_common.h"
 #include "drv_flash.h"
 #include "drv_pwr.h"
+#include "stm32g474xx.h"
 #include "stm32g4xx.h"
 
 const struct rcc_clock_config rcc_hsi_pll_170MHz = {
     .sysclk_source = RCC_SYSCLK_SOURCE_PLL,
     .pll_source = RCC_PLL_SOURCE_HSI,
+    .usbckl_source = RCC_USBCLK_SOURCE_HSI48,
     .pllm = 4,
     .pllp = 0,
     .plln = 85,
@@ -120,6 +122,15 @@ static void rcc_set_pll_source(enum rcc_pll_sources clk_src) {
   Modify_register_field(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC, clk_src);
 }
 
+static void rcc_set_usbclk_source(enum rcc_usbclk_sources clk_src) {
+  uint32_t usbclk_src;
+  if (clk_src == RCC_USBCLK_SOURCE_HSI48)
+    usbclk_src = 0b00;
+  if (clk_src == RCC_USBCLK_SOURCE_PPLQ)
+    usbclk_src = 0b10;
+  Modify_register_field(RCC->CCIPR, RCC_CCIPR_CLK48SEL, usbclk_src);
+}
+
 static void rcc_set_pll_scale(const struct rcc_clock_config *cfg) {
 
   /*
@@ -222,6 +233,9 @@ void rcc_clock_init(const struct rcc_clock_config *cfg) {
 
     while (!_rcc_pll_is_ready())
       ; // Wait for PLL to lock
+
+    // USB Clock Configuration
+    rcc_set_usbclk_source(cfg->usbckl_source);
   }
 
   //  Flash Configuration
@@ -231,7 +245,7 @@ void rcc_clock_init(const struct rcc_clock_config *cfg) {
 
   rcc_set_sysclk_source(cfg->sysclk_source);
 
-  volatile uint32_t sysclk_src = rcc_get_sysclk_source();
+  uint32_t sysclk_src = rcc_get_sysclk_source();
   while (sysclk_src != cfg->sysclk_source)
     ; // Wait for selected clock to be locked
 

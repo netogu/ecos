@@ -1,4 +1,5 @@
 #include "drv_rcc.h"
+#include "drv_usb.h"
 #include "stm32g4xx.h"
 #include <stdint.h>
 
@@ -14,6 +15,7 @@ int main(void) {
 
   SystemCoreClockUpdate();
   SysTick_Config(SystemCoreClock / 1000);
+  drv_usb_init();
   __enable_irq();
 
   RCC->AHB2ENR |= (1 << RCC_AHB2ENR_GPIOAEN_Pos);

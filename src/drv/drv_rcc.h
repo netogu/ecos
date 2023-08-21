@@ -1,5 +1,6 @@
 #pragma once
 
+#include "stm32g474xx.h"
 #include <stdint.h>
 
 enum rcc_clk_scales {
@@ -31,6 +32,11 @@ enum rcc_sysclk_sources {
   RCC_SYSCLK_SOURCE_END,
 };
 
+enum rcc_usbclk_sources {
+  RCC_USBCLK_SOURCE_HSI48,
+  RCC_USBCLK_SOURCE_PPLQ,
+};
+
 struct rcc_clock_config {
   uint8_t pllm;
   uint8_t plln;
@@ -42,6 +48,7 @@ struct rcc_clock_config {
   uint8_t boost_mode;
   enum rcc_pll_sources pll_source;
   enum rcc_sysclk_sources sysclk_source;
+  enum rcc_usbclk_sources usbckl_source;
   enum rcc_clk_scales mco_scale;
   enum rcc_clk_scales sysclk_scale;
   enum rcc_clk_scales pclk1_scale;

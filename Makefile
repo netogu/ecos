@@ -33,7 +33,8 @@ src/system.c \
 src/main.c   \
 src/drv/drv_rcc.c \
 src/drv/drv_pwr.c \
-src/drv/drv_flash.c
+src/drv/drv_flash.c \
+src/drv/drv_usb.c \
 
 # ASM sources
 ASM_SOURCES =  \
