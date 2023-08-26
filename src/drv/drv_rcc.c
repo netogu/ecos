@@ -10,8 +10,9 @@ const struct rcc_clock_config rcc_hsi_pll_170MHz = {
     .pll_source = RCC_PLL_SOURCE_HSI,
     .usbckl_source = RCC_USBCLK_SOURCE_HSI48,
     .pllm = 4,
-    .pllp = 0,
     .plln = 85,
+    .pllp = 2,
+    .pllq = 2,
     .pllr = 2,
     .sysclk_scale = RCC_CLK_DIV1,
     .pclk1_scale = RCC_CLK_DIV1,
@@ -124,8 +125,12 @@ static void rcc_set_pll_source(enum rcc_pll_sources clk_src) {
 
 static void rcc_set_usbclk_source(enum rcc_usbclk_sources clk_src) {
   uint32_t usbclk_src;
-  if (clk_src == RCC_USBCLK_SOURCE_HSI48)
+  if (clk_src == RCC_USBCLK_SOURCE_HSI48) {
     usbclk_src = 0b00;
+    RCC->CRRCR |= RCC_CRRCR_HSI48ON;
+    while (!(RCC->CRRCR & RCC_CRRCR_HSI48RDY))
+      ;
+  }
   if (clk_src == RCC_USBCLK_SOURCE_PPLQ)
     usbclk_src = 0b10;
   Modify_register_field(RCC->CCIPR, RCC_CCIPR_CLK48SEL, usbclk_src);

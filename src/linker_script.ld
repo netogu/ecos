@@ -63,6 +63,7 @@ MEMORY
 {
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 128K
 FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 512K
+USBRAM (rw)     : ORIGIN = 0x40006000, LENGTH = 1K
 }
 
 /* Define output sections */
@@ -172,6 +173,12 @@ SECTIONS
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
   } >RAM
+
+  .usbbuffer (NOLOAD) :
+  {
+    *(.usbbuf)
+    *(.usbbuf*)
+  } >USBRAM
 
   
 
