@@ -1,19 +1,46 @@
 #include "drv_rcc.h"
 #include "drv_usb.h"
+#include "stm32g474xx.h"
 #include "stm32g4xx.h"
 #include <stdint.h>
 
 #define LED_PIN 5
 
+rcc_clock_config_t clock_170MHz_pll_hsi = {
+    .sysclk_source = RCC_SYSCLK_SOURCE_PLL,
+    .pll_source = RCC_PLL_SOURCE_HSI,
+    .usbckl_source = RCC_USBCLK_SOURCE_HSI48,
+    .pllm = 4,
+    .plln = 85,
+    .pllp = 2,
+    .pllq = 2,
+    .pllr = 2,
+    .sysclk_scale = RCC_CLK_DIV2,
+    .pclk1_scale = RCC_CLK_DIV1,
+    .pclk2_scale = RCC_CLK_DIV1,
+    .flash_wait_states = 4,
+    .vos_range = 1,
+    .boost_mode = 1,
+};
+
 volatile uint32_t msTicks = 0;
+
+void SysTick_Init(void) {
+  SysTick->CTRL = 0;
+  msTicks = 0;
+  SysTick->VAL = 0; /* Load the SysTick Counter Value */
+  SysTick->CTRL = (SysTick_CTRL_TICKINT_Msk | /* Enable SysTick exception */
+                   SysTick_CTRL_ENABLE_Msk) | /* Enable SysTick system timer */
+                  SysTick_CTRL_CLKSOURCE_Msk; /* Use processor clock source */
+}
 
 void delay_ms(uint32_t ms);
 
 int main(void) {
 
-  rcc_clock_init(&rcc_hsi_pll_170MHz);
-
+  rcc_clock_init(&clock_170MHz_pll_hsi);
   SystemCoreClockUpdate();
+  SysTick_Init();
   SysTick_Config(SystemCoreClock / 1000);
   drv_usb_init();
   __enable_irq();
@@ -31,7 +58,9 @@ int main(void) {
 
   while (1) {
     GPIOA->ODR ^= (1 << LED_PIN);
-    delay_ms(100);
+    for (int i = 0; i < 17000000; i++) {
+      __ASM("nop");
+    }
   }
 }
 

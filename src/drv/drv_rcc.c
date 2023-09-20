@@ -5,26 +5,6 @@
 #include "stm32g474xx.h"
 #include "stm32g4xx.h"
 
-const struct rcc_clock_config rcc_hsi_pll_170MHz = {
-    .sysclk_source = RCC_SYSCLK_SOURCE_PLL,
-    .pll_source = RCC_PLL_SOURCE_HSI,
-    .usbckl_source = RCC_USBCLK_SOURCE_HSI48,
-    .pllm = 4,
-    .plln = 85,
-    .pllp = 2,
-    .pllq = 2,
-    .pllr = 2,
-    .sysclk_scale = RCC_CLK_DIV1,
-    .pclk1_scale = RCC_CLK_DIV1,
-    .pclk2_scale = RCC_CLK_DIV1,
-    .sysclk_frequency = 170e6,
-    .pclk1_frequency = 170e6,
-    .pclk2_frequency = 170e6,
-    .flash_wait_states = 4,
-    .vos_range = 1,
-    .boost_mode = 1,
-};
-
 enum rcc_oscs {
   RCC_OSC_HSI,
   RCC_OSC_HSE,
@@ -136,7 +116,7 @@ static void rcc_set_usbclk_source(enum rcc_usbclk_sources clk_src) {
   Modify_register_field(RCC->CCIPR, RCC_CCIPR_CLK48SEL, usbclk_src);
 }
 
-static void rcc_set_pll_scale(const struct rcc_clock_config *cfg) {
+static void rcc_set_pll_scale(rcc_clock_config_t *cfg) {
 
   /*
    * PLL Configuration
@@ -165,8 +145,7 @@ static void rcc_set_pll_scale(const struct rcc_clock_config *cfg) {
       RCC->PLLCFGR |= RCC_PLLCFGR_PLLP;
       break;
     case 7:
-      RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLPDIV;
-      RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLP;
+      RCC->PLLCFGR &= ~(RCC_PLLCFGR_PLLPDIV | ~RCC_PLLCFGR_PLLP);
       break;
     default:
       Modify_register_field(RCC->PLLCFGR, RCC_PLLCFGR_PLLPDIV, cfg->pllp);
@@ -191,7 +170,7 @@ static void rcc_set_pll_scale(const struct rcc_clock_config *cfg) {
   }
 } // rcc_set_pll_scale
 
-void rcc_clock_init(const struct rcc_clock_config *cfg) {
+void rcc_clock_init(rcc_clock_config_t *cfg) {
 
   _rcc_enable_hsi();
   while (!_rcc_hsi_is_ready())

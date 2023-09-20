@@ -37,7 +37,7 @@ enum rcc_usbclk_sources {
   RCC_USBCLK_SOURCE_PPLQ,
 };
 
-struct rcc_clock_config {
+typedef const struct {
   uint8_t pllm;
   uint8_t plln;
   uint8_t pllp;
@@ -53,12 +53,6 @@ struct rcc_clock_config {
   enum rcc_clk_scales sysclk_scale;
   enum rcc_clk_scales pclk1_scale;
   enum rcc_clk_scales pclk2_scale;
-  uint32_t sysclk_frequency;
-  uint32_t pclk1_frequency;
-  uint32_t pclk2_frequency;
-};
+} rcc_clock_config_t;
 
-// Clock Configurations
-extern const struct rcc_clock_config rcc_hsi_pll_170MHz;
-
-void rcc_clock_init(const struct rcc_clock_config *cfg);
+void rcc_clock_init(rcc_clock_config_t *cfg);

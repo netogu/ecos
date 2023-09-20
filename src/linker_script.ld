@@ -176,6 +176,10 @@ SECTIONS
 
   .usbbuffer (NOLOAD) :
   {
+    .usbtable = .;
+    *(.usbtable)
+    *(.usbtable*)
+    .usbbuf = .;
     *(.usbbuf)
     *(.usbbuf*)
   } >USBRAM

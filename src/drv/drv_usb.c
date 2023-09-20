@@ -85,28 +85,28 @@ static const usb_device_descriptor_t device_descriptor = {
     .max_packet_size = 64,
     .vendor_id = 0x0483,
     .product_id = 0x5740,
-    .device_release = 0x0100,
-    .manufacturer_index = 0x00,
-    .product_index = 0x00,
-    .serial_index = 0x00,
-    .num_configurations = 0x01};
+    .device_release = 0x0001,
+    .manufacturer_index = 0,
+    .product_index = 0,
+    .serial_index = 0,
+    .num_configurations = 1};
 
 static const usb_config_descriptor_t config_descriptor = {.length = 9,
                                                           .type = 0x02,
-                                                          .total_length = 0x20,
-                                                          .num_interfaces =
-                                                              0x01,
-                                                          .config_id = 0x01,
-                                                          .config_index = 0x00,
-                                                          .attributes = 0x80,
-                                                          .max_power = 0x32};
+                                                          .total_length = 32,
+                                                          .num_interfaces = 1,
+                                                          .config_id = 1,
+                                                          .config_index = 0,
+                                                          .attributes =
+                                                              (1 << 7),
+                                                          .max_power = 50};
 
 static const usb_interface_descriptor_t interface_descriptor[] = {
-    {.length = 7,
-     .type = 0x05,
-     .interface_id = 0x00,
-     .alternate_setting = 0x00,
-     .num_endpoints = 0x02,
+    {.length = 9,
+     .type = 0x04,
+     .interface_id = 0,
+     .alternate_setting = 0,
+     .num_endpoints = 2,
      .class = 0x0A,
      .subclass = 0x00,
      .protocol = 0x00,
@@ -117,16 +117,20 @@ static const usb_endpoint_descriptor_t endpoint_descriptor[] = {
      .type = 0x05,
      .address = 0x81,
      .attributes = 0x03,
-     .max_packet_size = 0x40,
+     .max_packet_size = 64,
      .interval = 0xFF},
     {.length = 7,
      .type = 0x05,
      .address = 0x01,
      .attributes = 0x03,
-     .max_packet_size = 0x40,
+     .max_packet_size = 64,
      .interval = 0xFF}};
 
 static uint8_t configuration_buffer[32] = {0};
+
+usb_device_descriptor_t *usb_get_device_descriptor() {
+  return &device_descriptor;
+}
 
 static void usb_add_to_descriptor(uint8_t *data, uint16_t *offset) {
   uint16_t descriptor_length = data[0];
@@ -149,14 +153,11 @@ uint8_t *usb_get_config_descriptor(uint16_t *length) {
   return configuration_buffer;
 }
 
-const usb_device_descriptor_t *usb_get_device_descriptor() {
-  return &device_descriptor;
-}
-
 /**
  * @brief Packet Memory Area macros
  */
-#define __USB_MEM __attribute__((section(".usbbuf")))
+#define __USB_TABLE __attribute__((section(".usbtable")))
+#define __USB_BUF __attribute__((section(".usbbuf")))
 #define __USBBUF_BEGIN 0x40006000
 #define __MEM2USB(x) ((uint32_t)x - __USBBUF_BEGIN);
 #define __USB2MEM(x) ((uint32_t)x + __USBBUF_BEGIN);
@@ -169,11 +170,11 @@ typedef struct {
 } usb_btable_entry_t;
 
 __ALIGNED(8)
-__USB_MEM
+__USB_TABLE
 __IO static usb_btable_entry_t btable[8] = {0};
 
 __ALIGNED(2)
-__USB_MEM
+__USB_BUF
 __IO static uint8_t EP0_buf[2][64] = {0};
 
 #define USB_NUM_ENDPOINTS 8
@@ -182,7 +183,7 @@ __IO static uint8_t EP0_buf[2][64] = {0};
 typedef struct {
   uint16_t length;
   uint16_t bytes_sent;
-  uint16_t *buffer;
+  uint8_t *buffer;
 } usb_transfer_t;
 
 typedef struct {
@@ -208,7 +209,7 @@ static void usb_set_endpoint(__IO uint16_t *ep, uint16_t value, uint16_t mask) {
   *ep = wr0 | wr1 | wr2;
 }
 
-static usb_control_state_t control_state = {0};
+static usb_control_state_t control_state;
 
 void drv_usb_init(void) {
 
@@ -223,12 +224,16 @@ void drv_usb_init(void) {
   USB->CNTR &= ~USB_CNTR_PDWN;
 
   // Wait 1us for stabilization
-  SysTick->LOAD = 200;
-  SysTick->VAL = 0;
-  SysTick->CTRL = 1;
-  while ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == 0)
-    ;
-  SysTick->CTRL = 0;
+  for (int i = 0; i < 170; i++) {
+    __ASM("nop");
+  }
+
+  /* SysTick->LOAD = 200; */
+  /* SysTick->VAL = 0; */
+  /* SysTick->CTRL = 1; */
+  /* while ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == 0) */
+  /*   ; */
+  /* SysTick->CTRL = 0; */
 
   // Enable all interrupts & activate D+ 1.5kohm pull-up (FullSpeed USB)
   USB->CNTR |=
@@ -247,8 +252,8 @@ static void usb_clear_sram(void) {
   }
 }
 
-static void usb_copy_memory(uint16_t *source, uint16_t *target,
-                            uint16_t length) {
+static void usb_copy_memory(volatile uint16_t *source,
+                            volatile uint16_t *target, uint16_t length) {
   for (uint32_t i = 0; i < length / 2; i++) {
     target[i] = source[i];
   }
@@ -275,31 +280,36 @@ static void usb_handle_setup(usb_setup_packet_t *setup) {
   usb_copy_memory(setup, &control_state.setup, sizeof(usb_setup_packet_t));
   control_state.transfer.length = 0;
 
-  if ((setup->bmRequestType & 0x0F) == 0) {
-    ;
+  if ((setup->bmRequestType & 0x0F) == 0) { // Device requeests
+
     switch (setup->bRequest) {
     case 0x05: { // Set Address
       btable[0].count_tx = 0;
       usb_set_endpoint(&USB->EP0R, USB_EP_TX_VALID, USB_EP_TX_VALID);
-      break;
-    }
+    } break;
     case 0x06: { // Get Descriptor
-    case 0x01: { // Device Descriptor
-      const usb_device_descriptor_t *descriptor = usb_get_device_descriptor();
-      usb_copy_memory(descriptor, EP0_buf[1], sizeof(usb_device_descriptor_t));
-      btable[0].count_tx = sizeof(usb_device_descriptor_t);
-      usb_set_endpoint(&USB->EP0R, USB_EP_TX_VALID, USB_EP_TX_VALID);
+      switch (setup->descriptor_type) {
+      case 0x01: { // Device Descriptor
+        const usb_device_descriptor_t *descriptor = usb_get_device_descriptor();
+        usb_copy_memory(descriptor, EP0_buf[1],
+                        sizeof(usb_device_descriptor_t));
+        btable[0].count_tx = sizeof(usb_device_descriptor_t);
+        usb_set_endpoint(&USB->EP0R, USB_EP_TX_VALID, USB_EP_TX_VALID);
+      } break;
+      case 0x02: { // Configuration Descriptor
+        uint16_t length = 0;
+        uint8_t *descriptor = usb_get_config_descriptor(&length);
+        control_state.transfer.buffer = descriptor;
+        control_state.transfer.bytes_sent = 0;
+        control_state.transfer.length = Min(length, setup->wLength);
+        usb_prepare_transfer(&control_state.transfer, &USB->EP0R, &EP0_buf[1],
+                             &btable[0].count_tx, 64);
+      } break;
+      case 0x06: // Device Qualifier Descriptor
+        usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+        break;
+      }
     } break;
-    case 0x02: { // Configuration Descriptor
-      uint16_t length = 0;
-      uint8_t *descriptor = usb_get_config_descriptor(&length);
-      control_state.transfer.buffer = descriptor;
-      control_state.transfer.bytes_sent = 0;
-      control_state.transfer.length = Min(length, setup->wLength);
-      usb_prepare_transfer(&control_state.transfer, &USB->EP0R, &EP0_buf[1],
-                           &btable[0].count_tx, 64);
-    } break;
-    }
     }
   }
 }
@@ -308,14 +318,14 @@ static void usb_handle_control() {
   if (USB->EP0R & USB_EP_CTR_RX) {
     // Received control message
     if (USB->EP0R & USB_EP_SETUP) {
-      usb_setup_packet_t *setup = EP0_buf[0];
+      usb_setup_packet_t *setup = (usb_setup_packet_t *)EP0_buf[0];
       usb_handle_setup(setup);
     }
 
     usb_set_endpoint(&USB->EP0R, USB_EP_RX_VALID,
                      USB_EP_CTR_RX | USB_EP_RX_VALID);
   }
-  // times out after enabling USB macrocell
+
   if (USB->EP0R & USB_EP_CTR_TX) {
     // Just sent a control message
     if (control_state.setup.bRequest == 0x05) {
@@ -344,9 +354,9 @@ void USB_LP_IRQHandler() {
     // Prepare Buffer Table
     USB->BTABLE = __MEM2USB(btable);
 
-    btable[0].addr_rx = __MEM2USB(EP0_buf[0]);
     btable[0].addr_tx = __MEM2USB(EP0_buf[1]);
     btable[0].count_tx = 0;
+    btable[0].addr_rx = __MEM2USB(EP0_buf[0]);
     btable[0].count_rx = (1 << 15) | (1 << 10);
 
     // Prepare for a setup packet (RX = Valid, TX = NAK)
@@ -356,7 +366,8 @@ void USB_LP_IRQHandler() {
 
     // Enable USB functionality and set address to 0
     USB->DADDR = USB_DADDR_EF;
-  } else if (USB->ISTR & USB_ISTR_CTR) {
+
+  } else if ((USB->ISTR & USB_ISTR_CTR) != 0) {
     if ((USB->ISTR & USB_ISTR_EP_ID) == 0) {
       usb_handle_control();
     }
