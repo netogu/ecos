@@ -1,6 +1,5 @@
 #include "drv_rcc.h"
 #include "drv_usb.h"
-#include "stm32g474xx.h"
 #include "stm32g4xx.h"
 #include <stdint.h>
 
@@ -23,6 +22,22 @@ rcc_clock_config_t clock_170MHz_pll_hsi = {
     .boost_mode = 1,
 };
 
+__STATIC_INLINE uint32_t systick_config(uint32_t ticks) {
+  if ((ticks - 1UL) > SysTick_LOAD_RELOAD_Msk) {
+    return (1UL); /* Reload value impossible */
+  }
+
+  SysTick->LOAD = (uint32_t)(ticks - 1UL); /* set reload register */
+  NVIC_SetPriority(SysTick_IRQn,
+                   (1UL << __NVIC_PRIO_BITS) -
+                       1UL); /* set Priority for Systick Interrupt */
+  SysTick->VAL = 0UL;        /* Load the SysTick Counter Value */
+  SysTick->CTRL =
+      SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk |
+      SysTick_CTRL_ENABLE_Msk; /* Enable SysTick IRQ and SysTick Timer */
+  return (0UL);                /* Function successful */
+}
+
 volatile uint32_t msTicks = 0;
 
 void SysTick_Init(void) {
@@ -41,7 +56,7 @@ int main(void) {
   rcc_clock_init(&clock_170MHz_pll_hsi);
   SystemCoreClockUpdate();
   SysTick_Init();
-  SysTick_Config(SystemCoreClock / 1000);
+  systick_config(SystemCoreClock / 1000);
   drv_usb_init();
   __enable_irq();
 

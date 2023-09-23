@@ -12,6 +12,14 @@
 
 #define Min(x, y) ((x) < (y) ? (x) : (y))
 
+#define USB_SELF_POWERED 0
+#define USB_NUM_INTERFACES 1
+#define USB_NUM_ENDPOINTS 2
+
+static uint8_t usb_active_config = 0;
+static uint8_t usb_device_state = 0;
+static uint8_t usb_endpoint_state[USB_NUM_ENDPOINTS] = {0};
+
 typedef struct {
   uint8_t length;
   uint8_t type;
@@ -128,7 +136,7 @@ static const usb_endpoint_descriptor_t endpoint_descriptor[] = {
 
 static uint8_t configuration_buffer[32] = {0};
 
-usb_device_descriptor_t *usb_get_device_descriptor() {
+const usb_device_descriptor_t *usb_get_device_descriptor() {
   return &device_descriptor;
 }
 
@@ -175,9 +183,11 @@ __IO static usb_btable_entry_t btable[8] = {0};
 
 __ALIGNED(2)
 __USB_BUF
-__IO static uint8_t EP0_buf[2][64] = {0};
+__IO static uint8_t ep0_buff_tx[64] = {0};
+__ALIGNED(2)
+__USB_BUF
+__IO static uint8_t ep0_buff_rx[64] = {0};
 
-#define USB_NUM_ENDPOINTS 8
 #define USB_MAX_CTRL_DATA 64
 
 typedef struct {
@@ -252,8 +262,8 @@ static void usb_clear_sram(void) {
   }
 }
 
-static void usb_copy_memory(volatile uint16_t *source,
-                            volatile uint16_t *target, uint16_t length) {
+static void usb_copy_memory(uint16_t *source, uint16_t *target,
+                            uint16_t length) {
   for (uint32_t i = 0; i < length / 2; i++) {
     target[i] = source[i];
   }
@@ -268,7 +278,8 @@ static void usb_prepare_transfer(usb_transfer_t *transfer, uint16_t *ep,
   *buf_count = Min(buf_size, transfer->length - transfer->bytes_sent);
 
   if (*buf_count > 0) {
-    usb_copy_memory(transfer->buffer + transfer->bytes_sent, buf, *buf_count);
+    usb_copy_memory((uint16_t *)(transfer->buffer + transfer->bytes_sent),
+                    (uint16_t *)buf, *buf_count);
     transfer->bytes_sent += *buf_count;
     usb_set_endpoint(ep, USB_EP_TX_VALID, USB_EP_TX_VALID);
   } else {
@@ -276,13 +287,30 @@ static void usb_prepare_transfer(usb_transfer_t *transfer, uint16_t *ep,
   }
 }
 
+void usb_reset_class(uint8_t interface, uint8_t alt_id){};
+
 static void usb_handle_setup(usb_setup_packet_t *setup) {
-  usb_copy_memory(setup, &control_state.setup, sizeof(usb_setup_packet_t));
+
+  usb_copy_memory((uint16_t *)setup, (uint16_t *)&control_state.setup,
+                  sizeof(usb_setup_packet_t));
   control_state.transfer.length = 0;
 
-  if ((setup->bmRequestType & 0x0F) == 0) { // Device requeests
+  if ((setup->bmRequestType & 0x0F) == 0) { // Device Requests
 
     switch (setup->bRequest) {
+    case 0x00: // Get Status
+      ep0_buff_tx[0] = USB_SELF_POWERED;
+      ep0_buff_tx[1] = 0x00;
+      btable[0].count_tx = 2;
+      usb_set_endpoint(&USB->EP0R, USB_EP_TX_VALID, USB_EP_TX_VALID);
+      break;
+    case 0x01: // Clear Feature
+      usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+      break;
+    case 0x03: // Set Feature
+      btable[0].count_tx = 0;
+      usb_set_endpoint(&USB->EP0R, USB_EP_TX_VALID, USB_EP_TX_VALID);
+      break;
     case 0x05: { // Set Address
       btable[0].count_tx = 0;
       usb_set_endpoint(&USB->EP0R, USB_EP_TX_VALID, USB_EP_TX_VALID);
@@ -291,7 +319,7 @@ static void usb_handle_setup(usb_setup_packet_t *setup) {
       switch (setup->descriptor_type) {
       case 0x01: { // Device Descriptor
         const usb_device_descriptor_t *descriptor = usb_get_device_descriptor();
-        usb_copy_memory(descriptor, EP0_buf[1],
+        usb_copy_memory((uint16_t *)descriptor, (uint16_t *)ep0_buff_tx,
                         sizeof(usb_device_descriptor_t));
         btable[0].count_tx = sizeof(usb_device_descriptor_t);
         usb_set_endpoint(&USB->EP0R, USB_EP_TX_VALID, USB_EP_TX_VALID);
@@ -302,7 +330,7 @@ static void usb_handle_setup(usb_setup_packet_t *setup) {
         control_state.transfer.buffer = descriptor;
         control_state.transfer.bytes_sent = 0;
         control_state.transfer.length = Min(length, setup->wLength);
-        usb_prepare_transfer(&control_state.transfer, &USB->EP0R, &EP0_buf[1],
+        usb_prepare_transfer(&control_state.transfer, &USB->EP0R, &ep0_buff_tx,
                              &btable[0].count_tx, 64);
       } break;
       case 0x06: // Device Qualifier Descriptor
@@ -310,15 +338,157 @@ static void usb_handle_setup(usb_setup_packet_t *setup) {
         break;
       }
     } break;
+    case 0x07: // Set Descriptor
+      // Allows the Host to alter the descriptor. Not supported
+      usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+      break;
+    case 0x08: // Get Configuration
+      if (usb_device_state == 1 || usb_device_state == 2) {
+        if (usb_device_state == 1) {
+          usb_active_config = 0;
+        }
+
+        ep0_buff_tx[0] = usb_active_config;
+        btable[0].count_tx = 1;
+        usb_set_endpoint(&USB->EP0R, USB_EP_TX_VALID, USB_EP_TX_VALID);
+      } else {
+        usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+      }
+      break;
+    case 0x09: // Set Configuration
+      if (usb_device_state == 1 || usb_device_state == 2) {
+        btable[0].count_tx = 0;
+        switch (setup->wValue & 0xFF) {
+        case 0:
+          usb_device_state = 1;
+          usb_active_config = 0;
+          usb_set_endpoint(&USB->EP0R, USB_EP_TX_VALID, USB_EP_TX_VALID);
+          break;
+        case 1:
+          usb_device_state = 2;
+          usb_active_config = 1;
+          usb_set_endpoint(&USB->EP0R, USB_EP_TX_VALID, USB_EP_TX_VALID);
+          break;
+        default:
+          usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+          break;
+        }
+
+        if (usb_device_state == 2) {
+          usb_set_endpoint(&USB->EP1R, 0x00, USB_EP_DTOG_RX | USB_EP_DTOG_TX);
+          usb_set_endpoint(&USB->EP2R, 0x00, USB_EP_DTOG_RX | USB_EP_DTOG_TX);
+          usb_set_endpoint(&USB->EP3R, 0x00, USB_EP_DTOG_RX | USB_EP_DTOG_TX);
+          usb_set_endpoint(&USB->EP4R, 0x00, USB_EP_DTOG_RX | USB_EP_DTOG_TX);
+          usb_set_endpoint(&USB->EP5R, 0x00, USB_EP_DTOG_RX | USB_EP_DTOG_TX);
+          usb_set_endpoint(&USB->EP6R, 0x00, USB_EP_DTOG_RX | USB_EP_DTOG_TX);
+          usb_set_endpoint(&USB->EP7R, 0x00, USB_EP_DTOG_RX | USB_EP_DTOG_TX);
+        }
+      } else {
+        usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+      }
+      break;
+    }
+  } else if ((setup->bmRequestType & 0x0F) == 0x01) { // Interface requests
+    switch (setup->bRequest) {
+    case 0x00: // Get Status
+      if (usb_device_state == 2) {
+        ep0_buff_tx[0] = 0x00;
+        ep0_buff_tx[1] = 0x00;
+        btable[0].count_tx = 2;
+        usb_set_endpoint(&USB->EP0R, USB_EP_TX_VALID, USB_EP_TX_VALID);
+      } else {
+        usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+      }
+      break;
+    case 0x01: // Clear Feature
+      usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+      break;
+    case 0x03: // Set Feature
+      usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+      break;
+    case 0x0A: // Get Interface
+      if (usb_device_state == 2 && setup->wIndex < USB_NUM_INTERFACES) {
+        ep0_buff_tx[0] = 0x00;
+        btable[0].count_tx = 1;
+        usb_set_endpoint(&USB->EP0R, USB_EP_TX_VALID, USB_EP_TX_VALID);
+      } else {
+        usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+      }
+      break;
+    case 0x0B: // Set Interface /!\ USB InANutshell is wrong here, it confuses
+               // the decimal value (11) with the hex one (0x0B)
+      if (usb_device_state == 2 && setup->wIndex < USB_NUM_INTERFACES) {
+        btable[0].count_tx = 0;
+        usb_set_endpoint(&USB->EP0R, USB_EP_TX_VALID, USB_EP_TX_VALID);
+        usb_reset_class(setup->wIndex, setup->wValue);
+      } else {
+        usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+      }
+      break;
+    }
+
+  } else if ((setup->bmRequestType & 0x0F) == 0x02) { // Endpoint requests
+    switch (setup->bRequest) {
+    case 0x00: // Get Status
+      if ((usb_device_state == 2 ||
+           (usb_device_state == 1 && setup->wIndex == 0x00)) &&
+          setup->wIndex < USB_NUM_ENDPOINTS) {
+        if (setup->wValue == 0x00) {
+          ep0_buff_tx[0] = usb_endpoint_state[setup->wIndex];
+          ep0_buff_tx[0] = 0x00;
+          btable[0].count_tx = 2;
+          usb_set_endpoint(&USB->EP0R, USB_EP_TX_VALID, USB_EP_TX_VALID);
+        } else {
+          usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+        }
+      } else {
+        usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+      }
+      break;
+    case 0x01: // Clear Feature
+      if ((usb_device_state == 2 ||
+           (usb_device_state == 1 && setup->wIndex == 0x00)) &&
+          setup->wIndex < USB_NUM_ENDPOINTS) {
+        if (setup->wValue == 0x00) {
+          usb_endpoint_state[setup->wIndex] = 0;
+          btable[0].count_tx = 0;
+          usb_set_endpoint(&USB->EP0R, USB_EP_TX_VALID, USB_EP_TX_VALID);
+        } else {
+          usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+        }
+      } else {
+        usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+      }
+      break;
+    case 0x03: // Set Feature
+      if ((usb_device_state == 2 ||
+           (usb_device_state == 1 && setup->wIndex == 0x00)) &&
+          setup->wIndex < USB_NUM_ENDPOINTS) {
+        if (setup->wValue == 0x00) {
+          usb_endpoint_state[setup->wIndex] = 1;
+          btable[0].count_tx = 0;
+          usb_set_endpoint(&USB->EP0R, USB_EP_TX_VALID, USB_EP_TX_VALID);
+        } else {
+          usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+        }
+      } else {
+        usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+      }
+      break;
+    case 0x0C: // Sync Frame /!\ USB InANutshell is wrong here again, as it
+               // confuses the decimal value (12) with the hex one (0x0C)
+      usb_set_endpoint(&USB->EP0R, USB_EP_TX_STALL, USB_EP_TX_VALID);
+      break;
     }
   }
 }
 
 static void usb_handle_control() {
+
   if (USB->EP0R & USB_EP_CTR_RX) {
     // Received control message
     if (USB->EP0R & USB_EP_SETUP) {
-      usb_setup_packet_t *setup = (usb_setup_packet_t *)EP0_buf[0];
+      usb_setup_packet_t *setup = (usb_setup_packet_t *)ep0_buff_rx;
       usb_handle_setup(setup);
     }
 
@@ -335,7 +505,7 @@ static void usb_handle_control() {
     // Check for ongoing usb_transfers
     if (control_state.transfer.length > 0) {
       if (control_state.transfer.length > control_state.transfer.bytes_sent) {
-        usb_prepare_transfer(&control_state.transfer, &USB->EP0R, &EP0_buf[1],
+        usb_prepare_transfer(&control_state.transfer, &USB->EP0R, &ep0_buff_tx,
                              &btable[0].count_tx, 64);
       }
     }
@@ -343,33 +513,56 @@ static void usb_handle_control() {
   }
 }
 
+void usb_handle_reset() {
+
+  // Clear interrupt
+  USB->ISTR = ~USB_ISTR_RESET;
+
+  // Clear USB-SRAM
+  usb_clear_sram();
+
+  // Prepare Buffer Table
+  USB->BTABLE = __MEM2USB(btable);
+
+  btable[0].addr_tx = __MEM2USB(ep0_buff_tx);
+  btable[0].count_tx = 0;
+  btable[0].addr_rx = __MEM2USB(ep0_buff_rx);
+  btable[0].count_rx = (1 << 15) | (1 << 10);
+
+  // Prepare for a setup packet (RX = Valid, TX = NAK)
+  usb_set_endpoint(&USB->EP0R, USB_EP_CONTROL | USB_EP_RX_VALID | USB_EP_TX_NAK,
+                   USB_EP_TYPE_MASK | USB_EP_RX_VALID | USB_EP_TX_VALID);
+
+  // Enable USB functionality and set address to 0
+  USB->DADDR = USB_DADDR_EF;
+}
+
+void usb_suspend_device() {}
+void usb_wakeup_device() {}
+
 void USB_LP_IRQHandler() {
+
   if (USB->ISTR & USB_ISTR_RESET) {
-    // Clear interrupt
-    USB->ISTR = ~USB_ISTR_RESET;
+    usb_handle_reset();
 
-    // Clear USB-SRAM
-    usb_clear_sram();
-
-    // Prepare Buffer Table
-    USB->BTABLE = __MEM2USB(btable);
-
-    btable[0].addr_tx = __MEM2USB(EP0_buf[1]);
-    btable[0].count_tx = 0;
-    btable[0].addr_rx = __MEM2USB(EP0_buf[0]);
-    btable[0].count_rx = (1 << 15) | (1 << 10);
-
-    // Prepare for a setup packet (RX = Valid, TX = NAK)
-    usb_set_endpoint(&USB->EP0R,
-                     USB_EP_CONTROL | USB_EP_RX_VALID | USB_EP_TX_NAK,
-                     USB_EP_TYPE_MASK | USB_EP_RX_VALID | USB_EP_TX_VALID);
-
-    // Enable USB functionality and set address to 0
-    USB->DADDR = USB_DADDR_EF;
-
-  } else if ((USB->ISTR & USB_ISTR_CTR) != 0) {
+  } else if (USB->ISTR & USB_ISTR_CTR) {
     if ((USB->ISTR & USB_ISTR_EP_ID) == 0) {
       usb_handle_control();
     }
+  } else if (USB->ISTR & USB_ISTR_WKUP) {
+    USB->ISTR = ~USB_ISTR_WKUP;
+    // Resume peripheral
+    USB->CNTR &= ~(USB_CNTR_FSUSP | USB_CNTR_LPMODE);
+    usb_wakeup_device();
+
+  } else if (USB->ISTR & USB_ISTR_SUSP) {
+    USB->ISTR = ~USB_ISTR_SUSP;
+    usb_suspend_device();
+    // On Suspend, the device should enter low power mode and turn off the
+    // USB-Peripheral
+    USB->CNTR |= USB_CNTR_FSUSP;
+
+    // If the device still needs power from the USB Host
+    USB->CNTR |= USB_CNTR_LPMODE;
   }
 }
