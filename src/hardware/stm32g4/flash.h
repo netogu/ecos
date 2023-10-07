@@ -2,6 +2,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "stm32g4xx.h"
 
 // Flash Access Control - ACR
 void flash_set_latency(uint32_t latency);

@@ -1,8 +1,7 @@
-#include "drv_rcc.h"
-#include "drv_common.h"
-#include "drv_flash.h"
-#include "drv_pwr.h"
-#include "stm32g474xx.h"
+#include "hardware/stm32g4/common.h"
+#include "hardware/stm32g4/rcc.h"
+#include "hardware/stm32g4/flash.h"
+#include "hardware/stm32g4/pwr.h"
 #include "stm32g4xx.h"
 
 enum rcc_oscs {

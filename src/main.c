@@ -1,81 +1,21 @@
-#include "drv_rcc.h"
-#include "drv_usb.h"
-#include "stm32g4xx.h"
 #include <stdint.h>
+#include "board/config.h"
+#include "hardware/stm32g4/rcc.h"
 
-#define LED_PIN 5
 
-rcc_clock_config_t clock_170MHz_pll_hsi = {
-    .sysclk_source = RCC_SYSCLK_SOURCE_PLL,
-    .pll_source = RCC_PLL_SOURCE_HSI,
-    .usbckl_source = RCC_USBCLK_SOURCE_HSI48,
-    .pllm = 4,
-    .plln = 85,
-    .pllp = 2,
-    .pllq = 2,
-    .pllr = 2,
-    .sysclk_scale = RCC_CLK_DIV2,
-    .pclk1_scale = RCC_CLK_DIV1,
-    .pclk2_scale = RCC_CLK_DIV1,
-    .flash_wait_states = 4,
-    .vos_range = 1,
-    .boost_mode = 1,
-};
-
-__STATIC_INLINE uint32_t systick_config(uint32_t ticks) {
-  if ((ticks - 1UL) > SysTick_LOAD_RELOAD_Msk) {
-    return (1UL); /* Reload value impossible */
-  }
-
-  SysTick->LOAD = (uint32_t)(ticks - 1UL); /* set reload register */
-  NVIC_SetPriority(SysTick_IRQn,
-                   (1UL << __NVIC_PRIO_BITS) -
-                       1UL); /* set Priority for Systick Interrupt */
-  SysTick->VAL = 0UL;        /* Load the SysTick Counter Value */
-  SysTick->CTRL =
-      SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_TICKINT_Msk |
-      SysTick_CTRL_ENABLE_Msk; /* Enable SysTick IRQ and SysTick Timer */
-  return (0UL);                /* Function successful */
-}
 
 volatile uint32_t msTicks = 0;
-
-void SysTick_Init(void) {
-  SysTick->CTRL = 0;
-  msTicks = 0;
-  SysTick->VAL = 0; /* Load the SysTick Counter Value */
-  SysTick->CTRL = (SysTick_CTRL_TICKINT_Msk | /* Enable SysTick exception */
-                   SysTick_CTRL_ENABLE_Msk) | /* Enable SysTick system timer */
-                  SysTick_CTRL_CLKSOURCE_Msk; /* Use processor clock source */
-}
 
 void delay_ms(uint32_t ms);
 
 int main(void) {
 
-  rcc_clock_init(&clock_170MHz_pll_hsi);
-  SystemCoreClockUpdate();
-  SysTick_Init();
-  systick_config(SystemCoreClock / 1000);
-  drv_usb_init();
-  __enable_irq();
-
-  RCC->AHB2ENR |= (1 << RCC_AHB2ENR_GPIOAEN_Pos);
-
-  // Two dummy reads after enabling the peripheral clock
-  __attribute__((unused)) uint32_t dummy;
-  dummy = RCC->AHB2ENR;
-  dummy = RCC->AHB2ENR;
-
-  GPIOA->MODER &= ~(GPIO_MODER_MODE5_Msk);
-  GPIOA->MODER |= (1 << GPIO_MODER_MODE5_Pos);
-  GPIOA->BSRR |= (1 << LED_PIN);
+  board_clock_setup();
+  board_gpio_setup();
 
   while (1) {
     GPIOA->ODR ^= (1 << LED_PIN);
-    for (int i = 0; i < 17000000; i++) {
-      __ASM("nop");
-    }
+    delay_ms(500);
   }
 }
 
@@ -93,3 +33,9 @@ void delay_ms(uint32_t ms) {
   while (msTicks < end)
     ;
 }
+
+// void USB_LP_IRQHandler() {
+// }
+
+// void USB_HP_IRQHandler() {
+// }

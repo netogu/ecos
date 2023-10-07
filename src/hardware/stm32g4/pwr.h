@@ -1,9 +1,8 @@
 /* Power and Voltage Reference Control*/
 #pragma once
 
-#include "drv_common.h"
-#include "stm32g4xx.h"
 #include <stdint.h>
+#include "stm32g4xx.h"
 
 enum pwr_vos_ranges {
   PWR_VOS_RANGE_X,
