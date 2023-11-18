@@ -16,7 +16,7 @@ int main(void) {
 
   while (1) {
     gpio_pin_toggle(&gpio_led_green);
-    delay_ms(500);
+    delay_ms(100);
   }
 }
 

@@ -7,7 +7,7 @@
 //------------------------------------------------------
 // GPIOs
 //------------------------------------------------------
-// gpio_t gpio_led_green;
+gpio_t gpio_led_green;
 
 void board_clock_setup(void) {
 
@@ -56,17 +56,6 @@ void board_gpio_setup(void) {
     .af = 0,
   };
 
-
   gpio_pin_init(&gpio_led_green);
-  // RCC->AHB2ENR |= (1 << RCC_AHB2ENR_GPIOAEN_Pos);
-
-  // // Two dummy reads after enabling the peripheral clock
-  // __attribute__((unused)) uint32_t dummy;
-  // dummy = RCC->AHB2ENR;
-  // dummy = RCC->AHB2ENR;
-
-  // GPIOA->MODER &= ~(GPIO_MODER_MODE5_Msk);
-  // GPIOA->MODER |= (1 << GPIO_MODER_MODE5_Pos);
-  // GPIOA->BSRR |= (1 << LED_PIN);
 
 }

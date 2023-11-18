@@ -10,7 +10,7 @@
 //------------------------------------------------------    
 // GPIOs
 //------------------------------------------------------
-static gpio_t gpio_led_green;
+extern gpio_t gpio_led_green;
 
 
 void board_clock_setup(void);
