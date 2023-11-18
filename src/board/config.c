@@ -2,9 +2,12 @@
 #include <stdint.h>
 #include "board/config.h"
 #include "hardware/stm32g4/rcc.h"
+#include "hardware/stm32g4/gpio.h"
 
-
-
+//------------------------------------------------------
+// GPIOs
+//------------------------------------------------------
+// gpio_t gpio_led_green;
 
 void board_clock_setup(void) {
 
@@ -25,7 +28,17 @@ void board_clock_setup(void) {
         .boost_mode = 1,
     };
 
+    rcc_crs_config_t crs_config = {
+        .sync_source = RCC_CRS_SYNC_SOURCE_USB,
+        .sync_polarity = RCC_CRS_SYNC_POLARITY_RISING,
+        .sync_scale = RCC_CRS_SYNC_DIV1,
+        .error_limit_value = 34,
+        .hsi48_calibration_value = 32,
+    };
+
   rcc_clock_init(&clock_170MHz_pll_hsi);
+  rcc_crs_init(&crs_config);
+  
   SystemCoreClockUpdate();
   SysTick_Config(SystemCoreClock / 1000);
 
@@ -33,15 +46,27 @@ void board_clock_setup(void) {
 
 void board_gpio_setup(void) {
 
-  RCC->AHB2ENR |= (1 << RCC_AHB2ENR_GPIOAEN_Pos);
+  gpio_led_green = (gpio_t){
+    .port = GPIO_PORT_A,
+    .pin = 5,
+    .mode = GPIO_MODE_OUTPUT,
+    .type = GPIO_TYPE_PUSH_PULL,
+    .pull = GPIO_PULL_UP,
+    .speed = GPIO_SPEED_HIGH,
+    .af = 0,
+  };
 
-  // Two dummy reads after enabling the peripheral clock
-  __attribute__((unused)) uint32_t dummy;
-  dummy = RCC->AHB2ENR;
-  dummy = RCC->AHB2ENR;
 
-  GPIOA->MODER &= ~(GPIO_MODER_MODE5_Msk);
-  GPIOA->MODER |= (1 << GPIO_MODER_MODE5_Pos);
-  GPIOA->BSRR |= (1 << LED_PIN);
+  gpio_pin_init(&gpio_led_green);
+  // RCC->AHB2ENR |= (1 << RCC_AHB2ENR_GPIOAEN_Pos);
+
+  // // Two dummy reads after enabling the peripheral clock
+  // __attribute__((unused)) uint32_t dummy;
+  // dummy = RCC->AHB2ENR;
+  // dummy = RCC->AHB2ENR;
+
+  // GPIOA->MODER &= ~(GPIO_MODER_MODE5_Msk);
+  // GPIOA->MODER |= (1 << GPIO_MODER_MODE5_Pos);
+  // GPIOA->BSRR |= (1 << LED_PIN);
 
 }

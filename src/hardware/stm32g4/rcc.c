@@ -237,3 +237,35 @@ void rcc_clock_init(rcc_clock_config_t *cfg) {
     _rcc_disable_hsi();
   }
 }
+
+void rcc_crs_init(rcc_crs_config_t *cfg) {
+  
+    // Enable CRS peripheral clock
+    // RCC->APB1ENR1 |= RCC_APB1ENR1_CRSEN;
+
+  /* Before configuration, reset CRS registers to their default values*/
+  RCC->APB1RSTR1 |= RCC_APB1RSTR1_CRSRST;
+  RCC->APB1RSTR1 &= ~RCC_APB1RSTR1_CRSRST;
+
+  uint32_t crs_cfgr_reg = 0;
+
+  /* CRS CFGR */
+  // Set CRS sync polarity
+  crs_cfgr_reg |= (cfg->sync_polarity << CRS_CFGR_SYNCPOL_Pos);
+  // Set CRS sync source
+  crs_cfgr_reg |= (cfg->sync_source << CRS_CFGR_SYNCSRC_Pos);
+  // Set CRS sync divider
+  crs_cfgr_reg |= (cfg->sync_scale << CRS_CFGR_SYNCDIV_Pos);
+  // Set CRS frequency error limit
+  crs_cfgr_reg |= (cfg->error_limit_value << CRS_CFGR_FELIM_Pos);
+  // Set CRS reload value
+  crs_cfgr_reg |= (cfg->reload_value << CRS_CFGR_RELOAD_Pos);
+
+  CRS->CFGR = crs_cfgr_reg;
+
+  /* CRS CR */
+  // Set CRS trim value
+  Modify_register_field(CRS->CR, CRS_CR_TRIM, cfg->hsi48_calibration_value);
+  // Enable CRS auto trimming and frequency error counter
+  Set_register_bit(CRS->CR, CRS_CR_AUTOTRIMEN | CRS_CR_CEN);
+}

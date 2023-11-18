@@ -1,13 +1,42 @@
-/**
- * @file drv_usb.c
- * @brief USB Peripheral driver
- * @details This file contains the USB Peripheral driver implementation.
- */
-
 #include <stdint.h>
-#include "hardware/stm32g4/usb.h"
+#include "hardware/stm32g4/usbpcd.h"
 
-void drv_usb_init(void) {
+
+#define __USB_TABLE __attribute__((section(".usbtable")))
+#define __USB_BUF __attribute__((section(".usbbuf")))
+#define __USBBUF_BEGIN 0x40006000
+#define __MEM2USB(x) ((uint32_t)x - __USBBUF_BEGIN);
+#define __USB2MEM(x) ((uint32_t)x + __USBBUF_BEGIN);
+
+
+//--------------------------------------------------------------------+
+// USB Peripheral Controller Memory Map
+//--------------------------------------------------------------------+
+#define USB_EP0_BUFF_SIZE 64
+
+
+
+typedef struct {
+
+  struct {
+    __IO uint16_t addr_tx;
+    __IO uint16_t count_tx;
+    __IO uint16_t addr_rx;
+    __IO uint16_t count_rx;
+  } usb_btable[8];
+
+  struct {
+    __IO uint8_t tx[USB_EP0_BUFF_SIZE];
+    __IO uint8_t rx[USB_EP0_BUFF_SIZE];
+  } ep0_buffer;
+
+} usbpd_pma_t;
+#define USB_PMA ((usbpd_pma_t *)0x40006000)
+
+
+
+
+void usbpcd_init(void) {
 
   // Enable IO Clock & GPIO Port
   RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
@@ -40,34 +69,7 @@ void drv_usb_init(void) {
   USB->CNTR &= ~USB_CNTR_FRES;
 }
 
-/**
- * @brief Packet Memory Area macros
- */
-#define __USB_TABLE __attribute__((section(".usbtable")))
-#define __USB_BUF __attribute__((section(".usbbuf")))
-#define __USBBUF_BEGIN 0x40006000
-#define __MEM2USB(x) ((uint32_t)x - __USBBUF_BEGIN);
-#define __USB2MEM(x) ((uint32_t)x + __USBBUF_BEGIN);
 
-typedef struct {
-  uint16_t addr_tx;
-  uint16_t count_tx;
-  uint16_t addr_rx;
-  uint16_t count_rx;
-} usb_btable_entry_t;
-
-__ALIGNED(8)
-__USB_TABLE
-__IO static usb_btable_entry_t btable[8] = {0};
-
-__ALIGNED(2)
-__USB_BUF
-__IO static uint8_t ep0_buff_tx[64] = {0};
-__ALIGNED(2)
-__USB_BUF
-__IO static uint8_t ep0_buff_rx[64] = {0};
-
-#define USB_MAX_CTRL_DATA 64
 
 typedef struct {
   uint16_t length;
@@ -76,7 +78,7 @@ typedef struct {
 } usb_transfer_t;
 
 typedef struct {
-  usb_setup_packet_t setup;
+  //usb_setup_packet_t setup;
   usb_transfer_t transfer;
 } usb_control_state_t;
 

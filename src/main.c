@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "board/config.h"
 #include "hardware/stm32g4/rcc.h"
+#include "hardware/stm32g4/gpio.h"
 
 
 
@@ -14,7 +15,7 @@ int main(void) {
   board_gpio_setup();
 
   while (1) {
-    GPIOA->ODR ^= (1 << LED_PIN);
+    gpio_pin_toggle(&gpio_led_green);
     delay_ms(500);
   }
 }

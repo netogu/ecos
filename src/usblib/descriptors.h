@@ -5,7 +5,7 @@
 //-----------------------------------------------------------------
 // USB Descriptors:
 //-----------------------------------------------------------------
-enum usb_descriptor_type{
+enum usb_descriptor_type {
     USB_DESC_DEVICE = 1,
     USB_DESC_CONFIGURATION,
     USB_DESC_STRING,
@@ -16,9 +16,8 @@ enum usb_descriptor_type{
     USB_DESC_INTERFACE_POWER,
 };
 
-
 // USB Device Descriptor
-typedef struct{
+typedef struct {
     uint8_t bLength;            // Size of this descriptor in bytes
     uint8_t bDescriptorType;    // DEVICE descriptor type
     uint16_t bcdUSB;            // USB Spec Release Number in BCD
@@ -36,7 +35,7 @@ typedef struct{
 } __attribute__((packed)) usb_dev_desc_t;
 
 // USB Configuration Descriptor
-typedef struct{
+typedef struct {
     uint8_t bLength;             // Size of this descriptor in bytes
     uint8_t bDescriptorType;     // CONFIGURATION descriptor type
     uint16_t wTotalLength;       // Total length of data for this cfg
@@ -48,7 +47,7 @@ typedef struct{
 } __attribute__((packed)) usb_cfg_desc_t;
 
 // USB Interface Descriptor
-typedef struct{
+typedef struct {
     uint8_t bLength;            // Size of this descriptor in bytes
     uint8_t bDescriptorType;    // INTERFACE descriptor type
     uint8_t bInterfaceNumber;   // Number of this interface
@@ -61,7 +60,7 @@ typedef struct{
 } __attribute__((packed)) usb_intf_desc_t;
 
 // USB Endpoint Descriptor
-typedef struct{
+typedef struct {
     uint8_t bLength;            // Size of this descriptor in bytes
     uint8_t bDescriptorType;    // ENDPOINT descriptor type
     uint8_t bEndpointAddress;   // Endpoint address (number & direction)
@@ -71,7 +70,7 @@ typedef struct{
 } __attribute__((packed)) usb_ep_desc_t;
 
 // USB String Descriptor
-typedef struct{
+typedef struct {
     uint8_t bLength;            // Size of this descriptor in bytes
     uint8_t bDescriptorType;    // STRING descriptor type
     uint16_t wString[];         // Unicode string
