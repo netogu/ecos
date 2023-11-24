@@ -1,8 +1,7 @@
-#include "drv_rcc.h"
-#include "drv_common.h"
-#include "drv_flash.h"
-#include "drv_pwr.h"
-#include "stm32g474xx.h"
+#include "hardware/stm32g4/common.h"
+#include "hardware/stm32g4/rcc.h"
+#include "hardware/stm32g4/flash.h"
+#include "hardware/stm32g4/pwr.h"
 #include "stm32g4xx.h"
 
 enum rcc_oscs {
@@ -59,7 +58,7 @@ enum rcc_mco_sources {
 #define _rcc_enable_hse_bypass() (RCC->CR |= RCC_CR_HSEBYP)
 #define _rcc_disable_hse_bypass() (RCC->CR &= ~RCC_CR_HSEBYP)
 
-static uint32_t rcc_set_sysclk_div(enum rcc_clk_scales scale) {
+static uint32_t rcc_set_hclk_div(enum rcc_clk_scales scale) {
   if (!In_range(scale, RCC_CLK_DIV1, RCC_CLK_DIV512))
     return RCC_ERROR;
   uint32_t sysclk_scale;
@@ -199,7 +198,7 @@ void rcc_clock_init(rcc_clock_config_t *cfg) {
   }
 
   // Pre-scaler Configuration
-  rcc_set_sysclk_div(cfg->sysclk_scale);
+  rcc_set_hclk_div(cfg->hclk_scale);
   rcc_set_pclk1_div(cfg->pclk1_scale);
   rcc_set_pclk2_div(cfg->pclk2_scale);
 
@@ -237,4 +236,36 @@ void rcc_clock_init(rcc_clock_config_t *cfg) {
   if (cfg->pll_source == RCC_PLL_SOURCE_HSE) {
     _rcc_disable_hsi();
   }
+}
+
+void rcc_crs_init(rcc_crs_config_t *cfg) {
+  
+    // Enable CRS peripheral clock
+    // RCC->APB1ENR1 |= RCC_APB1ENR1_CRSEN;
+
+  /* Before configuration, reset CRS registers to their default values*/
+  RCC->APB1RSTR1 |= RCC_APB1RSTR1_CRSRST;
+  RCC->APB1RSTR1 &= ~RCC_APB1RSTR1_CRSRST;
+
+  uint32_t crs_cfgr_reg = 0;
+
+  /* CRS CFGR */
+  // Set CRS sync polarity
+  crs_cfgr_reg |= (cfg->sync_polarity << CRS_CFGR_SYNCPOL_Pos);
+  // Set CRS sync source
+  crs_cfgr_reg |= (cfg->sync_source << CRS_CFGR_SYNCSRC_Pos);
+  // Set CRS sync divider
+  crs_cfgr_reg |= (cfg->sync_scale << CRS_CFGR_SYNCDIV_Pos);
+  // Set CRS frequency error limit
+  crs_cfgr_reg |= (cfg->error_limit_value << CRS_CFGR_FELIM_Pos);
+  // Set CRS reload value
+  crs_cfgr_reg |= (cfg->reload_value << CRS_CFGR_RELOAD_Pos);
+
+  CRS->CFGR = crs_cfgr_reg;
+
+  /* CRS CR */
+  // Set CRS trim value
+  Modify_register_field(CRS->CR, CRS_CR_TRIM, cfg->hsi48_calibration_value);
+  // Enable CRS auto trimming and frequency error counter
+  Set_register_bit(CRS->CR, CRS_CR_AUTOTRIMEN | CRS_CR_CEN);
 }

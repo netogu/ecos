@@ -2,7 +2,7 @@
 # Target
 ######################################
 TARGET = stm32g4-minimal
-
+DEVICE = STM32G474xx
 
 ######################################
 # Building variables
@@ -16,35 +16,54 @@ OPT = -Og
 # Debug 
 #######################################
 DEBUGER_PATH = openocd
-DEBUGER_CONF = src/openocd.cfg
+DEBUGER_CONF = src/board/openocd.cfg
 
 #######################################
 # paths
 #######################################
 # Build path
 BUILD_DIR = build
+#
+# Tinyusb Library
+TINYUSB = external/tinyusb/src
 
 ######################################
-# source
+# Sources
 ######################################
 # C sources
-C_SOURCES =  \
-src/system.c \
-src/main.c   \
-src/drv/drv_rcc.c \
-src/drv/drv_pwr.c \
-src/drv/drv_flash.c \
-src/drv/drv_usb.c \
-
+C_SOURCES = $(wildcard src/*.c) 
+C_SOURCES += $(wildcard src/hardware/stm32g4/*.c) 
+C_SOURCES += $(wildcard src/board/config.c) 
+# C_SOURCES += $(wildcard $(TINYUSB)/*.c) 
+# C_SOURCES += $(wildcard $(TINYUSB)/device/*.c) 
+# C_SOURCES += $(wildcard $(TINYUSB)/common/*.c) 
+# C_SOURCES += $(wildcard $(TINYUSB)/class/cdc/*.c) 
+# C_SOURCES += $(wildcard $(TINYUSB)/portable/st/stm32_fsdev/*.c) 
+# C_SOURCES += $(wildcard $(TINYUSB)/portable/st/synopsys/*.c) 
+# C_SOURCES += $(wildcard $(TINYUSB)/portable/st/typec/*.c) 
 # ASM sources
 ASM_SOURCES =  \
-src/startup.s
+src/hardware/stm32g4/startup.s
+
+
+######################################
+# Includes
+######################################
+# AS includes
+AS_INCLUDES = 
+
+# C includes
+C_INCLUDES =  \
+-Isrc/external/CMSIS/Device/ST/STM32G4xx/Include \
+-Isrc/external/CMSIS/Include \
+-Isrc/external/tinyusb/src \
+-Isrc \
 
 #######################################
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = src/linker_script.ld
+LDSCRIPT = src/hardware/stm32g4/linker_script.ld
 
 #######################################
 # binaries
@@ -80,7 +99,7 @@ FPU = -mfpu=fpv4-sp-d16
 FLOAT-ABI = -mfloat-abi=hard
 
 # mcu
-MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
+MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI) -D$(DEVICE)
 
 # macros for gcc
 # AS defines
@@ -91,21 +110,11 @@ C_DEFS =  \
 -DSTM32G474xx
 
 
-# AS includes
-AS_INCLUDES = 
-
-# C includes
-C_INCLUDES =  \
--Iexternal/CMSIS/Device/ST/STM32G4xx/Include \
--Iexternal/CMSIS/Include \
--Isrc/drv/ 
-
-
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
 CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
-CFLAGS += -nostdlib
+#CFLAGS += -nostdlib
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
@@ -116,13 +125,10 @@ endif
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 
 
-
-
-
-# libraries
 LIBS = -lc -lm -lnosys 
 LIBDIR = 
 LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
+
 
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
