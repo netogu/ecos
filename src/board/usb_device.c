@@ -1,9 +1,7 @@
 #include "board/usb_device.h"
 #include "hardware/stm32g4/usbpcd.h"
 
-void usbd_init(){
-return;
-}
+void usbd_init() { return; }
 
 #define USB_Correct_Transfer_Event (USB->ISTR & USB_ISTR_CTR)
 #define USB_Memory_Overflow_Event (USB->ISTR & USB_ISTR_PMAOVR)
@@ -16,9 +14,6 @@ return;
 #define USB_LPM_Event (USB->ISTR & USB_ISTR_L1REQ)
 #define USB_Transaction_Dir (USB->ISTR & USB_ISTR_DIR)
 #define USB_Endpoint_Identifier (USB->ISTR & USB_ISTR_EP_ID)
-
-
-
 
 //--------------------------------------------------------------------+
 // USB Request Handlers

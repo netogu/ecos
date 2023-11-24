@@ -58,7 +58,7 @@ enum rcc_mco_sources {
 #define _rcc_enable_hse_bypass() (RCC->CR |= RCC_CR_HSEBYP)
 #define _rcc_disable_hse_bypass() (RCC->CR &= ~RCC_CR_HSEBYP)
 
-static uint32_t rcc_set_sysclk_div(enum rcc_clk_scales scale) {
+static uint32_t rcc_set_hclk_div(enum rcc_clk_scales scale) {
   if (!In_range(scale, RCC_CLK_DIV1, RCC_CLK_DIV512))
     return RCC_ERROR;
   uint32_t sysclk_scale;
@@ -198,7 +198,7 @@ void rcc_clock_init(rcc_clock_config_t *cfg) {
   }
 
   // Pre-scaler Configuration
-  rcc_set_sysclk_div(cfg->sysclk_scale);
+  rcc_set_hclk_div(cfg->hclk_scale);
   rcc_set_pclk1_div(cfg->pclk1_scale);
   rcc_set_pclk2_div(cfg->pclk2_scale);
 

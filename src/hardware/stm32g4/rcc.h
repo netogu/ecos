@@ -76,7 +76,7 @@ typedef const struct {
   enum rcc_sysclk_sources sysclk_source;
   enum rcc_usbclk_sources usbckl_source;
   enum rcc_clk_scales mco_scale;
-  enum rcc_clk_scales sysclk_scale;
+  enum rcc_clk_scales hclk_scale;
   enum rcc_clk_scales pclk1_scale;
   enum rcc_clk_scales pclk2_scale;
 } rcc_clock_config_t;

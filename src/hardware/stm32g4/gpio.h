@@ -77,7 +77,7 @@ typedef enum {
     GPIO_PIN_15 = 15,
 } gpio_pin_t;
 
-typedef struct {
+typedef const struct {
     gpio_port_t port;
     gpio_pin_t pin;
     gpio_mode_t mode;

@@ -1,22 +1,35 @@
 #include <stdint.h>
+// #include <stdio.h>
+// #include <string.h>
 #include "board/config.h"
-#include "hardware/stm32g4/rcc.h"
-#include "hardware/stm32g4/gpio.h"
 
+void lpuart_write_str(char * buffer, uint32_t len) {
+    for (uint32_t i = 0; i < len; i++) {
+      lpuart_write(buffer[i]);
+    }
+}
 
 
 volatile uint32_t msTicks = 0;
 
 void delay_ms(uint32_t ms);
+uint32_t counter = 0;
 
 int main(void) {
 
   board_clock_setup();
   board_gpio_setup();
+  board_serial_setup();
 
   while (1) {
-    gpio_pin_toggle(&gpio_led_green);
+    gpio_pin_toggle(&gpios.led_green);
+
+    char msg[] = "Hello World!\r\n";
+    // sprintf(msg, "SystemCoreClock = %d\r\n", SystemCoreClock);
+    // lpuart_write(msg, strlen(msg));
+    lpuart_write(msg, 14);
     delay_ms(100);
+    counter++;
   }
 }
 

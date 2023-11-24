@@ -3,11 +3,11 @@
 #include "board/config.h"
 #include "hardware/stm32g4/rcc.h"
 #include "hardware/stm32g4/gpio.h"
+#include "hardware/stm32g4/lpuart.h"
 
 //------------------------------------------------------
-// GPIOs
+// Clock Config
 //------------------------------------------------------
-gpio_t gpio_led_green;
 
 void board_clock_setup(void) {
 
@@ -20,7 +20,7 @@ void board_clock_setup(void) {
         .pllp = 2,
         .pllq = 2,
         .pllr = 2,
-        .sysclk_scale = RCC_CLK_DIV2,
+        .hclk_scale = RCC_CLK_DIV1,
         .pclk1_scale = RCC_CLK_DIV1,
         .pclk2_scale = RCC_CLK_DIV1,
         .flash_wait_states = 4,
@@ -44,18 +44,71 @@ void board_clock_setup(void) {
 
 }
 
-void board_gpio_setup(void) {
+//------------------------------------------------------
+// GPIO Config
+//------------------------------------------------------
 
-  gpio_led_green = (gpio_t){
+struct board_gpio 
+gpios = (struct board_gpio) {
+  .led_green = (gpio_t){
     .port = GPIO_PORT_A,
-    .pin = 5,
+    .pin = GPIO_PIN_5,
     .mode = GPIO_MODE_OUTPUT,
     .type = GPIO_TYPE_PUSH_PULL,
     .pull = GPIO_PULL_UP,
     .speed = GPIO_SPEED_HIGH,
-    .af = 0,
-  };
+    .af = GPIO_AF0,
+  }
+} ;
 
-  gpio_pin_init(&gpio_led_green);
 
+void board_gpio_setup(void) {
+
+  for (int i = 0; i < sizeof(gpios) / sizeof(gpio_t); i++) {
+    gpio_pin_init((gpio_t *)&gpios + i);
+  }
+}
+
+
+//------------------------------------------------------
+// UART Config
+//------------------------------------------------------
+
+void board_serial_setup(void) {
+
+    gpio_t lpuart_tx = {
+      .port = GPIO_PORT_A,
+      .pin = GPIO_PIN_2,
+      .mode = GPIO_MODE_ALTERNATE,
+      .type = GPIO_TYPE_PUSH_PULL,
+      .pull = GPIO_PULL_NONE,
+      .speed = GPIO_SPEED_LOW,
+      .af = GPIO_AF12,
+    };
+
+    gpio_t lpuart_rx = {
+      .port = GPIO_PORT_A,
+      .pin = GPIO_PIN_3,
+      .mode = GPIO_MODE_ALTERNATE,
+      .type = GPIO_TYPE_PUSH_PULL,
+      .pull = GPIO_PULL_NONE,
+      .speed = GPIO_SPEED_LOW,
+      .af = GPIO_AF12,
+    };
+
+    gpio_pin_init(&lpuart_tx);
+    gpio_pin_init(&lpuart_rx);
+    
+    lpuart_config_t lpuart_config = {
+      .clock_source = LPUART_CLOCK_SOURCE_PCLK,
+      .clock_prescale = LPUART_CLOCK_PRESCALER_1,
+      .baudrate = 115200,
+      .mode = LPUART_MODE_RX_TX,
+      .word_length = LPUART_DATA_BITS_8,
+      .stop_bits = LPUART_STOP_BITS_1,
+      .parity = LPUART_PARITY_NONE,
+      .flow_control = LPUART_FLOW_CONTROL_NONE,
+    };
+  
+    lpuart_init(&lpuart_config);
 }

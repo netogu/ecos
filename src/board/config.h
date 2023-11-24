@@ -3,15 +3,17 @@
 #include "hardware/stm32g4/gpio.h"
 
 
-#define LED_PORT GPIOA
-#define LED_PIN 5
-
-
 //------------------------------------------------------    
 // GPIOs
 //------------------------------------------------------
-extern gpio_t gpio_led_green;
+
+struct board_gpio {
+  gpio_t led_green;
+};
+
+extern struct board_gpio gpios;
 
 
 void board_clock_setup(void);
 void board_gpio_setup(void);
+void board_serial_setup(void);
