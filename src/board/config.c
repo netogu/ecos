@@ -79,6 +79,16 @@ void _putchar(char character) {
   lpuart_write((uint8_t *)&character, 1);
 }
 
+int _write(int handle, char *data, int size) {
+  int count;
+  handle = handle; //unused
+  for (count = 0; count < size; count++) {
+    lpuart_write((uint8_t *)data, 1);
+    data++;
+  }
+  return count;
+}
+
 void board_serial_setup(void) {
 
     gpio_t lpuart_tx = {

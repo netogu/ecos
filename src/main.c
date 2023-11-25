@@ -1,13 +1,13 @@
 #include <stdint.h>
-// #include <string.h>
+// #include <stdio.h>
 #include "external/printf.h"
 #include "board/config.h"
 #include "lib/delay.h"
 #include "lib/debug.h"
 
 
-float counter = 0;
-
+uint32_t counter = 0;
+float val = 0.0;
 int main(void) {
 
   board_clock_setup();
@@ -18,8 +18,9 @@ int main(void) {
   
   while (1) {
     gpio_pin_toggle(&gpios.led_green);
-    printf("Hello World! %f\r\n", counter);
-    delay_ms(1000);
-    counter += 0.1;
+    printf("Hello World! %ld %f\r\n", counter, val);
+    delay_ms(500);
+    counter++;
+    val += 0.1;
   }
 }
