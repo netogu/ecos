@@ -74,6 +74,11 @@ void board_gpio_setup(void) {
 // UART Config
 //------------------------------------------------------
 
+// Hook to printf
+void _putchar(char character) {
+  lpuart_write((uint8_t *)&character, 1);
+}
+
 void board_serial_setup(void) {
 
     gpio_t lpuart_tx = {

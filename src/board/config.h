@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hardware/stm32g4/gpio.h"
-
+#include "hardware/stm32g4/lpuart.h"
 
 //------------------------------------------------------    
 // GPIOs

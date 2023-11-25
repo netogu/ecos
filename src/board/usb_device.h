@@ -1,6 +1,6 @@
 
 #include <stdint.h>
-#include "usblib/usb_descriptor.h"
+#include "lib/usb/descriptors.h"
 
 static const usb_dev_desc_t device_descriptor = {
     .bLength = 18,

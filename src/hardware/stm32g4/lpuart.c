@@ -69,10 +69,13 @@ void lpuart_init(lpuart_config_t *config) {
         
 }
 
-#define lpuart_write_byte_blocking(data) { \
-    LPUART1->TDR = data; \
+#define lpuart_write_byte_blocking(data) do{ \
     while (!(LPUART1->ISR & USART_ISR_TC)); \
-}
+    LPUART1->TDR = data; \
+}while(0);
+#define lpuart_write_byte(data) do{ \
+    LPUART1->TDR = data; \
+}while(0);
 
 void lpuart_write(uint8_t *data, uint32_t len) {
 

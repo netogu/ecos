@@ -5,7 +5,7 @@
  */
 
 #include <stdint.h>
-#include "usblib/descriptors.h"
+#include "lib/usb/descriptors.h"
 
 #define Min(x, y) ((x) < (y) ? (x) : (y))
 

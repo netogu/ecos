@@ -32,7 +32,11 @@ TINYUSB = external/tinyusb/src
 ######################################
 # C sources
 C_SOURCES = $(wildcard src/*.c) 
-C_SOURCES += $(wildcard src/hardware/stm32g4/*.c) 
+C_SOURCES += $(wildcard src/external/*.c)
+C_SOURCES += $(wildcard src/hardware/*.c) 
+C_SOURCES += $(wildcard src/hardware/*/*.c) 
+# C_SOURCES += $(wildcard src/lib/*.c)
+# C_SOURCES += $(wildcard src/lib/*/*.c)
 C_SOURCES += $(wildcard src/board/config.c) 
 # C_SOURCES += $(wildcard $(TINYUSB)/*.c) 
 # C_SOURCES += $(wildcard $(TINYUSB)/device/*.c) 
@@ -114,7 +118,6 @@ C_DEFS =  \
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
 CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
-#CFLAGS += -nostdlib
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
@@ -123,6 +126,8 @@ endif
 
 # Generate dependency information
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
+CFLAGS += -nostdlib
+CFLAGS += -fno-use-cxa-atexit
 
 
 LIBS = -lc -lm -lnosys 
