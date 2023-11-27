@@ -5,6 +5,7 @@
 #include "hardware/stm32g4/gpio.h"
 #include "hardware/stm32g4/lpuart.h"
 #include "hardware/stm32g4/usbpcd.h"
+#include "tusb.h"
 
 //------------------------------------------------------
 // Clock Config
@@ -129,4 +130,25 @@ void board_usb_setup(void) {
   // USB_DM = PA11, USB_DP = PA12
     
     usbpcd_init();
+}
+
+void HardFault_Handler(void) {
+  __asm("BKPT #0\n");
+}
+
+//--------------------------------------------------------------------+
+// Forward USB interrupt events to TinyUSB IRQ Handler
+//--------------------------------------------------------------------+
+void USB_HP_IRQHandler(void) {
+  tud_int_handler(0);
+}
+
+uint32_t usb_lp_irq_counter = 0;
+void USB_LP_IRQHandler(void) {
+  tud_int_handler(0);
+  usb_lp_irq_counter++;
+}
+
+void USBWakeUp_IRQHandler(void) {
+  tud_int_handler(0);
 }

@@ -25,7 +25,7 @@ DEBUGER_CONF = src/board/openocd.cfg
 BUILD_DIR = build
 #
 # Tinyusb Library
-TINYUSB = external/tinyusb/src
+TINYUSB = src/external/tinyusb/src
 
 ######################################
 # Sources
@@ -38,13 +38,10 @@ C_SOURCES += $(wildcard src/hardware/*/*.c)
 C_SOURCES += $(wildcard src/lib/*.c)
 # C_SOURCES += $(wildcard src/lib/*/*.c)
 C_SOURCES += $(wildcard src/board/*.c) 
-# C_SOURCES += $(wildcard $(TINYUSB)/*.c) 
-# C_SOURCES += $(wildcard $(TINYUSB)/device/*.c) 
-# C_SOURCES += $(wildcard $(TINYUSB)/common/*.c) 
-# C_SOURCES += $(wildcard $(TINYUSB)/class/cdc/*.c) 
-# C_SOURCES += $(wildcard $(TINYUSB)/portable/st/stm32_fsdev/*.c) 
-# C_SOURCES += $(wildcard $(TINYUSB)/portable/st/synopsys/*.c) 
-# C_SOURCES += $(wildcard $(TINYUSB)/portable/st/typec/*.c) 
+C_SOURCES += $(wildcard $(TINYUSB)/*.c) 
+C_SOURCES += $(wildcard $(TINYUSB)/*/*.c) 
+C_SOURCES += $(wildcard $(TINYUSB)/*/*/*.c) 
+C_SOURCES += $(wildcard $(TINYUSB)/*/*/*/*.c) 
 # ASM sources
 ASM_SOURCES =  \
 src/hardware/stm32g4/startup.s
@@ -126,13 +123,14 @@ endif
 
 # Generate dependency information
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
-CFLAGS += -nostdlib
-CFLAGS += -fno-use-cxa-atexit
+# CFLAGS += -nostdlib
 
 
 LIBS = -lc -lm -lnosys 
 LIBDIR = 
-LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
+LDFLAGS = $(MCU) -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
+LDFLAGS += -nostartfiles
+LDFLAGS += --specs=nano.specs --specs=nosys.specs
 
 
 # default action: build all

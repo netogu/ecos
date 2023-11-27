@@ -11,8 +11,6 @@ void usbpcd_init(void) {
   RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
   RCC->APB1ENR1 |= RCC_APB1ENR1_USBEN;
 
-  NVIC_SetPriority(USB_LP_IRQn, 8);
-  NVIC_EnableIRQ(USB_LP_IRQn);
 
   // Enable macrocell
   USB->CNTR &= ~USB_CNTR_PDWN;
@@ -30,6 +28,12 @@ void usbpcd_init(void) {
 
   // Clear the USB Reset (D+ & D- low) to start enumeration
   USB->CNTR &= ~USB_CNTR_FRES;
+
+  USB->ISTR = 0;
+
+  NVIC_EnableIRQ(USB_HP_IRQn);
+  NVIC_EnableIRQ(USB_LP_IRQn);
+  NVIC_EnableIRQ(USBWakeUp_IRQn);
 }
 
 void usbpcd_set_endpoint(__IO uint16_t *ep, uint16_t value, uint16_t mask) {
