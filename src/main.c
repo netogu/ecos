@@ -5,21 +5,25 @@
 #include "lib/delay.h"
 #include "lib/debug.h"
 
+// USB Device IRQ Monitor
+extern int usb_lp_irq_counter;
 
-float counter = 0;
-
+int main_loop_counter = 0;
 int main(void) {
 
   board_clock_setup();
   board_gpio_setup();
   board_serial_setup();
-
-  debug_print_memory_range((uint8_t *)0x08000000, (uint8_t *)0x08000000 + 0x400);
+  board_usb_setup();
   
   while (1) {
     gpio_pin_toggle(&gpios.led_green);
-    printf("Hello World! %f\r\n", counter);
+
+    printf("cnt_main, cnt_usb_irq: %d,%d \r\n", 
+      main_loop_counter, 
+      usb_lp_irq_counter);
+
     delay_ms(1000);
-    counter += 0.1;
+    main_loop_counter++;
   }
 }

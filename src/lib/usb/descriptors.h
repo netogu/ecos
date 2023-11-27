@@ -1,7 +1,6 @@
 #pragma once
 #include <stdint.h>
 
-
 //-----------------------------------------------------------------
 // USB Descriptors:
 //-----------------------------------------------------------------
@@ -32,7 +31,7 @@ typedef struct {
     uint8_t iProduct;           // Product string index
     uint8_t iSerialNumber;      // Serial number string index
     uint8_t bNumConfigurations; // Number of possible configurations
-} __attribute__((packed)) usb_dev_desc_t;
+} __attribute__((packed, aligned(2))) usb_dev_desc_t;
 
 // USB Configuration Descriptor
 typedef struct {
@@ -44,7 +43,7 @@ typedef struct {
     uint8_t iConfiguration;      // Index of string descriptor for this cfg
     uint8_t bmAttributes;        // Configuration characteristics
     uint8_t bMaxPower;           // Max power consumption in 2mA units
-} __attribute__((packed)) usb_cfg_desc_t;
+} __attribute__((packed, aligned(2))) usb_cfg_desc_t;
 
 // USB Interface Descriptor
 typedef struct {
@@ -57,7 +56,7 @@ typedef struct {
     uint8_t bInterfaceSubClass; // Subclass code
     uint8_t bInterfaceProtocol; // Protocol code
     uint8_t iInterface;         // Index of string descriptor for this intf
-} __attribute__((packed)) usb_intf_desc_t;
+} __attribute__((packed, aligned(2))) usb_intf_desc_t;
 
 // USB Endpoint Descriptor
 typedef struct {
@@ -67,11 +66,11 @@ typedef struct {
     uint8_t bmAttributes;       // Endpoint attributes
     uint16_t wMaxPacketSize;    // Max packet size this endpoint is capable of sending or receiving
     uint8_t bInterval;          // Interval for polling endpoint for data transfers
-} __attribute__((packed)) usb_ep_desc_t;
+} __attribute__((packed, aligned(2))) usb_ep_desc_t;
 
 // USB String Descriptor
 typedef struct {
     uint8_t bLength;            // Size of this descriptor in bytes
     uint8_t bDescriptorType;    // STRING descriptor type
     uint16_t wString[];         // Unicode string
-} __attribute__((packed)) usb_str_desc_t;
+} __attribute__((packed, aligned(2))) usb_str_desc_t;

@@ -4,6 +4,7 @@
 #include "hardware/stm32g4/rcc.h"
 #include "hardware/stm32g4/gpio.h"
 #include "hardware/stm32g4/lpuart.h"
+#include "hardware/stm32g4/usbpcd.h"
 
 //------------------------------------------------------
 // Clock Config
@@ -116,4 +117,16 @@ void board_serial_setup(void) {
     };
   
     lpuart_init(&lpuart_config);
+}
+
+
+//------------------------------------------------------
+// USB-CDC Config
+//------------------------------------------------------
+
+void board_usb_setup(void) {
+
+  // USB_DM = PA11, USB_DP = PA12
+    
+    usbpcd_init();
 }
