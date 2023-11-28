@@ -18,25 +18,28 @@ int main(void) {
   board_serial_setup();
   board_usb_setup();
   tusb_init();
-  printf("Waiting for USB\r\n");
-  while (!tud_cdc_connected()) {
-    for (int i = 0; i < 80; i++)
-      printf(".");
-      delay_ms(100);
-    printf("\r\n");
-  }
-  printf("\r\nUSB connected\r\n");
+  // printf("Waiting for USB\r\n");
+  // while (!tud_cdc_connected()) {
+  //   for (int i = 0; i < 80; i++)
+  //     printf(".");
+  //     delay_ms(100);
+  //   printf("\r\n");
+  // }
+  // printf("\r\nUSB connected\r\n");
   
   while (1) {
     tud_task();
-    gpio_pin_toggle(&gpios.led_green);
+    if (tud_cdc_connected()) {
+      tud_cdc_write_str("Hello World\r\n");
+    }
+    // gpio_pin_toggle(&gpios.led_green);
 
-    printf("cnt_main, cnt_usb_irq: %d,%d \r\n", 
-      main_loop_counter, 
-      usb_lp_irq_counter);
+    // printf("cnt_main, cnt_usb_irq: %d,%d \r\n", 
+    //   main_loop_counter, 
+    //   usb_lp_irq_counter);
 
-    delay_ms(1000);
-    main_loop_counter++;
+    // delay_ms(1000);
+    // main_loop_counter++;
   }
 }
 
@@ -46,6 +49,7 @@ int main(void) {
 // Invoked when device is mounted
 void tud_mount_cb(void) {
   printf("USB mounted\r\n");
+  gpio_pin_set(&gpios.led_green);
 }
 // Required by __libc_init_array in startup code if we are compiling using
 // -nostdlib/-nostartfiles.
