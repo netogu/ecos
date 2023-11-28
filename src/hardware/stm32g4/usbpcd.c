@@ -2,39 +2,8 @@
 #include "hardware/stm32g4/usbpcd.h"
 
 
-#define __USB_TABLE __attribute__((section(".usbtable")))
-#define __USB_BUF __attribute__((section(".usbbuf")))
-#define __USBBUF_BEGIN 0x40006000
-#define __MEM2USB(x) ((uint32_t)x - __USBBUF_BEGIN);
-#define __USB2MEM(x) ((uint32_t)x + __USBBUF_BEGIN);
-
-
-//--------------------------------------------------------------------+
-// USB Peripheral Controller Memory Map
-//--------------------------------------------------------------------+
-#define USB_EP0_BUFF_SIZE 64
-
-
-
-typedef struct {
-
-  struct {
-    __IO uint16_t addr_tx;
-    __IO uint16_t count_tx;
-    __IO uint16_t addr_rx;
-    __IO uint16_t count_rx;
-  } usb_btable[8];
-
-  struct {
-    __IO uint8_t tx[USB_EP0_BUFF_SIZE];
-    __IO uint8_t rx[USB_EP0_BUFF_SIZE];
-  } ep0_buffer;
-
-} usbpd_pma_t;
-#define USB_PMA ((usbpd_pma_t *)0x40006000)
-
-
-
+// #define __USB_TABLE __attribute__((section(".usbtable")))
+// #define __USB_BUF __attribute__((section(".usbbuf")))
 
 void usbpcd_init(void) {
 
@@ -42,23 +11,15 @@ void usbpcd_init(void) {
   RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
   RCC->APB1ENR1 |= RCC_APB1ENR1_USBEN;
 
-  NVIC_SetPriority(USB_LP_IRQn, 8);
-  NVIC_EnableIRQ(USB_LP_IRQn);
 
   // Enable macrocell
   USB->CNTR &= ~USB_CNTR_PDWN;
 
-  // Wait 1us for stabilization
-  for (int i = 0; i < 170; i++) {
+  // Wait 1us for stabilization @ 170Mhz Sysclk
+  // TODO: use DWT?
+  for (int i = 0; i < 180; i++) {
     __ASM("nop");
   }
-
-  /* SysTick->LOAD = 200; */
-  /* SysTick->VAL = 0; */
-  /* SysTick->CTRL = 1; */
-  /* while ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == 0) */
-  /*   ; */
-  /* SysTick->CTRL = 0; */
 
   // Enable all interrupts & activate D+ 1.5kohm pull-up (FullSpeed USB)
   USB->CNTR |=
@@ -67,28 +28,15 @@ void usbpcd_init(void) {
 
   // Clear the USB Reset (D+ & D- low) to start enumeration
   USB->CNTR &= ~USB_CNTR_FRES;
+
+  USB->ISTR = 0;
+
+  NVIC_EnableIRQ(USB_HP_IRQn);
+  NVIC_EnableIRQ(USB_LP_IRQn);
+  NVIC_EnableIRQ(USBWakeUp_IRQn);
 }
 
-
-
-typedef struct {
-  uint16_t length;
-  uint16_t bytes_sent;
-  uint8_t *buffer;
-} usb_transfer_t;
-
-typedef struct {
-  //usb_setup_packet_t setup;
-  usb_transfer_t transfer;
-} usb_control_state_t;
-
-typedef struct {
-  uint32_t *buffer;
-  uint32_t size;
-  void (*update)(uint8_t ep, uint16_t length);
-} usb_endpoint_buffer_t;
-
-static void usb_set_endpoint(__IO uint16_t *ep, uint16_t value, uint16_t mask) {
+void usbpcd_set_endpoint(__IO uint16_t *ep, uint16_t value, uint16_t mask) {
   uint16_t toggle = 0b0111000001110000;
   uint16_t rc_w0 = 0b1000000010000000;
   uint16_t rw = 0b0000011100001111;
@@ -100,35 +48,20 @@ static void usb_set_endpoint(__IO uint16_t *ep, uint16_t value, uint16_t mask) {
   *ep = wr0 | wr1 | wr2;
 }
 
-static void usb_clear_sram(void) {
-  uint8_t *buffer = (uint8_t *)__USBBUF_BEGIN;
+void usbpcd_clear_pma(void) {
+  uint8_t *buffer = (uint8_t *)USB_PMAADDR;
 
   for (uint32_t i = 0; i < 1024; i++) {
     buffer[i] = 0;
   }
 }
 
-static void usb_copy_memory(uint16_t *source, uint16_t *target,
+void usbpcd_copy_memory(uint16_t *source, uint16_t *target,
                             uint16_t length) {
   for (uint32_t i = 0; i < length / 2; i++) {
     target[i] = source[i];
   }
   if (length % 2 == 1) {
     ((uint8_t *)target)[length - 1] = ((uint8_t *)source)[length - 1];
-  }
-}
-
-static void usb_prepare_transfer(usb_transfer_t *transfer, uint16_t *ep,
-                                 uint8_t *buf, uint16_t *buf_count,
-                                 uint16_t buf_size) {
-  *buf_count = Min(buf_size, transfer->length - transfer->bytes_sent);
-
-  if (*buf_count > 0) {
-    usb_copy_memory((uint16_t *)(transfer->buffer + transfer->bytes_sent),
-                    (uint16_t *)buf, *buf_count);
-    transfer->bytes_sent += *buf_count;
-    usb_set_endpoint(ep, USB_EP_TX_VALID, USB_EP_TX_VALID);
-  } else {
-    usb_set_endpoint(ep, USB_EP_TX_NAK, USB_EP_TX_VALID);
   }
 }

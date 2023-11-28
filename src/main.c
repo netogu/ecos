@@ -4,23 +4,54 @@
 #include "board/config.h"
 #include "lib/delay.h"
 #include "lib/debug.h"
+#include "tusb.h"
+
+// USB Device IRQ Monitor
+extern int usb_lp_irq_counter;
 
 
-uint32_t counter = 0;
-float val = 0.0;
+int main_loop_counter = 0;
 int main(void) {
 
   board_clock_setup();
   board_gpio_setup();
   board_serial_setup();
-
-  debug_print_memory_range((uint8_t *)0x08000000, (uint8_t *)0x08000000 + 0x400);
+  board_usb_setup();
+  tusb_init();
+  // printf("Waiting for USB\r\n");
+  // while (!tud_cdc_connected()) {
+  //   for (int i = 0; i < 80; i++)
+  //     printf(".");
+  //     delay_ms(100);
+  //   printf("\r\n");
+  // }
+  // printf("\r\nUSB connected\r\n");
   
   while (1) {
-    gpio_pin_toggle(&gpios.led_green);
-    printf("Hello World! %ld %f\r\n", counter, val);
-    delay_ms(500);
-    counter++;
-    val += 0.1;
+    tud_task();
+    if (tud_cdc_connected()) {
+      tud_cdc_write_str("Hello World\r\n");
+    }
+    // gpio_pin_toggle(&gpios.led_green);
+
+    // printf("cnt_main, cnt_usb_irq: %d,%d \r\n", 
+    //   main_loop_counter, 
+    //   usb_lp_irq_counter);
+
+    // delay_ms(1000);
+    // main_loop_counter++;
   }
+}
+
+//--------------------------------------------------------------------+
+// USB Mount Callback API (Optional)
+//--------------------------------------------------------------------+
+// Invoked when device is mounted
+void tud_mount_cb(void) {
+  printf("USB mounted\r\n");
+  gpio_pin_set(&gpios.led_green);
+}
+// Required by __libc_init_array in startup code if we are compiling using
+// -nostdlib/-nostartfiles.
+void _init(void) {
 }
