@@ -111,6 +111,9 @@
 // CDC Endpoint transfer buffer size, more is faster
 #define CFG_TUD_CDC_EP_BUFSIZE   (TUD_OPT_HIGH_SPEED ? 512 : 64)
 
+struct ush_object* ush_get_instance(void);
+void ush_setup(struct ush_object *ush);
+
 #ifdef __cplusplus
  }
 #endif

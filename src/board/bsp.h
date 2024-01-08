@@ -1,8 +1,6 @@
 #pragma once
 
 #include "hardware/stm32g4/gpio.h"
-#include "hardware/stm32g4/lpuart.h"
-#include "hardware/stm32g4/usbpcd.h"
 
 //------------------------------------------------------    
 // GPIOs
@@ -13,9 +11,8 @@ struct board_gpio {
 };
 
 extern struct board_gpio gpios;
+extern uint8_t g_task_wait_flag;
 
-
-void board_clock_setup(void);
-void board_gpio_setup(void);
-void board_serial_setup(void);
-void board_usb_setup(void);
+void board_init(void);
+uint32_t millis(void);
+void delay_ms(uint32_t ms);

@@ -36,3 +36,9 @@ build
 
 # VS Code
 .vscode
+
+# Cache
+.cache
+
+# External/tinyusb
+src/external/tinyusb

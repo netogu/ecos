@@ -1,17 +1,33 @@
 
 #include <stdint.h>
-#include "board/config.h"
+#include "board/bsp.h"
 #include "hardware/stm32g4/rcc.h"
 #include "hardware/stm32g4/gpio.h"
 #include "hardware/stm32g4/lpuart.h"
 #include "hardware/stm32g4/usbpcd.h"
 #include "tusb.h"
+#include "microshell.h"
+
+//------------------------------------------------------+
+// Board Configuration 
+//------------------------------------------------------+
+
+static void board_clock_setup(void);
+static void board_gpio_setup(void);
+static void board_serial_setup(void);
+static void board_usb_setup(void);
+
+void board_init(void) {
+  board_clock_setup();
+  board_gpio_setup();
+  board_serial_setup();
+  board_usb_setup();
+}
 
 //------------------------------------------------------
 // Clock Config
 //------------------------------------------------------
-
-void board_clock_setup(void) {
+static void board_clock_setup(void) {
 
     rcc_clock_config_t clock_170MHz_pll_hsi = {
         .sysclk_source = RCC_SYSCLK_SOURCE_PLL,
@@ -50,6 +66,7 @@ void board_clock_setup(void) {
 // GPIO Config
 //------------------------------------------------------
 
+
 struct board_gpio 
 gpios = (struct board_gpio) {
   .led_green = (gpio_t){
@@ -64,7 +81,7 @@ gpios = (struct board_gpio) {
 } ;
 
 
-void board_gpio_setup(void) {
+static void board_gpio_setup(void) {
 
   for (int i = 0; i < sizeof(gpios) / sizeof(gpio_t); i++) {
     gpio_pin_init((gpio_t *)&gpios + i);
@@ -77,9 +94,9 @@ void board_gpio_setup(void) {
 //------------------------------------------------------
 
 // Hook to printf
-void _putchar(char character) {
-  lpuart_write((uint8_t *)&character, 1);
-}
+// void _putchar(char character) {
+//   lpuart_write((uint8_t *)&character, 1);
+// }
 
 int _write(int handle, char *data, int size) {
   int count;
@@ -91,7 +108,7 @@ int _write(int handle, char *data, int size) {
   return count;
 }
 
-void board_serial_setup(void) {
+static void board_serial_setup(void) {
 
     gpio_t lpuart_tx = {
       .port = GPIO_PORT_A,
@@ -135,11 +152,15 @@ void board_serial_setup(void) {
 // USB-CDC Config
 //------------------------------------------------------
 
-void board_usb_setup(void) {
+static void board_usb_setup(void) {
 
   // USB_DM = PA11, USB_DP = PA12
     
     usbpcd_init();
+}
+
+void _putchar(char character) {
+  tud_cdc_write_char(character);
 }
 
 void HardFault_Handler(void) {
@@ -161,4 +182,33 @@ void USB_LP_IRQHandler(void) {
 
 void USBWakeUp_IRQHandler(void) {
   tud_int_handler(0);
+}
+
+//--------------------------------------------------------------------+
+// System Tick
+//--------------------------------------------------------------------+
+
+volatile uint32_t system_ticks = 0;
+uint8_t g_task_wait_flag;
+void SysTick_Handler(void) { 
+  system_ticks++;
+  g_task_wait_flag = 1;
+}
+
+
+uint32_t millis(void){
+  return system_ticks;
+}
+
+void delay_ms(uint32_t ms) {
+  uint32_t start = system_ticks;
+  uint32_t end = start + ms;
+
+  if (end < start) {
+    while (system_ticks > start)
+      ;
+  }
+
+  while (system_ticks < end)
+    ;
 }

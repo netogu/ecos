@@ -26,6 +26,7 @@ BUILD_DIR = build
 #
 # Tinyusb Library
 TINYUSB = src/external/tinyusb/src
+MICROSHELL = src/external/microshell/src/lib
 
 ######################################
 # Sources
@@ -42,6 +43,9 @@ C_SOURCES += $(wildcard $(TINYUSB)/*.c)
 C_SOURCES += $(wildcard $(TINYUSB)/*/*.c) 
 C_SOURCES += $(wildcard $(TINYUSB)/*/*/*.c) 
 C_SOURCES += $(wildcard $(TINYUSB)/*/*/*/*.c) 
+C_SOURCES += $(wildcard $(MICROSHELL)/util/*.c)
+C_SOURCES += $(wildcard $(MICROSHELL)/core/*.c)
+
 # ASM sources
 ASM_SOURCES =  \
 src/hardware/stm32g4/startup.s
@@ -58,6 +62,9 @@ C_INCLUDES =  \
 -Isrc/external/CMSIS/Device/ST/STM32G4xx/Include \
 -Isrc/external/CMSIS/Include \
 -Isrc/external/tinyusb/src \
+-I$(TINYUSB)/src \
+-I$(MICROSHELL)/core \
+-I$(MICROSHELL)/util \
 -Isrc \
 
 #######################################
@@ -123,7 +130,7 @@ endif
 
 # Generate dependency information
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
-# CFLAGS += -nostdlib
+CFLAGS += -nostdlib
 
 
 LIBS = -lc -lm -lnosys 
@@ -148,23 +155,34 @@ OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
-	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+	@ echo "  CC    " $<
+	@ $(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
-	$(AS) -c $(CFLAGS) $< -o $@
+	@ $(AS) -c $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
-	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
-	$(SZ) $@
+	@ echo "  LD    " $(notdir $@)
+	@ $(CC) $(OBJECTS) $(LDFLAGS) -o $@
+	@ $(SZ) $@
 
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
-	$(HEX) $< $@
+	@ $(HEX) $< $@
 	
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
-	$(BIN) $< $@	
+	@ $(BIN) $< $@	
 	
 $(BUILD_DIR):
 	mkdir $@		
+
+#######################################
+# Binary Size	
+#######################################
+binsize: $(OBJECTS)
+	@ echo "Size of modules:"
+	@ $(SZ) $(OBJECTS)
+	@ echo "Size of firmware:"
+	@ $(SZ) $(BUILD_DIR)/$(TARGET).elf
 
 #######################################
 # clean up

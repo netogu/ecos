@@ -10,6 +10,7 @@ void lpuart_init(lpuart_config_t *config) {
         // Enable LPUART clock
         RCC->APB1ENR2 |= RCC_APB1ENR2_LPUART1EN;
         uint32_t tmpreg = RCC->APB1ENR2;
+        (void)tmpreg;
 
         // Set LPUART clock prescaler
         LPUART1->PRESC = 0x00;

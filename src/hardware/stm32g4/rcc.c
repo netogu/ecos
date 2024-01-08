@@ -240,8 +240,8 @@ void rcc_clock_init(rcc_clock_config_t *cfg) {
 
 void rcc_crs_init(rcc_crs_config_t *cfg) {
   
-    // Enable CRS peripheral clock
-    // RCC->APB1ENR1 |= RCC_APB1ENR1_CRSEN;
+  // Enable CRS peripheral clock
+  RCC->APB1ENR1 |= RCC_APB1ENR1_CRSEN;
 
   /* Before configuration, reset CRS registers to their default values*/
   RCC->APB1RSTR1 |= RCC_APB1RSTR1_CRSRST;
