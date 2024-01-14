@@ -183,32 +183,3 @@ void USB_LP_IRQHandler(void) {
 void USBWakeUp_IRQHandler(void) {
   tud_int_handler(0);
 }
-
-//--------------------------------------------------------------------+
-// System Tick
-//--------------------------------------------------------------------+
-
-volatile uint32_t system_ticks = 0;
-uint8_t g_task_wait_flag;
-void SysTick_Handler(void) { 
-  system_ticks++;
-  g_task_wait_flag = 1;
-}
-
-
-uint32_t millis(void){
-  return system_ticks;
-}
-
-void delay_ms(uint32_t ms) {
-  uint32_t start = system_ticks;
-  uint32_t end = start + ms;
-
-  if (end < start) {
-    while (system_ticks > start)
-      ;
-  }
-
-  while (system_ticks < end)
-    ;
-}

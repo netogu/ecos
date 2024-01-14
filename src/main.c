@@ -1,74 +1,111 @@
+/* FreeRTOS includes. */
+#include <FreeRTOS.h>
+#include <task.h>
+#include <queue.h>
+#include <timers.h>
+#include <semphr.h>
+
+
 #include <stdint.h>
 // #include <stdio.h>
 #include "external/printf.h"
 #include "board/bsp.h"
-#include "board/shell.h"
+// #include "board/shell.h"
 #include "tusb.h"
 // #include "ush_config.h"
 
 // USB Device IRQ Monitor
 extern int usb_lp_irq_counter;
 
-// Scheduler Task
-typedef struct task {
-  uint32_t period;
-  uint32_t elapsed_time;
-  void (*callback)(void);
-} task_t;
+/*-----------------------------------------------------------*/
+// Queues
+/*-----------------------------------------------------------*/
+#define QUEUE_LENGTH 5
+#define ITEM_SIZE sizeof( uint32_t )
+static StaticQueue_t led_queue_buffer;
+uint8_t led_queue_storage[QUEUE_LENGTH*ITEM_SIZE]; 
+static QueueHandle_t led_queue;
 
-void led_task(void) {
-  gpio_pin_toggle(&gpios.led_green);
+/*-----------------------------------------------------------*/
+//  Tasks
+/*-----------------------------------------------------------*/
+
+void led_task( void * parameters )
+{   
+  /* Unused parameters. */
+  ( void ) parameters;
+  uint32_t led_delay = 1000; 
+
+  while (1) {
+    if (xQueueReceive(led_queue, (void *)&led_delay, 0) == pdTRUE) {
+      // New Blink Delay Received
+    }
+    gpio_pin_toggle(&gpios.led_green);
+    vTaskDelay(led_delay / portTICK_PERIOD_MS);
+  }
 }
+/*-----------------------------------------------------------*/
 
-// task_t tasks[] = {
-//     {.period = 1, .elapsed_time = 0, .callback = &tud_task},
-//   {.period = 1, .elapsed_time = 0, .callback = &shell_task},
-//     {.period = 1000, .elapsed_time = 0, .callback = &led_task}
-// };
-
-// uint8_t g_task_wait_flag = 0;
-// void task_scheduler(task_t *tasks, uint32_t num_tasks) {
-//   for (uint32_t i = 0; i < num_tasks; i++) {
-//     if (tasks[i].elapsed_time >= tasks[i].period) {
-//       tasks[i].callback();
-//       tasks[i].elapsed_time = 0;
-//     }
-//     tasks[i].elapsed_time++;
-//   }
-//   g_task_wait_flag = 0;
-//   while (g_task_wait_flag == 0) {
-//     asm("nop");
-//   }
-// }
-
-
-int main_loop_counter = 0;
-int main(void) {
-
-  board_init();
-  shell_setup();
-  tusb_init();
-
- 
+void usb_task( void * parameters )
+{   
+  /* Unused parameters. */
+    ( void ) parameters;
 
   while (1) {
     tud_task();
-    if (tud_cdc_available()) {
-      char buf[32];
-      size_t count;
-      count=tud_cdc_read(&buf, sizeof(buf));
-      printf("read %d bytes\r\n", count);
-      printf("buf: %s\r\n", buf);
-    }
-    printf(".\r\n");
-    delay_ms(1);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+/*-----------------------------------------------------------*/
 
-    // printf("cnt_main, cnt_usb_irq, cdc_available: %d,%d,%d\r\n", 
-    //   main_loop_counter, 
-    //   usb_lp_irq_counter,
-    //   buf_count);
 
-    main_loop_counter++;
+
+int main_loop_counter = 0;
+int main(void) 
+{
+
+  board_init();
+  // shell_setup();
+  tusb_init();
+
+  led_queue = xQueueCreateStatic(QUEUE_LENGTH,
+                             ITEM_SIZE,
+                             &( led_queue_storage[ 0 ] ),
+                             &led_queue_buffer );
+
+
+  static StaticTask_t led_task_tcb;
+  static StackType_t led_task_stack[ configMINIMAL_STACK_SIZE ];
+  xTaskCreateStatic( led_task,
+                        "LED Task",
+                        configMINIMAL_STACK_SIZE,
+                        NULL,
+                        configMAX_PRIORITIES - 1,
+                        &( led_task_stack[ 0 ] ),
+                        &( led_task_tcb ) );
+
+  static StaticTask_t usb_task_tcb;
+  static StackType_t usb_task_stack[ configMINIMAL_STACK_SIZE ];
+  xTaskCreateStatic( usb_task,
+                      "LED Task",
+                      configMINIMAL_STACK_SIZE,
+                      NULL,
+                      configMAX_PRIORITIES - 1,
+                      &( usb_task_stack[ 0 ] ),
+                      &( usb_task_tcb ) );
+
+  /* Start the scheduler. */
+  vTaskStartScheduler();
+
+
+
+ 
+
+  while (1) 
+  { 
+    // gpio_pin_toggle(&gpios.led_green);
+    // delay_ms(250);
+    // Should not reach here
   }
 }
 
@@ -78,9 +115,22 @@ int main(void) {
 // Invoked when device is mounted
 void tud_mount_cb(void) {
   // printf("USB mounted\r\n");
-  gpio_pin_set(&gpios.led_green);
+  uint32_t led_delay = 100;
+  if (xQueueSend(led_queue, (void *)&led_delay, 10) != pdTRUE) {
+            // Could not place value in Queue
+  }
 }
 
 void _init(void) {
   // printf("init\r\n");
 }
+
+void vApplicationStackOverflowHook( TaskHandle_t xTask,
+                                    char * pcTaskName )
+{
+    /* Check pcTaskName for the name of the offending task,
+     * or pxCurrentTCB if pcTaskName has itself been corrupted. */
+    ( void ) xTask;
+    ( void ) pcTaskName;
+}
+/*-----------------------------------------------------------*/
