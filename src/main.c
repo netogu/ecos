@@ -28,37 +28,47 @@ enum {
 };
 
 
+
 /*-----------------------------------------------------------*/
 // Timers
 /*-----------------------------------------------------------*/
 TimerHandle_t led_blink_timer;
 StaticTimer_t led_blink_timer_s;
-static void led_blink_cb(TimerHandle_t *xTimer);
+static void led_blink_cb(TimerHandle_t xTimer);
 
 /*-----------------------------------------------------------*/
 // Queues
 /*-----------------------------------------------------------*/
 
-QueueHandle_t serial_queue;
-#define SERIAL_QUEUE_LENGTH 50
-#define SERIAL_QUEUE_TYPE char
-StaticQueue_t serial_queue_s;
-uint8_t serial_queue_storage[SERIAL_QUEUE_LENGTH*sizeof(SERIAL_QUEUE_TYPE)];
+// QueueHandle_t serial_queue;
+// #define SERIAL_QUEUE_LENGTH 50
+// #define SERIAL_QUEUE_TYPE char
+// StaticQueue_t serial_queue_s;
+// uint8_t serial_queue_storage[SERIAL_QUEUE_LENGTH*sizeof(SERIAL_QUEUE_TYPE)];
 
 
 /*-----------------------------------------------------------*/
 //  Tasks
 /*-----------------------------------------------------------*/
 
-#define USB_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
-TaskHandle_t usb_task_handle;
-void UsbTask( void * parameters );
+#define USB_TASK_STACK_SIZE 1024
+TaskHandle_t usbd_task_handle;
+StaticTask_t usbd_task_tcb;
+StackType_t usbd_task_stack[ USB_TASK_STACK_SIZE ];
+static void usbd_task( void * parameters );
 
-// TaskHandle_t cdc_task_handle;
-// void CdcTask( void * parameters );
+#define CDC_TASK_STACK_SIZE 1024
+TaskHandle_t cdc_task_handle;
+StaticTask_t cdc_task_tcb;
+StackType_t cdc_task_stack[ CDC_TASK_STACK_SIZE ];
+void cdc_task( void * parameters );
 
+#define SHELL_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 TaskHandle_t shell_task_handle;
-void ShellTask( void * parameters );
+StaticTask_t shell_task_tcb;
+StackType_t shell_task_stack[ configMINIMAL_STACK_SIZE ];
+void shell_task( void * parameters );
+
 
 int main(void) 
 {
@@ -66,10 +76,10 @@ int main(void)
   board_init();
   // shell_setup();
 
-  serial_queue = xQueueCreateStatic(SERIAL_QUEUE_LENGTH,
-                                   sizeof(SERIAL_QUEUE_TYPE),
-                                   &serial_queue_storage[0],
-                                   &serial_queue_s);
+  // serial_queue = xQueueCreateStatic(SERIAL_QUEUE_LENGTH,
+  //                                  sizeof(SERIAL_QUEUE_TYPE),
+  //                                  &serial_queue_storage[0],
+  //                                  &serial_queue_s);
 
   led_blink_timer = xTimerCreateStatic(NULL,
                                      pdMS_TO_TICKS(BLINK_NOT_MOUNTED),
@@ -79,35 +89,29 @@ int main(void)
                                      &led_blink_timer_s);
 
 
-  static StaticTask_t usb_task_tcb;
-  static StackType_t usb_task_stack[USB_TASK_STACK_SIZE];
-  usb_task_handle = xTaskCreateStatic( UsbTask,
-                      "USB Task",
+  usbd_task_handle = xTaskCreateStatic( usbd_task,
+                      "usb_task",
                       USB_TASK_STACK_SIZE,
                       NULL,
                       configMAX_PRIORITIES - 1,
-                      &( usb_task_stack[ 0 ] ),
-                      &( usb_task_tcb ) );
+                      usbd_task_stack,
+                      &usbd_task_tcb);
 
-  // static StaticTask_t cdc_task_tcb;
-  // static StackType_t cdc_task_stack[ configMINIMAL_STACK_SIZE ];
-  // cdc_task_handle = xTaskCreateStatic( CdcTask,
-  //                     "CDC Task",
+  cdc_task_handle = xTaskCreateStatic( cdc_task,
+                      "cdc_task",
+                      CDC_TASK_STACK_SIZE,
+                      NULL,
+                      configMAX_PRIORITIES - 2,
+                      cdc_task_stack,
+                      &cdc_task_tcb);
+
+  // shell_task_handle = xTaskCreateStatic( shell_task,
+  //                     "shell_task",
   //                     configMINIMAL_STACK_SIZE,
   //                     NULL,
-  //                     configMAX_PRIORITIES - 2,
-  //                     &( cdc_task_stack[ 0 ] ),
-  //                     &( cdc_task_tcb ) );
-
-  static StaticTask_t shell_task_tcb;
-  static StackType_t shell_task_stack[ configMINIMAL_STACK_SIZE ];
-  shell_task_handle = xTaskCreateStatic( ShellTask,
-                      "Shell Task",
-                      configMINIMAL_STACK_SIZE,
-                      NULL,
-                      configMAX_PRIORITIES - 1,
-                      &( shell_task_stack[ 0 ] ),
-                      &( shell_task_tcb ) );
+  //                     configMAX_PRIORITIES - 1,
+  //                     shell_task_stack,
+  //                     &shell_task_tcb);
 
   xTimerStart(led_blink_timer, 0);
 
@@ -118,14 +122,31 @@ int main(void)
 
  
 
-  while (1) 
-  { 
-    // Should not reach here
-  }
+  // Should not reach here
+  return 0;
 }
 
+
+
+void usbd_task( void *parameters )
+{   
+  /* Unused parameters. */
+    ( void ) parameters;
+
+  tusb_init();
+
+
+
+  while (1) {
+    tud_task();
+    tud_cdc_write_flush();
+  }
+
+}
+
+
 //--------------------------------------------------------------------+
-// USB Mount Callback API (Optional)
+// USB CDC Device Callbacks
 //--------------------------------------------------------------------+
 // Invoked when device is mounted
 void tud_mount_cb(void) {
@@ -158,71 +179,98 @@ void tud_resume_cb(void) {
   }
 }
 
+//--------------------------------------------------------------------+
+// USB CDC Task
+//--------------------------------------------------------------------+
 
-void UsbTask( void * parameters )
+void cdc_task( void *parameters )
 {   
   /* Unused parameters. */
     ( void ) parameters;
 
-  tusb_init();
+  char byte;
 
 
   while (1) {
-    tud_task();
-    // tud_cdc_write_flush();
-  }
 
+    // connected() check for DTR bit
+    // Most but not all terminal client set this when making connection
+    // if ( tud_cdc_connected() )
+    {
+      // There are data available
+      while (tud_cdc_available()) {
+        uint8_t buf[64];
+
+        // read and echo back
+        uint32_t count = tud_cdc_read(buf, sizeof(buf));
+        (void) count;
+
+        // Echo back
+        // Note: Skip echo by commenting out write() and write_flush()
+        // for throughput test e.g
+        //    $ dd if=/dev/zero of=/dev/ttyACM0 count=10000
+        tud_cdc_write(buf, count);
+      }
+
+      tud_cdc_write_flush();
+    }
+
+    // For ESP32-Sx this delay is essential to allow idle how to run and reset watchdog
+    vTaskDelay(1);
+
+  }
 }
 
 
-// void CdcTask( void * parameters )
-// {   
-//   /* Unused parameters. */
-//     ( void ) parameters;
-//
-//   char byte;
-//
-//
-//   while (1) {
-//
-//     // connected() check for DTR bit
-//     // Most but not all terminal client set this when making connection
-//     // if ( tud_cdc_connected() )
-//     // if (xQueueReceive(serial_queue, (void *)&byte, 1) == pdTRUE) {
-//     //   // New CDC message Received
-//     //   tud_cdc_write_char(byte);
-//     //   tud_cdc_write_flush();
-//     //   // lpuart_write((uint8_t *)&byte, 1);
-//     // }
-//
-//     vTaskDelay(1);
-//
-//
-//   }
-// }
+// Invoked when cdc when line state changed e.g connected/disconnected
+void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts) {
+  (void) itf;
+  (void) rts;
 
-void ShellTask( void * parameters )
+  // TODO set some indicator
+  if (dtr) {
+    // Terminal connected
+  } else {
+    // Terminal disconnected
+  }
+}
+
+// Invoked when CDC interface received data from host
+void tud_cdc_rx_cb(uint8_t itf) {
+  (void) itf;
+}
+
+//--------------------------------------------------------------------+
+// SHELL TASK
+//--------------------------------------------------------------------+
+
+void shell_task( void *parameters )
 {
   static int counter = 0;
   char message[50];
 
   while (1) {
     sprintf(message, "Counter = %d\r\n", counter);
-    for (int i = 0; message[i] != '\0'; i++) {
-      xQueueSend(serial_queue, &message[i],1);
-    }
+    tud_cdc_write_str(message);
+    tud_cdc_write_flush();
+
+    // for (int i = 0; message[i] != '\0'; i++) {
+    //   xQueueSend(serial_queue, &message[i],1);
+    // }
     counter++;
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 
 }
-/*-----------------------------------------------------------*/
 
+//--------------------------------------------------------------------+
+// BLINKING TASK
+//--------------------------------------------------------------------+
 
-static void led_blink_cb(TimerHandle_t *xHandle)
+static void led_blink_cb(TimerHandle_t xTimer)
 {   
   /* Unused parameters. */
-  ( void ) xHandle;
+  ( void ) xTimer;
 
   gpio_pin_toggle(&gpios.led_green);
 }
@@ -232,11 +280,3 @@ void _init(void) {
   // printf("init\r\n");
 }
 
-void vApplicationStackOverflowHook( TaskHandle_t xTask,
-                                    char * pcTaskName )
-{
-    /* Check pcTaskName for the name of the offending task,
-     * or pxCurrentTCB if pcTaskName has itself been corrupted. */
-    ( void ) xTask;
-    ( void ) pcTaskName;
-}
