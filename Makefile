@@ -26,7 +26,7 @@ BUILD_DIR = build
 #
 # Tinyusb Library
 TINYUSB = src/external/tinyusb/src
-MICROSHELL = src/external/microshell/src/lib
+MICROSHELL = src/external/microshell/src
 TINYPRINTF = src/external/tiny_printf
 FREERTOS = src/external/freertos
 
@@ -45,8 +45,8 @@ C_SOURCES += $(wildcard $(TINYUSB)/*.c)
 C_SOURCES += $(wildcard $(TINYUSB)/*/*.c)
 C_SOURCES += $(wildcard $(TINYUSB)/*/*/*.c)
 C_SOURCES += $(wildcard $(TINYUSB)/*/*/*/*.c)
-# C_SOURCES += $(wildcard $(MICROSHELL)/util/*.c)
-# C_SOURCES += $(wildcard $(MICROSHELL)/core/*.c)
+C_SOURCES += $(wildcard $(MICROSHELL)/src/*.c)
+C_SOURCES += $(wildcard $(MICROSHELL)/src/commands/*.c)
 C_SOURCES += $(wildcard $(FREERTOS)/*.c)
 C_SOURCES += $(FREERTOS)/portable/GCC/ARM_CM4F/port.c
 
@@ -69,8 +69,8 @@ C_INCLUDES =  \
 -Isrc/external/tinyusb/src \
 -I$(TINYUSB)/src \
 -I$(TINYPRINTF) \
--I$(MICROSHELL)/core \
--I$(MICROSHELL)/util \
+-I$(MICROSHELL) \
+-I$(MICROSHELL)/inc \
 -I$(FREERTOS)/include \
 -I$(FREERTOS)/portable/GCC/ARM_CM4F \
 -Isrc \

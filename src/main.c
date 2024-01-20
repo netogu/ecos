@@ -14,7 +14,7 @@
 #include "board/bsp.h"
 #include "hardware/stm32g4/lpuart.h"
 // #include "board/shell.h"
-// #include "ush_config.h"
+#include "ush_config.h"
 
 /* Blink pattern
 * - 250 ms  : device not mounted
@@ -63,18 +63,17 @@ StaticTask_t cdc_task_tcb;
 StackType_t cdc_task_stack[ CDC_TASK_STACK_SIZE ];
 void cdc_task( void * parameters );
 
-#define SHELL_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
-TaskHandle_t shell_task_handle;
-StaticTask_t shell_task_tcb;
-StackType_t shell_task_stack[ configMINIMAL_STACK_SIZE ];
-void shell_task( void * parameters );
+// #define SHELL_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
+// TaskHandle_t shell_task_handle;
+// StaticTask_t shell_task_tcb;
+// StackType_t shell_task_stack[ configMINIMAL_STACK_SIZE ];
+// void shell_task( void * parameters );
 
 
 int main(void) 
 {
 
   board_init();
-  // shell_setup();
 
   // serial_queue = xQueueCreateStatic(SERIAL_QUEUE_LENGTH,
   //                                  sizeof(SERIAL_QUEUE_TYPE),
@@ -190,6 +189,8 @@ void cdc_task( void *parameters )
 
   char byte;
 
+  shell_init();
+
 
   while (1) {
 
@@ -197,25 +198,25 @@ void cdc_task( void *parameters )
     // Most but not all terminal client set this when making connection
     // if ( tud_cdc_connected() )
     {
-      // There are data available
-      while (tud_cdc_available()) {
-        uint8_t buf[64];
+      // // There are data available
+      // while (tud_cdc_available()) {
+      //   uint8_t buf[64];
 
-        // read and echo back
-        uint32_t count = tud_cdc_read(buf, sizeof(buf));
-        (void) count;
+      //   // read and echo back
+      //   uint32_t count = tud_cdc_read(buf, sizeof(buf));
+      //   (void) count;
 
-        // Echo back
-        // Note: Skip echo by commenting out write() and write_flush()
-        // for throughput test e.g
-        //    $ dd if=/dev/zero of=/dev/ttyACM0 count=10000
-        tud_cdc_write(buf, count);
-      }
+      //   // Echo back
+      //   // Note: Skip echo by commenting out write() and write_flush()
+      //   // for throughput test e.g
+      //   //    $ dd if=/dev/zero of=/dev/ttyACM0 count=10000
+      //   tud_cdc_write(buf, count);
+      // }
+      shell_update();
 
       tud_cdc_write_flush();
     }
 
-    // For ESP32-Sx this delay is essential to allow idle how to run and reset watchdog
     vTaskDelay(1);
 
   }
@@ -244,24 +245,24 @@ void tud_cdc_rx_cb(uint8_t itf) {
 // SHELL TASK
 //--------------------------------------------------------------------+
 
-void shell_task( void *parameters )
-{
-  static int counter = 0;
-  char message[50];
+// void shell_task( void *parameters )
+// {
+//   static int counter = 0;
+//   char message[50];
 
-  while (1) {
-    sprintf(message, "Counter = %d\r\n", counter);
-    tud_cdc_write_str(message);
-    tud_cdc_write_flush();
+//   while (1) {
+//     sprintf(message, "Counter = %d\r\n", counter);
+//     tud_cdc_write_str(message);
+//     tud_cdc_write_flush();
 
-    // for (int i = 0; message[i] != '\0'; i++) {
-    //   xQueueSend(serial_queue, &message[i],1);
-    // }
-    counter++;
-    vTaskDelay(100 / portTICK_PERIOD_MS);
-  }
+//     // for (int i = 0; message[i] != '\0'; i++) {
+//     //   xQueueSend(serial_queue, &message[i],1);
+//     // }
+//     counter++;
+//     vTaskDelay(100 / portTICK_PERIOD_MS);
+//   }
 
-}
+// }
 
 //--------------------------------------------------------------------+
 // BLINKING TASK
