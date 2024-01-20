@@ -6,7 +6,7 @@
 #include "hardware/stm32g4/lpuart.h"
 #include "hardware/stm32g4/usbpcd.h"
 #include "tusb.h"
-#include "microshell.h"
+// #include "microshell.h"
 
 //------------------------------------------------------+
 // Board Configuration 

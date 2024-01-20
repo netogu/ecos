@@ -7,3 +7,6 @@
 [submodule "src/external/freertos"]
 	path = src/external/freertos
 	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
+[submodule "src/external/microshell"]
+	path = src/external/microshell
+	url = https://github.com/marcinbor85/microshell.git

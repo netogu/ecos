@@ -27,6 +27,7 @@ BUILD_DIR = build
 # Tinyusb Library
 TINYUSB = src/external/tinyusb/src
 MICROSHELL = src/external/microshell/src/lib
+TINYPRINTF = src/external/tiny_printf
 FREERTOS = src/external/freertos
 
 ######################################
@@ -38,7 +39,7 @@ C_SOURCES += $(wildcard src/external/*.c)
 C_SOURCES += $(wildcard src/hardware/*.c) 
 C_SOURCES += $(wildcard src/hardware/*/*.c) 
 C_SOURCES += $(wildcard src/lib/*.c)
-# C_SOURCES += $(wildcard src/lib/*/*.c)
+C_SOURCES += $(wildcard $(TINYPRINTF)/*.c)
 C_SOURCES += $(wildcard src/board/*.c) 
 C_SOURCES += $(wildcard $(TINYUSB)/*.c)
 C_SOURCES += $(wildcard $(TINYUSB)/*/*.c)
@@ -67,6 +68,7 @@ C_INCLUDES =  \
 -Isrc/external/tinyusb/src \
 -Isrc/external/tinyusb/src \
 -I$(TINYUSB)/src \
+-I$(TINYPRINTF) \
 -I$(MICROSHELL)/core \
 -I$(MICROSHELL)/util \
 -I$(FREERTOS)/include \

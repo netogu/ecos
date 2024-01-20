@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "external/printf.h"
+#include "tiny_printf.h"
 
 //print range of memory in 32 byte chunks
 void debug_print_memory_range(uint8_t *start, uint8_t *end, uint8_t table_width) {
