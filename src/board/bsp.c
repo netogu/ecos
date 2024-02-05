@@ -66,19 +66,14 @@ static void board_clock_setup(void) {
 // GPIO Config
 //------------------------------------------------------
 
+struct board_gpio gpios = {.led_green = {.port = GPIO_PORT_A,
+                                         .pin = GPIO_PIN_5,
+                                         .mode = GPIO_MODE_OUTPUT,
+                                         .type = GPIO_TYPE_PUSH_PULL,
+                                         .pull = GPIO_PULL_UP,
+                                         .speed = GPIO_SPEED_HIGH,
+                                         .af = GPIO_AF0,}};
 
-struct board_gpio 
-gpios = (struct board_gpio) {
-  .led_green = (gpio_t){
-    .port = GPIO_PORT_A,
-    .pin = GPIO_PIN_5,
-    .mode = GPIO_MODE_OUTPUT,
-    .type = GPIO_TYPE_PUSH_PULL,
-    .pull = GPIO_PULL_UP,
-    .speed = GPIO_SPEED_HIGH,
-    .af = GPIO_AF0,
-  }
-} ;
 
 
 static void board_gpio_setup(void) {
