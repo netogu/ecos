@@ -5,6 +5,7 @@
 #include "hardware/stm32g4/gpio.h"
 #include "hardware/stm32g4/lpuart.h"
 #include "hardware/stm32g4/usbpcd.h"
+#include "hardware/stm32g4/hrtim.h"
 #include "tusb.h"
 // #include "microshell.h"
 
@@ -22,6 +23,7 @@ void board_init(void) {
   board_gpio_setup();
   board_serial_setup();
   board_usb_setup();
+  hrtim_init();
 }
 
 //------------------------------------------------------
