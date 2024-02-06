@@ -6,7 +6,7 @@
 #define HRTIM_PERCLK 170000000L 
 #define HRTIM_FREQ_2_PER(__FREQ__) ((HRTIM_PERCLK/__FREQ__)*32 + 1)
 
-hrtim_init() {
+void hrtim_init() {
 
     // 1. enable HRTIM clock source (RCC)
     // - check that fHRTIM won't exceed range of DLL lock
@@ -37,7 +37,7 @@ hrtim_init() {
     tim_regs->RSTx1R = HRTIM_RST1R_PER;
 
     // Preload enabled. PER and CMP1 loaded into active register
-    tim_regs->TIMxCR |= HRTIM_TIMCR_PREEN;
+    // tim_regs->TIMxCR |= HRTIM_TIMCR_PREEN;
 
     // 6. configure GPIOs. Timer ready to take over
 
@@ -54,6 +54,14 @@ hrtim_init() {
 
     gpio_pin_init(&pwm);
 
+
+    // Set Repetition counter to 5
+    tim_regs->REPxR = 4; 
+
+    // Enable REP Interrupt
+    tim_regs->TIMxDIER |= HRTIM_TIMDIER_REPIE;
+    NVIC_EnableIRQ(HRTIM1_TIMA_IRQn);
+
     // 7. enable outputs TxyOEN in HRTIM_OENR
     HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TA1OEN; 
 
@@ -61,3 +69,13 @@ hrtim_init() {
     HRTIM1->sMasterRegs.MCR |= HRTIM_MCR_TACEN;
 
 }
+
+	
+void HRTIM1_TIMA_IRQHandler(void) {
+    // Disable TIMER A
+    HRTIM1->sCommonRegs.ODISR |= HRTIM_ODISR_TA1ODIS;
+    HRTIM1->sMasterRegs.MCR &= ~HRTIM_MCR_TACEN;
+    // On interrupt
+    HRTIM1->sTimerxRegs[0].TIMxICR = HRTIM_TIMICR_REPC; // Clear REP interrupt
+}
+
