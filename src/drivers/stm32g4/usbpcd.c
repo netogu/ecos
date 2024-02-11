@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "hardware/stm32g4/usbpcd.h"
+#include "drivers/stm32g4/usbpcd.h"
 
 
 // #define __USB_TABLE __attribute__((section(".usbtable")))

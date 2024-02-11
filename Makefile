@@ -36,8 +36,8 @@ FREERTOS = src/external/freertos
 # C sources
 C_SOURCES = $(wildcard src/*.c) 
 C_SOURCES += $(wildcard src/external/*.c)
-C_SOURCES += $(wildcard src/hardware/*.c) 
-C_SOURCES += $(wildcard src/hardware/*/*.c) 
+C_SOURCES += $(wildcard src/drivers/*.c) 
+C_SOURCES += $(wildcard src/drivers/*/*.c) 
 C_SOURCES += $(wildcard src/lib/*.c)
 C_SOURCES += $(wildcard $(TINYPRINTF)/*.c)
 C_SOURCES += $(wildcard src/board/*.c) 
@@ -52,7 +52,7 @@ C_SOURCES += $(FREERTOS)/portable/GCC/ARM_CM4F/port.c
 
 # ASM sources
 ASM_SOURCES =  \
-src/hardware/stm32g4/startup.s
+src/drivers/stm32g4/startup.s
 
 
 ######################################
@@ -74,12 +74,13 @@ C_INCLUDES =  \
 -I$(FREERTOS)/include \
 -I$(FREERTOS)/portable/GCC/ARM_CM4F \
 -Isrc \
+-Isrc/drivers \
 
 #######################################
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = src/hardware/stm32g4/linker_script.ld
+LDSCRIPT = src/drivers/stm32g4/linker_script.ld
 
 #######################################
 # binaries

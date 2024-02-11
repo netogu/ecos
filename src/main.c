@@ -12,7 +12,7 @@
 #include "tiny_printf.h"
 
 #include "board/bsp.h"
-#include "hardware/stm32g4/lpuart.h"
+#include "stm32g4/lpuart.h"
 // #include "board/shell.h"
 #include "ush_config.h"
 
@@ -274,6 +274,7 @@ static void led_blink_cb(TimerHandle_t xTimer)
   ( void ) xTimer;
 
   gpio_pin_toggle(&gpios.led_green);
+
 }
 /*-----------------------------------------------------------*/
 

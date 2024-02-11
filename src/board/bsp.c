@@ -1,11 +1,11 @@
 
 #include <stdint.h>
 #include "board/bsp.h"
-#include "hardware/stm32g4/rcc.h"
-#include "hardware/stm32g4/gpio.h"
-#include "hardware/stm32g4/lpuart.h"
-#include "hardware/stm32g4/usbpcd.h"
-#include "hardware/stm32g4/hrtim.h"
+#include "drivers/stm32g4/rcc.h"
+#include "drivers/stm32g4/gpio.h"
+#include "drivers/stm32g4/lpuart.h"
+#include "drivers/stm32g4/usbpcd.h"
+#include "drivers/stm32g4/hrtim.h"
 #include "tusb.h"
 // #include "microshell.h"
 
@@ -17,13 +17,36 @@ static void board_clock_setup(void);
 static void board_gpio_setup(void);
 static void board_serial_setup(void);
 static void board_usb_setup(void);
+static void board_pwm_setup(void);
 
 void board_init(void) {
+
   board_clock_setup();
   board_gpio_setup();
   board_serial_setup();
   board_usb_setup();
+  board_pwm_setup();
+
+}
+
+//------------------------------------------------------+
+// PWM Config
+//------------------------------------------------------+
+static void board_pwm_setup(void) {
+
+  struct hrtim_pwm pwm1 = {
+    .timer = HRTIM_TIMER_A,
+    .type = HRTIM_PWM_TYPE_TRAILING_EDGE,
+    .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
+    .polarity = HRTIM_PWM_POLARITY_NORMAL,
+    .freq_hz = 334000, 
+    .duty_pc = 76.0, 
+    .deadtime_ns = 100.0,
+  };
+
   hrtim_init();
+  hrtim_pwm_init(&pwm1);
+  hrtim_pwm_start(&pwm1);
 }
 
 //------------------------------------------------------

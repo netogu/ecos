@@ -1,4 +1,4 @@
-#include "hardware/stm32g4/gpio.h"
+#include "drivers/stm32g4/gpio.h"
 
 
 void 

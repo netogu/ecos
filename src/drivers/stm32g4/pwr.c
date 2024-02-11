@@ -1,5 +1,5 @@
-#include "hardware/stm32g4/pwr.h"
-#include "hardware/stm32g4/common.h"
+#include "drivers/stm32g4/pwr.h"
+#include "drivers/stm32g4/common.h"
 #include "stm32g4xx.h"
 
 void pwr_set_vos_range(enum pwr_vos_ranges scale) {

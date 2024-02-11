@@ -1,4 +1,4 @@
-#include "hardware/stm32g4/lpuart.h"
+#include "drivers/stm32g4/lpuart.h"
 
 
 void lpuart_init(lpuart_config_t *config) {
