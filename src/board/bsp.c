@@ -32,20 +32,21 @@ void board_init(void) {
 //------------------------------------------------------+
 // PWM Config
 //------------------------------------------------------+
-static void board_pwm_setup(void) {
+struct hrtim_pwm pwm1 = {
+  .timer = HRTIM_TIMER_A,
+  .type = HRTIM_PWM_TYPE_CENTER_ALIGNED,
+  .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
+  .polarity = HRTIM_PWM_POLARITY_NORMAL,
+  .freq_hz = 100000, 
+  .deadtime_ns = 100.0,
+};
 
-  struct hrtim_pwm pwm1 = {
-    .timer = HRTIM_TIMER_A,
-    .type = HRTIM_PWM_TYPE_TRAILING_EDGE,
-    .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
-    .polarity = HRTIM_PWM_POLARITY_NORMAL,
-    .freq_hz = 334000, 
-    .duty_pc = 76.0, 
-    .deadtime_ns = 100.0,
-  };
+static void board_pwm_setup(void) {
 
   hrtim_init();
   hrtim_pwm_init(&pwm1);
+  hrtim_pwm_set_duty(&pwm1, 32.5);
+  hrtim_pwm_set_n_cycle_run(&pwm1, 3);
   hrtim_pwm_start(&pwm1);
 }
 

@@ -31,9 +31,9 @@ static const struct ush_io_interface ush_iface = {
 };
 
 // working buffers allocations (size could be customized)
-    #define BUF_IN_SIZE    32
-    #define BUF_OUT_SIZE   32
-    #define PATH_MAX_SIZE  32
+    #define BUF_IN_SIZE    64
+    #define BUF_OUT_SIZE   64
+    #define PATH_MAX_SIZE  64
 
 static char ush_in_buf[BUF_IN_SIZE];
 static char ush_out_buf[BUF_OUT_SIZE];
@@ -53,10 +53,38 @@ static const struct ush_descriptor ush_desc = {
 };
 
 // toggle file execute callback
-static void toggle_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
+static void dpt_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
-    // simple toggle led, without any arguments validation
-    gpio_pin_toggle(&gpios.led_green);
+
+    // arguments count validation
+    if (argc < 3) {
+        // return predefined error message
+        ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+        return;
+    }
+
+
+    int ton = atoi(argv[1]);
+    ush_printf(self, "ton: %d ns\r\n", ton);
+    int toff = atoi(argv[2]);
+    ush_printf(self, "toff: %d ns\r\n", toff);
+    int n = atoi(argv[3]);
+    ush_printf(self, "n: %d\r\n", n);
+
+    // hrtim_pwm_stop(&pwm1);
+    ton += pwm1.deadtime_ns;
+    toff += pwm1.deadtime_ns;
+
+    ton < 0 ? ton = 0 : ton;
+    toff < 0 ? toff = 0 : toff;
+    if (toff < ton) {
+        ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+        return;
+    }
+    hrtim_pwm_set_frequency(&pwm1, 1000000000/(ton + toff));
+    hrtim_pwm_set_duty(&pwm1, ton*100/(ton + toff));
+    hrtim_pwm_set_n_cycle_run(&pwm1, n);
+    hrtim_pwm_start(&pwm1);
 
 }
 
@@ -66,34 +94,11 @@ static void reboot_exec_callback(struct ush_object *self, struct ush_file_descri
     ush_print(self, "error: reboot not supported...");
 }
 
-// set file execute callback
-static void set_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
-{
-    // arguments count validation
-    if (argc != 2) {
-        // return predefined error message
-        ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
-        return;
-    }
-
-    // arguments validation
-    if (strcmp(argv[1], "1") == 0) {
-        // turn led on
-        gpio_pin_set(&gpios.led_green);
-    } else if (strcmp(argv[1], "0") == 0) {
-        // turn led off
-        gpio_pin_clear(&gpios.led_green);
-    } else {
-        // return predefined error message
-        ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
-        return;
-    }
-}
 
 // info file get data callback
 size_t info_get_data_callback(struct ush_object *self, struct ush_file_descriptor const *file, uint8_t **data)
 {
-    static const char *info = "Use MicroShell and make fun!\r\n";
+    static const char *info = "Minimal STM32G4 Shell\r\n";
 
     // return pointer to data
     *data = (uint8_t*)info;
@@ -101,50 +106,8 @@ size_t info_get_data_callback(struct ush_object *self, struct ush_file_descripto
     return strlen(info);
 }
 
-// led file get data callback
-size_t led_get_data_callback(struct ush_object *self, struct ush_file_descriptor const *file, uint8_t **data)
-{
-    // read current led state
-    bool state = gpio_pin_read(&gpios.led_green);
-    // return pointer to data
-    *data = (uint8_t*)((state) ? "1\r\n" : "0\r\n");
-    // return data size
 
-    return strlen((char*)(*data));
-}
 
-// led file set data callback
-void led_set_data_callback(struct ush_object *self, struct ush_file_descriptor const *file, uint8_t *data, size_t size)
-{
-    // data size validation
-    if (size < 1)
-        return;
-
-    // arguments validation
-    if (data[0] == '1') {
-        // turn led on
-        gpio_pin_set(&gpios.led_green);
-    } else if (data[0] == '0') {
-        // turn led off
-        gpio_pin_clear(&gpios.led_green);
-    }
-}
-
-// time file get data callback
-size_t time_get_data_callback(struct ush_object *self, struct ush_file_descriptor const *file, uint8_t **data)
-{
-    static char time_buf[16];
-    // read current time
-    // long current_time = xTaskGetTickCount();
-    long current_time = 1000;
-    // convert
-    snprintf(time_buf, sizeof(time_buf), "%ld\r\n", current_time);
-    time_buf[sizeof(time_buf) - 1] = 0;
-    // return pointer to data
-    *data = (uint8_t*)time_buf;
-    // return data size
-    return strlen((char*)(*data));
-}
 
 // root directory files descriptor
 static const struct ush_file_descriptor root_files[] = {
@@ -157,41 +120,6 @@ static const struct ush_file_descriptor root_files[] = {
     }
 };
 
-// bin directory files descriptor
-static const struct ush_file_descriptor bin_files[] = {
-    {
-        .name = "toggle",                       // toogle file name
-        .description = "toggle led",            // optional file description
-        .help = "usage: toggle\r\n",            // optional help manual
-        .exec = toggle_exec_callback,           // optional execute callback
-    },
-    {
-        .name = "set",                          // set file name
-        .description = "set led",
-        .help = "usage: set {0,1}\r\n",
-        .exec = set_exec_callback
-    },
-};
-
-// dev directory files descriptor
-static const struct ush_file_descriptor dev_files[] = {
-    {
-        .name = "led",
-        .description = NULL,
-        .help = NULL,
-        .exec = NULL,
-        .get_data = led_get_data_callback,      // optional data getter callback
-        .set_data = led_set_data_callback,      // optional data setter callback
-    },
-    {
-        .name = "time",
-        .description = NULL,
-        .help = NULL,
-        .exec = NULL,
-        .get_data = time_get_data_callback,
-    },
-};
-
 // cmd files descriptor
 static const struct ush_file_descriptor cmd_files[] = {
     {
@@ -200,15 +128,16 @@ static const struct ush_file_descriptor cmd_files[] = {
         .help = NULL,
         .exec = reboot_exec_callback,
     },
+    {
+        .name = "dpt",                       
+        .description = "run double-pulse test",            // optional file description
+        .help = "usage: dpt ton(ns) toff(ns) n(pulses)\r\n",            // optional help manual
+        .exec = dpt_exec_callback,           // optional execute callback
+    },
 };
 
 // root directory handler
 static struct ush_node_object root;
-// dev directory handler
-static struct ush_node_object dev;
-// bin directory handler
-static struct ush_node_object bin;
-
 // cmd commands handler
 static struct ush_node_object cmd;
 
@@ -223,10 +152,6 @@ void shell_init(void)
 
     // mount root directory (root must be first)
     ush_node_mount(&ush, "/", &root, root_files, sizeof(root_files) / sizeof(root_files[0]));
-    // mount dev directory
-    ush_node_mount(&ush, "/dev", &dev, dev_files, sizeof(dev_files) / sizeof(dev_files[0]));
-    // mount bin directory
-    ush_node_mount(&ush, "/bin", &bin, bin_files, sizeof(bin_files) / sizeof(bin_files[0]));
 
 }
 
