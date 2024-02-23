@@ -39,6 +39,7 @@ enum hrtim_pwm_polarity {
     HRTIM_PWM_POLARITY_INVERTED
 };
 
+
 struct hrtim_pwm {
     enum hrtim_timer timer;
     enum hrtim_pwm_type type;
@@ -48,10 +49,12 @@ struct hrtim_pwm {
     float deadtime_ns;
 };
 
+void hrtim_init(void);
 int hrtim_pwm_init(struct hrtim_pwm *pwm);
 void hrtim_pwm_set_frequency(struct hrtim_pwm *pwm, uint32_t freq_hz);
 void hrtim_pwm_set_duty(struct hrtim_pwm *pwm, uint32_t duty_pc);
 void hrtim_pwm_start(struct hrtim_pwm *pwm);
 void hrtim_pwm_stop(struct hrtim_pwm *pwm);
 void hrtim_pwm_set_n_cycle_run(struct hrtim_pwm *pwm, uint32_t cycles);
+// void hrtim_pwm_set_adc_trigger(struct hrtim_pwm *pwm, uint32_t adc_trig);
 

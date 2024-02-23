@@ -115,6 +115,14 @@ static void rcc_set_usbclk_source(enum rcc_usbclk_sources clk_src) {
   Modify_register_field(RCC->CCIPR, RCC_CCIPR_CLK48SEL, usbclk_src);
 }
 
+static void rcc_set_adcclk_source(rcc_clock_config_t *cfg) {
+  uint32_t adc12clk_src = cfg->adc12clk_source;
+  uint32_t adc345clk_src = cfg->adc345clk_source;
+
+  Modify_register_field(RCC->CCIPR, RCC_CCIPR_ADC12SEL, adc12clk_src);
+  Modify_register_field(RCC->CCIPR, RCC_CCIPR_ADC345SEL, adc345clk_src);
+}
+
 static void rcc_set_pll_scale(rcc_clock_config_t *cfg) {
 
   /*
@@ -219,6 +227,7 @@ void rcc_clock_init(rcc_clock_config_t *cfg) {
 
     // USB Clock Configuration
     rcc_set_usbclk_source(cfg->usbckl_source);
+    rcc_set_adcclk_source(cfg);
   }
 
   //  Flash Configuration

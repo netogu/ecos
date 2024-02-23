@@ -1,11 +1,14 @@
 
 #include <stdint.h>
 #include "board/bsp.h"
+
 #include "drivers/stm32g4/rcc.h"
 #include "drivers/stm32g4/gpio.h"
+#include "drivers/stm32g4/adc.h"
 #include "drivers/stm32g4/lpuart.h"
 #include "drivers/stm32g4/usbpcd.h"
 #include "drivers/stm32g4/hrtim.h"
+#include "drivers/stm32g4/adc.h"
 #include "tusb.h"
 // #include "microshell.h"
 
@@ -29,27 +32,6 @@ void board_init(void) {
 
 }
 
-//------------------------------------------------------+
-// PWM Config
-//------------------------------------------------------+
-struct hrtim_pwm pwm1 = {
-  .timer = HRTIM_TIMER_A,
-  .type = HRTIM_PWM_TYPE_CENTER_ALIGNED,
-  .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
-  .polarity = HRTIM_PWM_POLARITY_NORMAL,
-  .freq_hz = 100000, 
-  .deadtime_ns = 100.0,
-};
-
-static void board_pwm_setup(void) {
-
-  hrtim_init();
-  hrtim_pwm_init(&pwm1);
-  hrtim_pwm_set_duty(&pwm1, 32.5);
-  hrtim_pwm_set_n_cycle_run(&pwm1, 3);
-  hrtim_pwm_start(&pwm1);
-}
-
 //------------------------------------------------------
 // Clock Config
 //------------------------------------------------------
@@ -61,12 +43,14 @@ static void board_clock_setup(void) {
         .usbckl_source = RCC_USBCLK_SOURCE_HSI48,
         .pllm = 4,
         .plln = 85,
-        .pllp = 2,
+        .pllp = 2, 
         .pllq = 2,
         .pllr = 2,
         .hclk_scale = RCC_CLK_DIV1,
         .pclk1_scale = RCC_CLK_DIV1,
         .pclk2_scale = RCC_CLK_DIV1,
+        .adc12clk_source = RCC_ADC_CLK_SOURCE_NONE,
+        .adc345clk_source = RCC_ADC_CLK_SOURCE_NONE,
         .flash_wait_states = 4,
         .vos_range = 1,
         .boost_mode = 1,
@@ -92,20 +76,35 @@ static void board_clock_setup(void) {
 // GPIO Config
 //------------------------------------------------------
 
-struct board_gpio gpios = {.led_green = {.port = GPIO_PORT_A,
-                                         .pin = GPIO_PIN_5,
-                                         .mode = GPIO_MODE_OUTPUT,
-                                         .type = GPIO_TYPE_PUSH_PULL,
-                                         .pull = GPIO_PULL_UP,
-                                         .speed = GPIO_SPEED_HIGH,
-                                         .af = GPIO_AF0,}};
+struct board_io io = {
+  .led_green = {.port = GPIO_PORT_A,
+                .pin = GPIO_PIN_5,
+                .mode = GPIO_MODE_OUTPUT,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_UP,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF0,},
+  .test_pin1 = {.port = GPIO_PORT_B,
+                .pin = GPIO_PIN_0,
+                .mode = GPIO_MODE_OUTPUT,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_UP,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF0,},
+  .adc11_test = {.port = GPIO_PORT_A,
+                .pin = GPIO_PIN_0,
+                .mode = GPIO_MODE_ANALOG,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_NONE,
+                .speed = GPIO_SPEED_LOW,
+                .af = GPIO_AF0,}};
 
 
 
 static void board_gpio_setup(void) {
 
-  for (int i = 0; i < sizeof(gpios) / sizeof(gpio_t); i++) {
-    gpio_pin_init((gpio_t *)&gpios + i);
+  for (int i = 0; i < sizeof(io) / sizeof(gpio_t); i++) {
+    gpio_pin_init((gpio_t *)&io + i);
   }
 }
 
@@ -203,4 +202,58 @@ void USB_LP_IRQHandler(void) {
 
 void USBWakeUp_IRQHandler(void) {
   tud_int_handler(0);
+}
+
+//------------------------------------------------------+
+// PWM Config
+//------------------------------------------------------+
+struct hrtim_pwm pwm1 = {
+  .timer = HRTIM_TIMER_A,
+  .type = HRTIM_PWM_TYPE_CENTER_ALIGNED,
+  .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
+  .polarity = HRTIM_PWM_POLARITY_NORMAL,
+  .freq_hz = 100000, 
+  .deadtime_ns = 100.0,
+};
+
+static void board_pwm_setup(void) {
+
+  hrtim_init();
+  hrtim_pwm_init(&pwm1);
+  hrtim_pwm_set_duty(&pwm1, 32.5);
+  hrtim_pwm_set_n_cycle_run(&pwm1, 3);
+  // Enable Reset Interrupt
+  HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxDIER |= HRTIM_TIMDIER_RSTIE;
+  // Enable ADC1 Trigger on Timer A Reset
+
+  hrtim_pwm_start(&pwm1);
+}
+
+//--------------------------------------------------------------------+
+// ADC Config
+//--------------------------------------------------------------------+
+
+
+static void board_adc_setup(void) {
+
+  struct adc adc1 = {
+    .instance = ADC1_BASE,
+    .channel_count = 1,
+  };
+
+  adc_init(&adc1);
+  adc_enable(&adc1);
+
+  // struct adc_input adc1_input = {
+  //   .channel = 11,
+  //   .sample_time = ADC_SAMPLETIME_2_5,
+  //   .resolution = ADC_RESOLUTION_12B,
+  //   .alignment = ADC_ALIGNMENT_RIGHT,
+  //   .trigger = ADC_TRIGGER_SOFTWARE,
+  // };
+
+  adc_add_input(&adc1, &adc1_input);
+  adc_start(&adc1);
+  adc_stop(&adc1);
+  adc_deinit(&adc1);
 }

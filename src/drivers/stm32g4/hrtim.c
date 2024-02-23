@@ -155,7 +155,7 @@ void hrtim_pwm_set_n_cycle_run(struct hrtim_pwm *pwm, uint32_t cycles) {
 
 
 
-void hrtim_init() {
+void hrtim_init(void) {
 
     // Enable HRTIM clock source (RCC)
     // - check that fHRTIM won't exceed range of DLL lock
@@ -171,25 +171,3 @@ void hrtim_init() {
 }
 
 	
-void HRTIM1_TIMA_IRQHandler(void) {
-
-    // Disable TIMER A
-    // HRTIM1->sCommonRegs.ODISR |= HRTIM_ODISR_TA1ODIS | HRTIM_ODISR_TA2ODIS;
-    // HRTIM1->sMasterRegs.MCR &= ~(HRTIM_MCR_TACEN);
-
-    // HRTIM1->sTimerxRegs[HRTIM_TIM_A].CMP1CxR = 0;
-    // HRTIM1->sTimerxRegs[HRTIM_TIM_A].RSTx1R = HRTIM_RST1R_PER;
-    HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxCR &= ~(HRTIM_TIMCR_CONT);
-    // // HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxCR2 |= HRTIM_CR2_TARST;
-    // HRTIM1->sCommonRegs.CR2 |= HRTIM_CR2_TASWU;
-
-    // HRTIM1->sMasterRegs.MCR &= ~(HRTIM_MCR_TACEN); // Disable TIMER A
-    HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxICR |= HRTIM_TIMICR_REPC; // Clear REP interrupt
-
-    // for (int pwm = 0; pwm < 5; pwm++) {
-    //     if (HRTIM1->sTimerxRegs[pwm].TIMxISR & HRTIM_TIMISR_REP) {
-    //         HRTIM1->sMasterRegs.MCR &= ~(HRTIM_MCR_TACEN + pwm);
-    //         HRTIM1->sTimerxRegs[pwm].TIMxICR = HRTIM_TIMICR_REPC; // Clear REP interrupt
-    //     }
-    // }
-}

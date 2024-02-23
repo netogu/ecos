@@ -63,6 +63,14 @@ enum rcc_crs_sync_scales {
   RCC_CRS_SYNC_END,
 };
 
+enum rcc_adcclk_sources {
+  RCC_ADC_CLK_SOURCE_NONE,
+  RCC_ADC_CLK_SOURCE_PLLP,
+  RCC_ADC_CLK_SOURCE_SYSCLK,
+  RCC_ADC_CLK_SOURCE_END,
+};
+
+
 typedef const struct {
   uint8_t pllm;
   uint8_t plln;
@@ -79,6 +87,8 @@ typedef const struct {
   enum rcc_clk_scales hclk_scale;
   enum rcc_clk_scales pclk1_scale;
   enum rcc_clk_scales pclk2_scale;
+  enum rcc_adcclk_sources adc12clk_source;
+  enum rcc_adcclk_sources adc345clk_source;
 } rcc_clock_config_t;
 
 typedef const struct {

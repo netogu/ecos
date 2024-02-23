@@ -273,7 +273,7 @@ static void led_blink_cb(TimerHandle_t xTimer)
   /* Unused parameters. */
   ( void ) xTimer;
 
-  gpio_pin_toggle(&gpios.led_green);
+  gpio_pin_toggle(&io.led_green);
 
 }
 /*-----------------------------------------------------------*/
