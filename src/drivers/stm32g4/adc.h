@@ -5,10 +5,25 @@
 #include "drivers/stm32g4/gpio.h"
 
 
+// ------------------------------------------------------+
+// ADC Sample Hold Time
+// Tconv = Sample Time + 12.5 ADC clock cycles
+// ------------------------------------------------------+
+enum adc_sample_time {
+    ADC_SAMPLE_TIME_2_5_CYCLES,
+    ADC_SAMPLE_TIME_6_5_CYCLES,
+    ADC_SAMPLE_TIME_12_5_CYCLES,
+    ADC_SAMPLE_TIME_24_5_CYCLES,
+    ADC_SAMPLE_TIME_47_5_CYCLES,
+    ADC_SAMPLE_TIME_92_5_CYCLES,
+    ADC_SAMPLE_TIME_247_5_CYCLES,
+    ADC_SAMPLE_TIME_640_5_CYCLES,
+};
+
 struct adc_input {
     uint8_t *name;
-    uint8_t status;
     uint8_t channel;
+    uint8_t sequence;
     uint8_t sample_time;
     uint32_t *sample_data;
     uint32_t sample_size;
@@ -18,6 +33,7 @@ struct adc_input {
 struct adc {
     uint32_t instance;
     uint8_t channel_count;
+
 };
 
 
@@ -46,24 +62,43 @@ int adc_enable(struct adc *adc) {
     // Wait for the ADC to be ready
     while (!(adc_regs->ISR & ADC_ISR_ADRDY));
 
+    // Clear ADRDY
+    adc_regs->ISR |= ADC_ISR_ADRDY;
+
+    // Done
     return 0;
 }
 
-// int adc_disable(struct adc_channel *adc)
-// {
-//     ADC_TypeDef *adc_regs = (ADC_TypeDef *)adc->base;
-//     // Checkthat ADSTART = 0 and JDSTART = 0
-//     adc_regs->CR |= ADC_CR_ADSTP;
-//     adc_regs->CR |= ADC_CR_JADSTP;
-//     while (adc_regs->CR & (ADC_CR_ADSTART | ADC_CR_JADSTART));
-//     // Disable the ADC
-//     adc_regs->CR |= ADC_CR_ADDIS;
-//     // Wait for the ADC to be disabled
-//     while (adc_regs->CR & ADC_CR_ADEN);
+int adc_disable(struct adc *adc)
+{
+    ADC_TypeDef *adc_regs = (ADC_TypeDef *)adc->instance;
+    // Stop on-going conversions
+    adc_regs->CR |= ADC_CR_ADSTP;
+    adc_regs->CR |= ADC_CR_JADSTP;
+    while (adc_regs->CR & (ADC_CR_ADSTP | ADC_CR_JADSTP));
+    // Disable the ADC
+    adc_regs->CR |= ADC_CR_ADDIS;
+    // Wait for the ADC to be disabled
+    while (adc_regs->CR & ADC_CR_ADEN);
 
-//     return 0;
-// }
+    return 0;
+}
 
+int adc_calibrate(struct adc *adc) {
+    ADC_TypeDef *adc_regs = (ADC_TypeDef *)adc->instance;
+
+    // Calibrate the ADC for single ended mode
+    adc_regs->CR |= ADC_CR_ADCAL;
+    while (adc_regs->CR & ADC_CR_ADCAL)
+        ; // Wait for the calibration to complete
+
+    adc_regs->CR |= ADC_CR_ADCALDIF;
+    adc_regs->CR |= ADC_CR_ADCAL;
+    while (adc_regs->CR & ADC_CR_ADCAL)
+        ; // Wait for the calibration to complete
+
+    return 0;
+}
 int adc_init(struct adc *adc) {
 
     ADC_TypeDef *adc_regs = (ADC_TypeDef *)adc->instance;
@@ -86,19 +121,13 @@ int adc_init(struct adc *adc) {
     // Ensure ADEN = 0
     adc_regs->CR &= ~ADC_CR_ADEN;
 
-    // Wait for the ADC voltage regulator to be ready
+// Wait for the ADC voltage regulator to be ready
+// Regulator startup time = 20us (from datasheet)
     for (int i = 0; i < 4000; i++)
         __NOP();  
 
-    // Calibrate the ADC for single ended mode
-    adc_regs->CR |= ADC_CR_ADCAL;
-    while (adc_regs->CR & ADC_CR_ADCAL)
-        ; // Wait for the calibration to complete
-
-    adc_regs->CR |= ADC_CR_ADCALDIF;
-    adc_regs->CR |= ADC_CR_ADCAL;
-    while (adc_regs->CR & ADC_CR_ADCAL)
-        ; // Wait for the calibration to complete
+    // Calibrate the ADC
+    adc_calibrate(adc);
 
     return 0;
 }

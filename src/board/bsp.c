@@ -213,7 +213,7 @@ struct hrtim_pwm pwm1 = {
   .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
   .polarity = HRTIM_PWM_POLARITY_NORMAL,
   .freq_hz = 100000, 
-  .deadtime_ns = 100.0,
+  .deadtime_ns = 300.0,
 };
 
 static void board_pwm_setup(void) {
@@ -241,9 +241,6 @@ static void board_adc_setup(void) {
     .channel_count = 1,
   };
 
-  adc_init(&adc1);
-  adc_enable(&adc1);
-
   // struct adc_input adc1_input = {
   //   .channel = 11,
   //   .sample_time = ADC_SAMPLETIME_2_5,
@@ -252,8 +249,9 @@ static void board_adc_setup(void) {
   //   .trigger = ADC_TRIGGER_SOFTWARE,
   // };
 
-  adc_add_input(&adc1, &adc1_input);
-  adc_start(&adc1);
-  adc_stop(&adc1);
-  adc_deinit(&adc1);
+  adc_init(&adc1);
+  adc_enable(&adc1);
+
+
+  // adc_add_input(&adc1, &adc1_input);
 }

@@ -27,7 +27,36 @@ enum {
  BLINK_SUSPENDED = 2500,
 };
 
+/* 
+api::Status Os::cmdPs(lib::console::ConsoleBase& console, lib::console::Arguments& arguments)
+{
+  static const size_t kMaxTasks = 50U;
+  static etl::array<TaskStatus_t, kMaxTasks> task_status_array;
 
+  size_t task_count = uxTaskGetNumberOfTasks();
+
+  uint32_t total_run_time;
+  uint32_t stats_as_percentage;
+
+  console.print("FreeRTOS task list\r\n");
+  console.print("==================================================\r\n");
+  console.print(
+    "|{:<20}|{:>4}|{:>10}|{:>4}|{:>6}|\r\n",
+      "Task Name",
+      "Prio",
+      "Cycles",
+      "CPU",
+      "Stack"
+  );
+  console.print("--------------------------------------------------\r\n");
+
+  // Generate raw status information about each task.
+  task_count = uxTaskGetSystemState(
+    task_status_array.data(),
+    task_status_array.size(),
+    &total_run_time
+  );
+*/
 
 /*-----------------------------------------------------------*/
 // Timers
