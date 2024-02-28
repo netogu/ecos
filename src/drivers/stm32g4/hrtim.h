@@ -14,6 +14,7 @@
 #define HRTIM_TIM_C 2
 #define HRTIM_TIM_D 3
 #define HRTIM_TIM_E 4
+#define HRTIM_TIM_F 5
 
 
 enum hrtim_timer {
@@ -21,7 +22,8 @@ enum hrtim_timer {
     HRTIM_TIMER_B,
     HRTIM_TIMER_C,
     HRTIM_TIMER_D,
-    HRTIM_TIMER_E
+    HRTIM_TIMER_E,
+    HRTIM_TIMER_F
 };
 
 enum hrtim_pwm_type {

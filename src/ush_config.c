@@ -52,9 +52,58 @@ static const struct ush_descriptor ush_desc = {
     .hostname = "stm32",                      // hostname (in prompt)
 };
 
-// toggle file execute callback
+// drive enable callback
+static void drv_en_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
+{
+    // arguments count validation
+    if (argc != 2) {
+        // return predefined error message
+        ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+        return;
+    }
+
+    // arguments validation
+    if (strcmp(argv[1], "1") == 0) {
+        // turn gate driver on
+        gpio_pin_set(&io.drive_enable);
+    } else if (strcmp(argv[1], "0") == 0) {
+        // turn gate driver off
+        gpio_pin_clear(&io.drive_enable);
+    } else {
+        // return predefined error message
+        ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+        return;
+    }
+}
+
+// drive enable callback
+static void mpwr_en_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
+{
+    // arguments count validation
+    if (argc != 2) {
+        // return predefined error message
+        ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+        return;
+    }
+
+    // arguments validation
+    if (strcmp(argv[1], "1") == 0) {
+        // turn gate driver on
+        gpio_pin_set(&io.test_pin0);
+    } else if (strcmp(argv[1], "0") == 0) {
+        // turn VM efuse driver off
+        gpio_pin_clear(&io.test_pin0);
+    } else {
+        // return predefined error message
+        ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+        return;
+    }
+}
+
+// dpt test callback
 static void dpt_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
+    struct hrtim_pwm *pwm = &pwma;
 
     // arguments count validation
     if (argc < 3) {
@@ -72,8 +121,8 @@ static void dpt_exec_callback(struct ush_object *self, struct ush_file_descripto
     ush_printf(self, "n: %d\r\n", n);
 
     // hrtim_pwm_stop(&pwm1);
-    ton += pwm1.deadtime_ns;
-    toff += pwm1.deadtime_ns;
+    ton += pwm->deadtime_ns;
+    toff += pwm->deadtime_ns;
 
     ton < 0 ? ton = 0 : ton;
     toff < 0 ? toff = 0 : toff;
@@ -81,10 +130,10 @@ static void dpt_exec_callback(struct ush_object *self, struct ush_file_descripto
         ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
         return;
     }
-    hrtim_pwm_set_frequency(&pwm1, 1000000000/(ton + toff));
-    hrtim_pwm_set_duty(&pwm1, ton*100/(ton + toff));
-    hrtim_pwm_set_n_cycle_run(&pwm1, n);
-    hrtim_pwm_start(&pwm1);
+    hrtim_pwm_set_frequency(pwm, 1000000000/(ton + toff));
+    hrtim_pwm_set_duty(pwm, ton*100/(ton + toff));
+    hrtim_pwm_set_n_cycle_run(pwm, n);
+    hrtim_pwm_start(pwm);
 
 }
 
@@ -134,6 +183,16 @@ static const struct ush_file_descriptor cmd_files[] = {
         .help = "usage: dpt ton(ns) toff(ns) n(pulses)\r\n",            // optional help manual
         .exec = dpt_exec_callback,           // optional execute callback
     },
+    {   .name = "drv_en",
+        .description = "enable/disable gate driver",
+        .help = "usage: drv_en 1|0\r\n",
+        .exec = drv_en_callback,
+    },
+    {   .name = "mpwr_en",
+        .description = "enable/disable VM efuse driver",
+        .help = "usage: mpwr_en 1|0\r\n",
+        .exec = mpwr_en_callback,
+    }
 };
 
 // root directory handler

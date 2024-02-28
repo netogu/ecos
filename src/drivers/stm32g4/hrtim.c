@@ -87,32 +87,6 @@ int hrtim_pwm_init(struct hrtim_pwm *pwm) {
 
     // Configure PWM Polarity
 
-    // Configure GPIOs. Timer ready to take over
-    {
-        gpio_t pwm_gpio_1 = {
-            .port = GPIO_PORT_A,
-            .pin = GPIO_PIN_8,
-            .mode = GPIO_MODE_ALTERNATE,
-            .speed = GPIO_SPEED_HIGH,
-            .type = GPIO_TYPE_PUSH_PULL,
-            .pull = GPIO_PULL_UP,
-            .af = GPIO_AF13
-        };
-
-        gpio_t pwm_gpio_2 = {
-            .port = GPIO_PORT_A,
-            .pin = GPIO_PIN_9,
-            .mode = GPIO_MODE_ALTERNATE,
-            .speed = GPIO_SPEED_HIGH,
-            .type = GPIO_TYPE_PUSH_PULL,
-            .pull = GPIO_PULL_UP,
-            .af = GPIO_AF13
-        };
-
-        gpio_pin_init(&pwm_gpio_1);
-        gpio_pin_init(&pwm_gpio_2);
-
-    }
 
     return 0;
 
@@ -121,10 +95,10 @@ int hrtim_pwm_init(struct hrtim_pwm *pwm) {
 void hrtim_pwm_start(struct hrtim_pwm *pwm) {
 
     // Enable outputs
-    HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TA1OEN + pwm->timer; 
-    HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TA2OEN + pwm->timer; 
+    HRTIM1->sCommonRegs.OENR |= 1 << (HRTIM_OENR_TA1OEN_Pos + 2*pwm->timer);
+    HRTIM1->sCommonRegs.OENR |= 1 << (HRTIM_OENR_TA2OEN_Pos + 2*pwm->timer);
     // Start Timer
-    HRTIM1->sMasterRegs.MCR |= HRTIM_MCR_TACEN + pwm->timer;
+    HRTIM1->sMasterRegs.MCR |= 1 << (HRTIM_MCR_TACEN_Pos + pwm->timer);
 
 }
 

@@ -9,13 +9,23 @@
 //------------------------------------------------------
 
 struct board_io {
+  gpio_t led_red;
   gpio_t led_green;
+  gpio_t led_blue;
+  gpio_t drive_enable;
+  gpio_t pwm_ah;
+  gpio_t pwm_al;
+  gpio_t pwm_bh;
+  gpio_t pwm_bl;
+  gpio_t pwm_ch;
+  gpio_t pwm_cl;
+  gpio_t test_pin0;
   gpio_t test_pin1;
   gpio_t adc11_test;
 };
 
 extern struct board_io io;
-extern struct hrtim_pwm pwm1;
+extern struct hrtim_pwm pwma, pwmb, pwmc;
 extern uint8_t g_task_wait_flag;
 
 void board_init(void);

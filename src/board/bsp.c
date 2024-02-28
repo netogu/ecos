@@ -77,13 +77,100 @@ static void board_clock_setup(void) {
 //------------------------------------------------------
 
 struct board_io io = {
-  .led_green = {.port = GPIO_PORT_A,
-                .pin = GPIO_PIN_5,
+
+  // Status LEDs
+  .led_red = {.port = GPIO_PORT_B,
+                .pin = GPIO_PIN_6,
                 .mode = GPIO_MODE_OUTPUT,
                 .type = GPIO_TYPE_PUSH_PULL,
                 .pull = GPIO_PULL_UP,
                 .speed = GPIO_SPEED_HIGH,
                 .af = GPIO_AF0,},
+
+  .led_green = {.port = GPIO_PORT_B,
+                .pin = GPIO_PIN_7,
+                .mode = GPIO_MODE_OUTPUT,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_UP,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF0,},
+
+  .led_blue = {.port = GPIO_PORT_B,
+                .pin = GPIO_PIN_8,
+                .mode = GPIO_MODE_OUTPUT,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_UP,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF0,},
+
+  .drive_enable = {.port = GPIO_PORT_C,
+                .pin = GPIO_PIN_13,
+                .mode = GPIO_MODE_OUTPUT,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_UP,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF0,},
+
+  //HRTIM_CHA1
+  .pwm_ah = {.port = GPIO_PORT_A,
+                .pin = GPIO_PIN_8,
+                .mode = GPIO_MODE_ALTERNATE,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_UP,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF13,},
+
+  //HRTIM_CHA2
+  .pwm_al = {.port = GPIO_PORT_A,
+                .pin = GPIO_PIN_9,
+                .mode = GPIO_MODE_ALTERNATE,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_UP,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF13,},
+
+  //HRTIM_CHF1
+  .pwm_bh = {.port = GPIO_PORT_C,
+                .pin = GPIO_PIN_6,
+                .mode = GPIO_MODE_ALTERNATE,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_UP,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF13,},
+  //HRTIM_CHF2
+  .pwm_bl = {.port = GPIO_PORT_C,
+                .pin = GPIO_PIN_7,
+                .mode = GPIO_MODE_ALTERNATE,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_UP,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF13,},
+  //HRTIM_CHE1
+  .pwm_ch = {.port = GPIO_PORT_C,
+                .pin = GPIO_PIN_8,
+                .mode = GPIO_MODE_ALTERNATE,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_UP,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF3,},
+  //HRTIM_CHE2
+  .pwm_cl = {.port = GPIO_PORT_C,
+                .pin = GPIO_PIN_9,
+                .mode = GPIO_MODE_ALTERNATE,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_UP,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF3,},
+
+  // Test pin on 'pwm_dac2' pin
+  .test_pin0 = {.port = GPIO_PORT_F,
+                .pin = GPIO_PIN_9,
+                .mode = GPIO_MODE_OUTPUT,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_UP,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF0,},
+
   .test_pin1 = {.port = GPIO_PORT_B,
                 .pin = GPIO_PIN_0,
                 .mode = GPIO_MODE_OUTPUT,
@@ -91,6 +178,7 @@ struct board_io io = {
                 .pull = GPIO_PULL_UP,
                 .speed = GPIO_SPEED_HIGH,
                 .af = GPIO_AF0,},
+
   .adc11_test = {.port = GPIO_PORT_A,
                 .pin = GPIO_PIN_0,
                 .mode = GPIO_MODE_ANALOG,
@@ -207,7 +295,7 @@ void USBWakeUp_IRQHandler(void) {
 //------------------------------------------------------+
 // PWM Config
 //------------------------------------------------------+
-struct hrtim_pwm pwm1 = {
+struct hrtim_pwm pwma = {
   .timer = HRTIM_TIMER_A,
   .type = HRTIM_PWM_TYPE_CENTER_ALIGNED,
   .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
@@ -216,17 +304,47 @@ struct hrtim_pwm pwm1 = {
   .deadtime_ns = 300.0,
 };
 
+struct hrtim_pwm pwmb = {
+  .timer = HRTIM_TIMER_F,
+  .type = HRTIM_PWM_TYPE_CENTER_ALIGNED,
+  .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
+  .polarity = HRTIM_PWM_POLARITY_NORMAL,
+  .freq_hz = 100000, 
+  .deadtime_ns = 300.0,
+};
+
+struct hrtim_pwm pwmc = {
+  .timer = HRTIM_TIMER_E,
+  .type = HRTIM_PWM_TYPE_CENTER_ALIGNED,
+  .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
+  .polarity = HRTIM_PWM_POLARITY_NORMAL,
+  .freq_hz = 100000, 
+  .deadtime_ns = 300.0,
+};
+
+
 static void board_pwm_setup(void) {
 
   hrtim_init();
-  hrtim_pwm_init(&pwm1);
-  hrtim_pwm_set_duty(&pwm1, 32.5);
-  hrtim_pwm_set_n_cycle_run(&pwm1, 3);
-  // Enable Reset Interrupt
-  HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxDIER |= HRTIM_TIMDIER_RSTIE;
-  // Enable ADC1 Trigger on Timer A Reset
+  hrtim_pwm_init(&pwma);
+  hrtim_pwm_init(&pwmb);
+  hrtim_pwm_init(&pwmc);
 
-  hrtim_pwm_start(&pwm1);
+  hrtim_pwm_set_duty(&pwma, 50);
+  hrtim_pwm_set_duty(&pwmb, 50);
+  hrtim_pwm_set_duty(&pwmc, 50);
+ 
+ 
+  // hrtim_pwm_set_n_cycle_run(&pwma, 3);50.0); HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxDIER |= HRTIM_TIMDIER_RSTIE;
+  // // Enable ADC1 Trigger on Timer A Reset
+
+  hrtim_pwm_start(&pwma);
+  hrtim_pwm_start(&pwmb);
+  hrtim_pwm_start(&pwmc);
+  // HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TF1OEN;
+  // HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TF2OEN;
+  // // Start Timer
+  // HRTIM1->sMasterRegs.MCR |= HRTIM_MCR_TFCEN;
 }
 
 //--------------------------------------------------------------------+

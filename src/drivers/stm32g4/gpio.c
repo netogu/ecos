@@ -19,6 +19,11 @@ gpio_pin_init(gpio_t *pin) {
     // Set GPIO output type
     gpio->OTYPER &= ~(0x1 << pin->pin);
     gpio->OTYPER |= (pin->type << pin->pin);
+
+    // Clear output if it is an output
+    if (pin->mode == GPIO_MODE_OUTPUT) {
+        gpio->ODR &= ~(1 << pin->pin);
+    }
     
     // Set GPIO pull-up/pull-down
     gpio->PUPDR &= ~(0x3 << (pin->pin * 2));

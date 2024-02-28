@@ -271,29 +271,6 @@ void tud_cdc_rx_cb(uint8_t itf) {
 }
 
 //--------------------------------------------------------------------+
-// SHELL TASK
-//--------------------------------------------------------------------+
-
-// void shell_task( void *parameters )
-// {
-//   static int counter = 0;
-//   char message[50];
-
-//   while (1) {
-//     sprintf(message, "Counter = %d\r\n", counter);
-//     tud_cdc_write_str(message);
-//     tud_cdc_write_flush();
-
-//     // for (int i = 0; message[i] != '\0'; i++) {
-//     //   xQueueSend(serial_queue, &message[i],1);
-//     // }
-//     counter++;
-//     vTaskDelay(100 / portTICK_PERIOD_MS);
-//   }
-
-// }
-
-//--------------------------------------------------------------------+
 // BLINKING TASK
 //--------------------------------------------------------------------+
 
@@ -303,6 +280,8 @@ static void led_blink_cb(TimerHandle_t xTimer)
   ( void ) xTimer;
 
   gpio_pin_toggle(&io.led_green);
+  gpio_pin_toggle(&io.led_red);
+  gpio_pin_toggle(&io.led_blue);
 
 }
 /*-----------------------------------------------------------*/
