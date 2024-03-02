@@ -37,11 +37,32 @@ void board_init(void) {
 //------------------------------------------------------
 static void board_clock_setup(void) {
 
+    // HSI = 16MHz
     rcc_clock_config_t clock_170MHz_pll_hsi = {
         .sysclk_source = RCC_SYSCLK_SOURCE_PLL,
         .pll_source = RCC_PLL_SOURCE_HSI,
         .usbckl_source = RCC_USBCLK_SOURCE_HSI48,
         .pllm = 4,
+        .plln = 85,
+        .pllp = 2, 
+        .pllq = 2,
+        .pllr = 2,
+        .hclk_scale = RCC_CLK_DIV1,
+        .pclk1_scale = RCC_CLK_DIV1,
+        .pclk2_scale = RCC_CLK_DIV1,
+        .adc12clk_source = RCC_ADC_CLK_SOURCE_NONE,
+        .adc345clk_source = RCC_ADC_CLK_SOURCE_NONE,
+        .flash_wait_states = 4,
+        .vos_range = 1,
+        .boost_mode = 1,
+    };
+
+    // HSE = 24MHz
+    rcc_clock_config_t clock_170MHz_pll_hse = {
+        .sysclk_source = RCC_SYSCLK_SOURCE_PLL,
+        .pll_source = RCC_PLL_SOURCE_HSE,
+        .usbckl_source = RCC_USBCLK_SOURCE_HSI48,
+        .pllm = 6,
         .plln = 85,
         .pllp = 2, 
         .pllq = 2,
@@ -64,7 +85,7 @@ static void board_clock_setup(void) {
         .hsi48_calibration_value = 32,
     };
 
-  rcc_clock_init(&clock_170MHz_pll_hsi);
+  rcc_clock_init(&clock_170MHz_pll_hse);
   rcc_crs_init(&crs_config);
   
   SystemCoreClockUpdate();
@@ -185,8 +206,15 @@ struct board_io io = {
                 .type = GPIO_TYPE_PUSH_PULL,
                 .pull = GPIO_PULL_NONE,
                 .speed = GPIO_SPEED_LOW,
-                .af = GPIO_AF0,}};
+                .af = GPIO_AF0,},
 
+  .pwm_dac_ocp_th = {.port = GPIO_PORT_F,
+                .pin = GPIO_PIN_2,
+                .mode = GPIO_MODE_ALTERNATE,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_NONE,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF2,}};
 
 
 static void board_gpio_setup(void) {
@@ -310,7 +338,7 @@ struct hrtim_pwm pwmb = {
   .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
   .polarity = HRTIM_PWM_POLARITY_NORMAL,
   .freq_hz = 100000, 
-  .deadtime_ns = 300.0,
+  .deadtime_ns = 200.0,
 };
 
 struct hrtim_pwm pwmc = {
@@ -319,8 +347,35 @@ struct hrtim_pwm pwmc = {
   .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
   .polarity = HRTIM_PWM_POLARITY_NORMAL,
   .freq_hz = 100000, 
-  .deadtime_ns = 300.0,
+  .deadtime_ns = 200.0,
 };
+
+static void pwm_dac_init(void) {
+  // Enable TIM20 APB Clock
+  RCC->APB2ENR |= RCC_APB2ENR_TIM20EN;
+  // Enable Auto-Reload
+  TIM20->CR1 |= TIM_CR1_ARPE;
+  // Set count mode to up-count
+  TIM20->CR1 &= ~TIM_CR1_DIR;
+  // Set Prescaler
+  TIM20->PSC = 0;
+  // Set Period
+  TIM20->ARR = 20;
+  // Set Duty Cycle to 50%
+  TIM20->CCR3 = 10;
+  // Set CH3 output mode to PWM
+  TIM20->CCMR2 |= TIM_CCMR2_OC3M_1 | TIM_CCMR2_OC3M_2;
+  // Preload disable
+  TIM20->CCMR2 &= ~TIM_CCMR2_OC3PE;
+  // Enable CH3 output
+  TIM20->CCER |= TIM_CCER_CC3E;
+  // Update registers
+  TIM20->EGR |= TIM_EGR_UG;
+  // Enable Counter
+  TIM20->CR1 |= TIM_CR1_CEN;
+  TIM20->BDTR |= TIM_BDTR_MOE;
+
+}
 
 
 static void board_pwm_setup(void) {
@@ -329,18 +384,19 @@ static void board_pwm_setup(void) {
   hrtim_pwm_init(&pwma);
   hrtim_pwm_init(&pwmb);
   hrtim_pwm_init(&pwmc);
+  pwm_dac_init();
 
-  hrtim_pwm_set_duty(&pwma, 50);
-  hrtim_pwm_set_duty(&pwmb, 50);
-  hrtim_pwm_set_duty(&pwmc, 50);
+  hrtim_pwm_set_duty(&pwma, 10);
+  hrtim_pwm_set_duty(&pwmb, 0);
+  hrtim_pwm_set_duty(&pwmc, 0);
  
  
   // hrtim_pwm_set_n_cycle_run(&pwma, 3);50.0); HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxDIER |= HRTIM_TIMDIER_RSTIE;
   // // Enable ADC1 Trigger on Timer A Reset
 
-  hrtim_pwm_start(&pwma);
-  hrtim_pwm_start(&pwmb);
-  hrtim_pwm_start(&pwmc);
+  // hrtim_pwm_start(&pwma);
+  // hrtim_pwm_start(&pwmb);
+  // hrtim_pwm_start(&pwmc);
   // HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TF1OEN;
   // HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TF2OEN;
   // // Start Timer

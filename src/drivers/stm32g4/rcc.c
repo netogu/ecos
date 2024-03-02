@@ -185,7 +185,14 @@ void rcc_clock_init(rcc_clock_config_t *cfg) {
 
   rcc_set_sysclk_source(RCC_SYSCLK_SOURCE_HSI16);
 
+  if (cfg->pll_source == RCC_PLL_SOURCE_HSE_BYPASS) {
+    _rcc_enable_hse_bypass();
+  } else {
+    _rcc_disable_hse_bypass();
+  }
+
   if (cfg->pll_source == RCC_PLL_SOURCE_HSE ||
+      cfg->pll_source == RCC_PLL_SOURCE_HSE_BYPASS ||
       cfg->sysclk_source == RCC_SYSCLK_SOURCE_HSE) {
 
     _rcc_enable_hse();

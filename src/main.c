@@ -278,10 +278,27 @@ static void led_blink_cb(TimerHandle_t xTimer)
 {   
   /* Unused parameters. */
   ( void ) xTimer;
-
+  static uint32_t duty = 0;
+  static uint32_t dir = 0;
   gpio_pin_toggle(&io.led_green);
   gpio_pin_toggle(&io.led_red);
   gpio_pin_toggle(&io.led_blue);
+
+  // increment duty up to 10 and then reverse to 0
+  if (dir) {
+    duty--;
+  } else {
+    duty++;
+  }
+
+  if (duty == 10) {
+    dir = 1;
+  } else if (duty == 0) {
+    dir = 0;
+  }
+
+  TIM20->CCR3 = duty;
+
 
 }
 /*-----------------------------------------------------------*/

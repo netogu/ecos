@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include "microshell.h"
 #include "board/bsp.h"
 #include "tusb.h"
@@ -103,7 +104,6 @@ static void mpwr_en_callback(struct ush_object *self, struct ush_file_descriptor
 // dpt test callback
 static void dpt_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
-    struct hrtim_pwm *pwm = &pwma;
 
     // arguments count validation
     if (argc < 3) {
@@ -112,6 +112,29 @@ static void dpt_exec_callback(struct ush_object *self, struct ush_file_descripto
         return;
     }
 
+    struct hrtim_pwm *pwm = &pwma;
+
+    // // Get PWM Channel argument
+    // char channel = argv[1];
+    // // channel = (channel <= 'Z' && channel >= 'A') ? channel + 32 : channel;
+    // switch (channel){
+    //     case 'a':
+    //     pwm = &pwma;
+    //     break;
+    //     case 'b':
+    //     pwm = &pwmb;
+    //     break;
+    //     case 'c':
+    //     pwm = &pwmc;
+    //     break;
+    //     default:
+    //     break;
+    // }
+
+    // if (pwm == NULL) {
+    //     ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+    //     return;
+    // }
 
     int ton = atoi(argv[1]);
     ush_printf(self, "ton: %d ns\r\n", ton);
@@ -180,7 +203,7 @@ static const struct ush_file_descriptor cmd_files[] = {
     {
         .name = "dpt",                       
         .description = "run double-pulse test",            // optional file description
-        .help = "usage: dpt ton(ns) toff(ns) n(pulses)\r\n",            // optional help manual
+        .help = "usage: dpt channel(a,b,c) ton(ns) toff(ns) n(pulses)\r\n",            // optional help manual
         .exec = dpt_exec_callback,           // optional execute callback
     },
     {   .name = "drv_en",
