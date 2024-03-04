@@ -4,36 +4,18 @@
 
 void hrtim_pwm_set_frequency(struct hrtim_pwm *pwm, uint32_t freq_hz) {
     uint32_t period = 0;
-    switch (pwm->type) {
-        case HRTIM_PWM_TYPE_TRAILING_EDGE:
-            period = HRTIM_FREQ_2_PER(freq_hz);
-            break;
-        case HRTIM_PWM_TYPE_CENTER_ALIGNED:
-            period = HRTIM_FREQ_2_PER(freq_hz)/2;
-            break;
-        default:
-            return -1;
-    }
-
-    HRTIM1->sTimerxRegs[pwm->timer].PERxR = period;   
+    uint32_t prescale = HRTIM1->sTimerxRegs[pwm->timer].TIMxCR & HRTIM_TIMCR_CK_PSC;
+    HRTIM1->sTimerxRegs[pwm->timer].PERxR = SystemCoreClock / freq_hz * 32 >> prescale + 1;
 }
 
 void hrtim_pwm_set_duty(struct hrtim_pwm *pwm, uint32_t duty_pc) {
     uint32_t cmp = 0;
     uint32_t period = HRTIM1->sTimerxRegs[pwm->timer].PERxR;
-    switch (pwm->type) {
-        case HRTIM_PWM_TYPE_TRAILING_EDGE:
-            cmp = period * duty_pc / 100.0;
-            break;
-        case HRTIM_PWM_TYPE_CENTER_ALIGNED:
-            cmp = period * (100.0 - duty_pc) / 100.0;
-            break;
-        default:
-            break;
-    }
+    cmp = period * (100.0 - duty_pc) / 100.0;
 
     HRTIM1->sTimerxRegs[pwm->timer].CMP1xR = cmp;
 }   
+
 int hrtim_pwm_init(struct hrtim_pwm *pwm) {
 
     HRTIM_Timerx_TypeDef *tim_regs = &HRTIM1->sTimerxRegs[pwm->timer];
@@ -42,28 +24,41 @@ int hrtim_pwm_init(struct hrtim_pwm *pwm) {
 
     uint32_t period = 0;
     uint32_t cmp = 0;
+    uint32_t prescale = 0;
 
-    switch (pwm->type) {
-        case HRTIM_PWM_TYPE_TRAILING_EDGE:
-            tim_regs->TIMxCR2 &= HRTIM_TIMCR2_UDM;
-            tim_regs->RSTx1R = HRTIM_SET1R_CMP1;
-            tim_regs->SETx1R = HRTIM_RST1R_PER;
-            period = HRTIM_FREQ_2_PER(pwm->freq_hz);
-            break;
-        case HRTIM_PWM_TYPE_CENTER_ALIGNED:
-            tim_regs->TIMxCR2 |= HRTIM_TIMCR2_UDM;
-            tim_regs->SETx1R = HRTIM_SET1R_CMP1;
-            period = HRTIM_FREQ_2_PER(pwm->freq_hz)/2;
-            break;
-        default:
-            return -1;
+    if (pwm->freq_hz < 83000) {
+        prescale = 1;
+    }
+    if (pwm->freq_hz < 41500) {
+        prescale = 2;
+    }
+    if (pwm->freq_hz < 20800) {
+        prescale = 3;
+    }
+    if (pwm->freq_hz < 10400) {
+        prescale = 4;
+    }
+    if (pwm->freq_hz < 5190) {
+        prescale = 5;
+    }
+    if (pwm->freq_hz < 2590) {
+        prescale = 6;
+    }
+    if (pwm->freq_hz < 1300) {
+        prescale = 7;
     }
 
+    
+    tim_regs->TIMxCR &= ~HRTIM_TIMCR_CK_PSC;
+    tim_regs->TIMxCR |= prescale << HRTIM_TIMCR_CK_PSC_Pos;
 
-
+    // Set PWM Mode to Center Aligned
+    tim_regs->TIMxCR2 |= HRTIM_TIMCR2_UDM;
+    tim_regs->SETx1R = HRTIM_SET1R_CMP1;
+    period = (SystemCoreClock / pwm->freq_hz * (32 >> prescale) + 1) / 2;
+    
     tim_regs->PERxR = period;
     tim_regs->CMP1xR = 0;
-
 
     // Pre-load enable update on reset/roll-over, continuous mode
     tim_regs->TIMxCR |= ( HRTIM_TIMCR_PREEN | HRTIM_TIMCR_TRSTU | HRTIM_TIMCR_CONT );
@@ -72,8 +67,6 @@ int hrtim_pwm_init(struct hrtim_pwm *pwm) {
 
     // Configure PWM Output : Reset on match, Set on Period
 
-    
-    
     // tim_regs->RSTx2R = HRTIM_RST1R_PER;
     // tim_regs->SETx2R = HRTIM_SET1R_CMP1;
 
@@ -83,10 +76,8 @@ int hrtim_pwm_init(struct hrtim_pwm *pwm) {
     // Configure Deadtime
     uint32_t deadtime = HRTIM_DT_COUNT_PER_NS(pwm->deadtime_ns);
     tim_regs->DTxR = (deadtime << HRTIM_DTR_DTF_Pos) | (deadtime << HRTIM_DTR_DTR_Pos);
-    
 
     // Configure PWM Polarity
-
 
     return 0;
 

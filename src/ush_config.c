@@ -141,7 +141,13 @@ static void dpt_exec_callback(struct ush_object *self, struct ush_file_descripto
     int toff = atoi(argv[2]);
     ush_printf(self, "toff: %d ns\r\n", toff);
     int n = atoi(argv[3]);
+    if (n <= 1) {
+        ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+        ush_printf(self, "error: n has to be larger than 1\r\n");
+        return;
+    }
     ush_printf(self, "n: %d\r\n", n);
+
 
     // hrtim_pwm_stop(&pwm1);
     ton += pwm->deadtime_ns;
@@ -149,10 +155,7 @@ static void dpt_exec_callback(struct ush_object *self, struct ush_file_descripto
 
     ton < 0 ? ton = 0 : ton;
     toff < 0 ? toff = 0 : toff;
-    if (toff < ton) {
-        ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
-        return;
-    }
+
     hrtim_pwm_set_frequency(pwm, 1000000000/(ton + toff));
     hrtim_pwm_set_duty(pwm, ton*100/(ton + toff));
     hrtim_pwm_set_n_cycle_run(pwm, n);

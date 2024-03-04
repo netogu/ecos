@@ -3,9 +3,6 @@
 #include <stdint.h>
 
 
-#define HRTIM_PERCLK_HZ 170000000L 
-
-#define HRTIM_FREQ_2_PER(__FREQ__) ((HRTIM_PERCLK_HZ / __FREQ__) * 32 + 1)
 #define HRTIM_DT_COUNT_PER_NS(__DT_NS__) (__DT_NS__ / 0.73 + 0.5) // From RM0440 Table 221
 
 
@@ -26,11 +23,6 @@ enum hrtim_timer {
     HRTIM_TIMER_F
 };
 
-enum hrtim_pwm_type {
-    HRTIM_PWM_TYPE_TRAILING_EDGE,
-    HRTIM_PWM_TYPE_CENTER_ALIGNED
-};
-
 enum hrtim_pwm_output {
     HRTIM_PWM_OUTPUT_SINGLE,
     HRTIM_PWM_OUTPUT_COMPLEMENTARY,
@@ -41,10 +33,8 @@ enum hrtim_pwm_polarity {
     HRTIM_PWM_POLARITY_INVERTED
 };
 
-
 struct hrtim_pwm {
     enum hrtim_timer timer;
-    enum hrtim_pwm_type type;
     enum hrtim_pwm_output output;
     enum hrtim_pwm_polarity polarity;
     uint32_t freq_hz;

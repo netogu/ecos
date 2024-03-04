@@ -4,6 +4,7 @@
 #include <stm32g4xx.h>
 #include "drivers/stm32g4/gpio.h"
 
+#define ADC_CLK_DOMAIN_SYSCLK_PLL 0
 
 // ------------------------------------------------------+
 // ADC Sample Hold Time
@@ -23,17 +24,19 @@ enum adc_sample_time {
 struct adc_input {
     uint8_t *name;
     uint8_t channel;
-    uint8_t sequence;
+    uint8_t sequence_number;
+    uint8_t resolution_bits;
     uint8_t sample_time;
-    uint32_t *sample_data;
-    uint32_t sample_size;
+    uint8_t sample_trigger;
+    uint16_t *sample_data;
+    uint32_t sample_count;
 };
 
 
 struct adc {
     uint32_t instance;
     uint8_t channel_count;
-
+    struct adc_input *channels; 
 };
 
 
@@ -51,6 +54,23 @@ int adc_add_input(struct adc *adc, struct adc_input *channel) {
 
 
 }
+
+int adc_start_sampling(struct adc *adc) {
+    ADC_TypeDef *adc_regs = (ADC_TypeDef *)adc->instance;
+    // Start converting the regular group and injected group
+    adc_regs->CR |= ADC_CR_ADSTART;
+    adc_regs->CR |= ADC_CR_JADSTART;
+    return 0;
+}
+
+int adc_stop_sampling(struct adc *adc) {
+    ADC_TypeDef *adc_regs = (ADC_TypeDef *)adc->instance;
+    // Stop converting the regular group and injected group
+    adc_regs->CR |= ADC_CR_ADSTP;
+    adc_regs->CR |= ADC_CR_JADSTP;
+    return 0;
+}
+
 
 int adc_enable(struct adc *adc) {
     ADC_TypeDef *adc_regs = (ADC_TypeDef *)adc->instance;
@@ -103,6 +123,8 @@ int adc_init(struct adc *adc) {
 
     ADC_TypeDef *adc_regs = (ADC_TypeDef *)adc->instance;
 
+    #if ADC_CLK_DOMAIN_SYSCLK_PLL
+    // ADC Clk domain: SYSCLK or PLL
     // Enable the ADC Peripheral Clock
     if (adc->instance == ADC1_BASE || ADC2_BASE) {
         RCC->AHB2ENR |= RCC_AHB2ENR_ADC12EN;
@@ -111,6 +133,18 @@ int adc_init(struct adc *adc) {
         RCC->AHB2ENR |= RCC_AHB2ENR_ADC345EN;
         ADC345_COMMON->CCR |= ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1; // Set ADC CLK Domain to HCLK/4
     }
+    #else
+    // ADC Clk domain: HCLK
+    if (adc->instance == ADC1_BASE || ADC2_BASE) {
+        ADC12_COMMON->CCR &= ~ADC_CCR_CKMODE;
+        ADC12_COMMON->CCR |= ADC_CCR_CKMODE_0; // Set ADC CLK Domain to HCLK/1
+
+    } else if (adc->instance == ADC3_BASE || ADC4_BASE || ADC5_BASE) {
+        ADC345_COMMON->CCR &= ~ADC_CCR_CKMODE;
+        ADC345_COMMON->CCR |= ADC_CCR_CKMODE_0; // Set ADC CLK Domain to HCLK/1
+    }
+    #endif
+
 
 
     // Exit deep-power mode
@@ -128,6 +162,9 @@ int adc_init(struct adc *adc) {
 
     // Calibrate the ADC
     adc_calibrate(adc);
+
+    // Enable the ADC
+    adc_enable(adc);
 
     return 0;
 }

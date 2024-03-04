@@ -22,6 +22,8 @@ static void board_serial_setup(void);
 static void board_usb_setup(void);
 static void board_pwm_setup(void);
 
+#define STM32G4_NUKLEO 1
+
 void board_init(void) {
 
   board_clock_setup();
@@ -36,6 +38,7 @@ void board_init(void) {
 // Clock Config
 //------------------------------------------------------
 static void board_clock_setup(void) {
+
 
     // HSI = 16MHz
     rcc_clock_config_t clock_170MHz_pll_hsi = {
@@ -85,7 +88,12 @@ static void board_clock_setup(void) {
         .hsi48_calibration_value = 32,
     };
 
+  #if STM32G4_NUKLEO
+  rcc_clock_init(&clock_170MHz_pll_hsi);
+  #else
   rcc_clock_init(&clock_170MHz_pll_hse);
+  #endif
+
   rcc_crs_init(&crs_config);
   
   SystemCoreClockUpdate();
@@ -108,6 +116,15 @@ struct board_io io = {
                 .speed = GPIO_SPEED_HIGH,
                 .af = GPIO_AF0,},
 
+  #if STM32G4_NUKLEO
+  .led_green = {.port = GPIO_PORT_A,
+                .pin = GPIO_PIN_5,
+                .mode = GPIO_MODE_OUTPUT,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_UP,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF0,},
+  #else
   .led_green = {.port = GPIO_PORT_B,
                 .pin = GPIO_PIN_7,
                 .mode = GPIO_MODE_OUTPUT,
@@ -115,6 +132,7 @@ struct board_io io = {
                 .pull = GPIO_PULL_UP,
                 .speed = GPIO_SPEED_HIGH,
                 .af = GPIO_AF0,},
+  #endif
 
   .led_blue = {.port = GPIO_PORT_B,
                 .pin = GPIO_PIN_8,
@@ -325,16 +343,14 @@ void USBWakeUp_IRQHandler(void) {
 //------------------------------------------------------+
 struct hrtim_pwm pwma = {
   .timer = HRTIM_TIMER_A,
-  .type = HRTIM_PWM_TYPE_CENTER_ALIGNED,
   .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
   .polarity = HRTIM_PWM_POLARITY_NORMAL,
-  .freq_hz = 100000, 
-  .deadtime_ns = 300.0,
+  .freq_hz = 10000, 
+  .deadtime_ns = 200.0,
 };
 
 struct hrtim_pwm pwmb = {
   .timer = HRTIM_TIMER_F,
-  .type = HRTIM_PWM_TYPE_CENTER_ALIGNED,
   .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
   .polarity = HRTIM_PWM_POLARITY_NORMAL,
   .freq_hz = 100000, 
@@ -343,7 +359,6 @@ struct hrtim_pwm pwmb = {
 
 struct hrtim_pwm pwmc = {
   .timer = HRTIM_TIMER_E,
-  .type = HRTIM_PWM_TYPE_CENTER_ALIGNED,
   .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
   .polarity = HRTIM_PWM_POLARITY_NORMAL,
   .freq_hz = 100000, 
@@ -381,6 +396,7 @@ static void pwm_dac_init(void) {
 static void board_pwm_setup(void) {
 
   hrtim_init();
+  // Change HRTIM prescaler
   hrtim_pwm_init(&pwma);
   hrtim_pwm_init(&pwmb);
   hrtim_pwm_init(&pwmc);
@@ -389,6 +405,7 @@ static void board_pwm_setup(void) {
   hrtim_pwm_set_duty(&pwma, 10);
   hrtim_pwm_set_duty(&pwmb, 0);
   hrtim_pwm_set_duty(&pwmc, 0);
+  
  
  
   // hrtim_pwm_set_n_cycle_run(&pwma, 3);50.0); HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxDIER |= HRTIM_TIMDIER_RSTIE;
