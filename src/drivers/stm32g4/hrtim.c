@@ -16,6 +16,41 @@ void hrtim_pwm_set_duty(struct hrtim_pwm *pwm, uint32_t duty_pc) {
     HRTIM1->sTimerxRegs[pwm->timer].CMP1xR = cmp;
 }   
 
+int hrtim_pwm_enable_fault_input(struct hrtim_pwm *pwm, uint32_t fault) {
+    HRTIM_Timerx_TypeDef *tim_regs = &HRTIM1->sTimerxRegs[pwm->timer];
+
+    // Set Input Source to FLT pin
+    HRTIM1->sCommonRegs.FLTINR2 &= ~(HRTIM_FLTINR2_FLT5SRC_0_Msk | HRTIM_FLTINR2_FLT5SRC_1_Msk);
+
+    // Set Input Polarity
+    HRTIM1->sCommonRegs.FLTINR2 &= ~HRTIM_FLTINR2_FLT5P_Msk; // Active Low
+
+    // Configure input filter
+    // fSAMPLING = fFLTS/4, N = 6
+    HRTIM1->sCommonRegs.FLTINR2 &= ~HRTIM_FLTINR2_FLT5F_Msk;
+    HRTIM1->sCommonRegs.FLTINR2 |= 6 << HRTIM_FLTINR2_FLT5F_Pos;
+
+    // Configure Blanking sources
+    // -- None --
+
+    // Engage fault input
+    HRTIM1->sCommonRegs.FLTINR2 |= HRTIM_FLTINR2_FLT5E;
+
+    
+    // Configure PWM faulted states
+    tim_regs->OUTxR &= ~HRTIM_OUTR_FAULT1_Msk;
+    tim_regs->OUTxR &= ~HRTIM_OUTR_FAULT2_Msk;
+    tim_regs->OUTxR |= 0b10 << HRTIM_OUTR_FAULT1_Pos; // Inactive fault state
+    tim_regs->OUTxR |= 0b10 << HRTIM_OUTR_FAULT2_Pos; // Inactive fault state
+
+    // Enable fault 
+    tim_regs->FLTxR |= HRTIM_FLTR_FLT5EN;
+
+
+
+
+    return 0;
+}
 int hrtim_pwm_init(struct hrtim_pwm *pwm) {
 
     HRTIM_Timerx_TypeDef *tim_regs = &HRTIM1->sTimerxRegs[pwm->timer];

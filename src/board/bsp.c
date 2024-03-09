@@ -22,7 +22,7 @@ static void board_serial_setup(void);
 static void board_usb_setup(void);
 static void board_pwm_setup(void);
 
-#define STM32G4_NUKLEO 1
+#define STM32G4_NUKLEO 0
 
 void board_init(void) {
 
@@ -210,14 +210,6 @@ struct board_io io = {
                 .speed = GPIO_SPEED_HIGH,
                 .af = GPIO_AF0,},
 
-  .test_pin1 = {.port = GPIO_PORT_B,
-                .pin = GPIO_PIN_0,
-                .mode = GPIO_MODE_OUTPUT,
-                .type = GPIO_TYPE_PUSH_PULL,
-                .pull = GPIO_PULL_UP,
-                .speed = GPIO_SPEED_HIGH,
-                .af = GPIO_AF0,},
-
   .adc11_test = {.port = GPIO_PORT_A,
                 .pin = GPIO_PIN_0,
                 .mode = GPIO_MODE_ANALOG,
@@ -232,7 +224,16 @@ struct board_io io = {
                 .type = GPIO_TYPE_PUSH_PULL,
                 .pull = GPIO_PULL_NONE,
                 .speed = GPIO_SPEED_HIGH,
-                .af = GPIO_AF2,}};
+                .af = GPIO_AF2,},
+
+  // HRTIM1_FLT5
+  .flt_ocp_n = {.port = GPIO_PORT_B,
+                .pin = GPIO_PIN_0,
+                .mode = GPIO_MODE_ALTERNATE,
+                .type = GPIO_TYPE_OPEN_DRAIN,
+                .pull = GPIO_PULL_NONE,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF13}};
 
 
 static void board_gpio_setup(void) {
@@ -400,7 +401,9 @@ static void board_pwm_setup(void) {
   hrtim_pwm_init(&pwma);
   hrtim_pwm_init(&pwmb);
   hrtim_pwm_init(&pwmc);
+  hrtim_pwm_enable_fault_input(&pwma, 5);
   pwm_dac_init();
+  TIM20->CCR3 = 1;
 
   hrtim_pwm_set_duty(&pwma, 10);
   hrtim_pwm_set_duty(&pwmb, 0);

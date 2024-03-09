@@ -26,9 +26,9 @@ struct board_io {
   gpio_t pwm_ch;
   gpio_t pwm_cl;
   gpio_t test_pin0;
-  gpio_t test_pin1;
   gpio_t adc11_test;
   gpio_t pwm_dac_ocp_th;
+  gpio_t flt_ocp_n;
   //TODO create board struct and add alt func ios here too
 };
 

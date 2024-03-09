@@ -18,8 +18,8 @@ void HRTIM1_TIMA_IRQHandler(void) {
     /* RESET Roll-Over Interupt */
     if (HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxISR & HRTIM_TIMISR_RST) { 
         // Togle test pin
-        gpio_pin_set(&io.test_pin1);
-        gpio_pin_clear(&io.test_pin1);
+        // gpio_pin_set(&io.test_pin1);
+        // gpio_pin_clear(&io.test_pin1);
         // Clear RST interrupt
         HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxICR |= HRTIM_TIMICR_RSTC;
     }
