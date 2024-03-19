@@ -16,6 +16,15 @@ void hrtim_pwm_set_duty(struct hrtim_pwm *pwm, uint32_t duty_pc) {
     HRTIM1->sTimerxRegs[pwm->timer].CMP1xR = cmp;
 }   
 
+void hrtim_pwm_swap_output(struct hrtim_pwm *pwm) {
+
+  // Swap PWM outputs
+  HRTIM1->sCommonRegs.CR2 |= HRTIM_CR2_SWPA + pwm->timer;
+  // Update registers
+  HRTIM1->sCommonRegs.CR2 |= HRTIM_CR2_TASWU + pwm->timer;
+  
+}
+
 int hrtim_pwm_enable_fault_input(struct hrtim_pwm *pwm, uint32_t fault) {
     HRTIM_Timerx_TypeDef *tim_regs = &HRTIM1->sTimerxRegs[pwm->timer];
 
@@ -26,9 +35,9 @@ int hrtim_pwm_enable_fault_input(struct hrtim_pwm *pwm, uint32_t fault) {
     HRTIM1->sCommonRegs.FLTINR2 &= ~HRTIM_FLTINR2_FLT5P_Msk; // Active Low
 
     // Configure input filter
-    // fSAMPLING = fFLTS/4, N = 6
+    HRTIM1->sCommonRegs.FLTINR2 |= 2 << HRTIM_FLTINR2_FLTSD_Pos;  // fFLTS = fHRTIM/4
     HRTIM1->sCommonRegs.FLTINR2 &= ~HRTIM_FLTINR2_FLT5F_Msk;
-    HRTIM1->sCommonRegs.FLTINR2 |= 6 << HRTIM_FLTINR2_FLT5F_Pos;
+    HRTIM1->sCommonRegs.FLTINR2 |= 6 << HRTIM_FLTINR2_FLT5F_Pos; // fsampling = fFLTS/4 * 6
 
     // Configure Blanking sources
     // -- None --
@@ -102,15 +111,16 @@ int hrtim_pwm_init(struct hrtim_pwm *pwm) {
 
     // Configure PWM Output : Reset on match, Set on Period
 
-    // tim_regs->RSTx2R = HRTIM_RST1R_PER;
+    tim_regs->RSTx2R = HRTIM_RST1R_CMP1;
     // tim_regs->SETx2R = HRTIM_SET1R_CMP1;
 
-    // Enable Deadtime
-    tim_regs->OUTxR |= HRTIM_OUTR_DTEN;
 
     // Configure Deadtime
-    uint32_t deadtime = HRTIM_DT_COUNT_PER_NS(pwm->deadtime_ns);
-    tim_regs->DTxR = (deadtime << HRTIM_DTR_DTF_Pos) | (deadtime << HRTIM_DTR_DTR_Pos);
+    tim_regs->DTxR |= (1 << HRTIM_DTR_DTPRSC_Pos); // tDTG = tHRTIM/4 
+    uint32_t deadtime = (uint32_t)(pwm->deadtime_ns/1.47 + 0.5); // From Rm0440 table 221
+    tim_regs->DTxR |= (deadtime << HRTIM_DTR_DTF_Pos) | (deadtime << HRTIM_DTR_DTR_Pos);
+    // Enable Deadtime
+    tim_regs->OUTxR |= HRTIM_OUTR_DTEN;
 
     // Configure PWM Polarity
 

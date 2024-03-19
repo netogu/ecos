@@ -347,7 +347,7 @@ struct hrtim_pwm pwma = {
   .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
   .polarity = HRTIM_PWM_POLARITY_NORMAL,
   .freq_hz = 10000, 
-  .deadtime_ns = 200.0,
+  .deadtime_ns = 500.0,
 };
 
 struct hrtim_pwm pwmb = {
@@ -376,9 +376,9 @@ static void pwm_dac_init(void) {
   // Set Prescaler
   TIM20->PSC = 0;
   // Set Period
-  TIM20->ARR = 20;
-  // Set Duty Cycle to 50%
-  TIM20->CCR3 = 10;
+  TIM20->ARR = SystemCoreClock/50000;
+  // Set Duty Cycle to 25%
+  TIM20->CCR3 = TIM20->ARR >> 2;
   // Set CH3 output mode to PWM
   TIM20->CCMR2 |= TIM_CCMR2_OC3M_1 | TIM_CCMR2_OC3M_2;
   // Preload disable
@@ -399,21 +399,22 @@ static void board_pwm_setup(void) {
   hrtim_init();
   // Change HRTIM prescaler
   hrtim_pwm_init(&pwma);
-  hrtim_pwm_init(&pwmb);
-  hrtim_pwm_init(&pwmc);
+  // hrtim_pwm_init(&pwmb);
+  // hrtim_pwm_init(&pwmc);
   hrtim_pwm_enable_fault_input(&pwma, 5);
-  pwm_dac_init();
-  TIM20->CCR3 = 1;
 
-  hrtim_pwm_set_duty(&pwma, 10);
-  hrtim_pwm_set_duty(&pwmb, 0);
-  hrtim_pwm_set_duty(&pwmc, 0);
+  pwm_dac_init();
+
+  // hrtim_pwm_set_duty(&pwma, 20);
+  // hrtim_pwm_set_duty(&pwmb, 0);
+  // hrtim_pwm_set_duty(&pwmc, 0);
   
  
  
   // hrtim_pwm_set_n_cycle_run(&pwma, 3);50.0); HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxDIER |= HRTIM_TIMDIER_RSTIE;
   // // Enable ADC1 Trigger on Timer A Reset
 
+  // HRTIM1->sCommonRegs.CR2 |= HRTIM_CR2_SWPA;
   // hrtim_pwm_start(&pwma);
   // hrtim_pwm_start(&pwmb);
   // hrtim_pwm_start(&pwmc);

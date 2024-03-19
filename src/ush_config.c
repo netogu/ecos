@@ -101,6 +101,31 @@ static void mpwr_en_callback(struct ush_object *self, struct ush_file_descriptor
     }
 }
 
+// ocp threshold callback
+static void ocp_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
+{
+    // arguments count validation
+    if (argc < 2) {
+        // return predefined error message
+        ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+        return;
+    }
+
+    float threshold_pc = atoi(argv[1])/100.0;
+    if ( threshold_pc > 1.0 || threshold_pc < 0.0 ) {
+        ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+        return;
+    }
+
+    // TIM20.3 at 50% duty cycle maps to the OCP threshold at 100%
+    float duty = threshold_pc * 1/2.0;
+    duty > 0.5 ? 0.5 : duty < 0.0 ? 0.0 : duty;
+    uint32_t period = TIM20->ARR;
+    duty = period * duty + 0.5;
+    TIM20->CCR3 = (uint32_t) duty;
+
+}
+
 // dpt test callback
 static void dpt_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
@@ -218,6 +243,12 @@ static const struct ush_file_descriptor cmd_files[] = {
         .description = "enable/disable VM efuse driver",
         .help = "usage: mpwr_en 1|0\r\n",
         .exec = mpwr_en_callback,
+    },
+    {
+        .name = "ocp",
+        .description = "sets ocp threshold (%)",
+        .help = "usage: ocp < 0 to 100 >",
+        .exec = ocp_exec_callback,
     }
 };
 

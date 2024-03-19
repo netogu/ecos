@@ -49,5 +49,6 @@ void hrtim_pwm_start(struct hrtim_pwm *pwm);
 void hrtim_pwm_stop(struct hrtim_pwm *pwm);
 void hrtim_pwm_set_n_cycle_run(struct hrtim_pwm *pwm, uint32_t cycles);
 int hrtim_pwm_enable_fault_input(struct hrtim_pwm *pwm, uint32_t fault);
+void hrtim_pwm_swap_output(struct hrtim_pwm *pwm);
 // void hrtim_pwm_set_adc_trigger(struct hrtim_pwm *pwm, uint32_t adc_trig);
 
