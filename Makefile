@@ -2,7 +2,7 @@
 # Target
 ######################################
 TARGET = stm32g4-minimal
-
+DEVICE = STM32G474xx
 
 ######################################
 # Building variables
@@ -16,34 +16,71 @@ OPT = -Og
 # Debug 
 #######################################
 DEBUGER_PATH = openocd
-DEBUGER_CONF = src/openocd.cfg
+DEBUGER_CONF = src/board/openocd.cfg
 
 #######################################
 # paths
 #######################################
 # Build path
 BUILD_DIR = build
+#
+# Tinyusb Library
+TINYUSB = src/external/tinyusb/src
+MICROSHELL = src/external/microshell/src
+TINYPRINTF = src/external/tiny_printf
+FREERTOS = src/external/freertos
 
 ######################################
-# source
+# Sources
 ######################################
 # C sources
-C_SOURCES =  \
-src/system.c \
-src/main.c   \
-src/drv/drv_rcc.c \
-src/drv/drv_pwr.c \
-src/drv/drv_flash.c
+C_SOURCES = $(wildcard src/*.c) 
+C_SOURCES += $(wildcard src/external/*.c)
+C_SOURCES += $(wildcard src/drivers/*.c) 
+C_SOURCES += $(wildcard src/drivers/*/*.c) 
+C_SOURCES += $(wildcard src/lib/*.c)
+C_SOURCES += $(wildcard $(TINYPRINTF)/*.c)
+C_SOURCES += $(wildcard src/board/*.c) 
+C_SOURCES += $(wildcard $(TINYUSB)/*.c)
+C_SOURCES += $(wildcard $(TINYUSB)/*/*.c)
+C_SOURCES += $(wildcard $(TINYUSB)/*/*/*.c)
+C_SOURCES += $(wildcard $(TINYUSB)/*/*/*/*.c)
+C_SOURCES += $(wildcard $(MICROSHELL)/src/*.c)
+C_SOURCES += $(wildcard $(MICROSHELL)/src/commands/*.c)
+C_SOURCES += $(wildcard $(FREERTOS)/*.c)
+C_SOURCES += $(FREERTOS)/portable/GCC/ARM_CM4F/port.c
 
 # ASM sources
 ASM_SOURCES =  \
-src/startup.s
+src/drivers/stm32g4/startup.s
+
+
+######################################
+# Includes
+######################################
+# AS includes
+AS_INCLUDES = 
+
+# C includes
+C_INCLUDES =  \
+-Isrc/external/CMSIS/Device/ST/STM32G4xx/Include \
+-Isrc/external/CMSIS/Include \
+-Isrc/external/tinyusb/src \
+-Isrc/external/tinyusb/src \
+-I$(TINYUSB)/src \
+-I$(TINYPRINTF) \
+-I$(MICROSHELL) \
+-I$(MICROSHELL)/inc \
+-I$(FREERTOS)/include \
+-I$(FREERTOS)/portable/GCC/ARM_CM4F \
+-Isrc \
+-Isrc/drivers \
 
 #######################################
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = src/linker_script.ld
+LDSCRIPT = src/drivers/stm32g4/linker_script.ld
 
 #######################################
 # binaries
@@ -79,7 +116,7 @@ FPU = -mfpu=fpv4-sp-d16
 FLOAT-ABI = -mfloat-abi=hard
 
 # mcu
-MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
+MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI) -D$(DEVICE)
 
 # macros for gcc
 # AS defines
@@ -90,21 +127,10 @@ C_DEFS =  \
 -DSTM32G474xx
 
 
-# AS includes
-AS_INCLUDES = 
-
-# C includes
-C_INCLUDES =  \
--Iexternal/CMSIS/Device/ST/STM32G4xx/Include \
--Iexternal/CMSIS/Include \
--Isrc/drv/ 
-
-
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
 CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
-CFLAGS += -nostdlib
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
@@ -113,15 +139,15 @@ endif
 
 # Generate dependency information
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
+CFLAGS += -nostdlib
 
 
-
-
-
-# libraries
 LIBS = -lc -lm -lnosys 
 LIBDIR = 
-LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
+LDFLAGS = $(MCU) -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
+LDFLAGS += -nostartfiles
+LDFLAGS += --specs=nano.specs --specs=nosys.specs
+
 
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
@@ -138,23 +164,34 @@ OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
-	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+	@ echo "  CC    " $<
+	@ $(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
-	$(AS) -c $(CFLAGS) $< -o $@
+	@ $(AS) -c $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
-	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
-	$(SZ) $@
+	@ echo "  LD    " $(notdir $@)
+	@ $(CC) $(OBJECTS) $(LDFLAGS) -o $@
+	@ $(SZ) $@
 
 $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
-	$(HEX) $< $@
+	@ $(HEX) $< $@
 	
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
-	$(BIN) $< $@	
+	@ $(BIN) $< $@	
 	
 $(BUILD_DIR):
 	mkdir $@		
+
+#######################################
+# Binary Size	
+#######################################
+binsize: $(OBJECTS)
+	@ echo "Size of modules:"
+	@ $(SZ) $(OBJECTS)
+	@ echo "Size of firmware:"
+	@ $(SZ) $(BUILD_DIR)/$(TARGET).elf
 
 #######################################
 # clean up

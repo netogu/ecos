@@ -1,5 +1,6 @@
 #pragma once
 
+
 #define Set_register_bit(reg, mask) (reg |= (mask))
 
 #define Clear_register_bit(reg, mask) (reg &= ~(mask))
@@ -15,6 +16,7 @@
     r |= ((uint32_t)value << field##_Pos) & field##_Msk;                       \
     reg = r;                                                                   \
   }
+
 
 #define Limit(x, min, max) (x < min ? min : x > max ? max : x)
 #define In_range(x, min, max) (x >= min && x <= max)

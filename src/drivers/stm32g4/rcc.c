@@ -1,26 +1,8 @@
-#include "drv_rcc.h"
-#include "drv_common.h"
-#include "drv_flash.h"
-#include "drv_pwr.h"
+#include "drivers/stm32g4/common.h"
+#include "drivers/stm32g4/rcc.h"
+#include "drivers/stm32g4/flash.h"
+#include "drivers/stm32g4/pwr.h"
 #include "stm32g4xx.h"
-
-const struct rcc_clock_config rcc_hsi_pll_170MHz = {
-    .sysclk_source = RCC_SYSCLK_SOURCE_PLL,
-    .pll_source = RCC_PLL_SOURCE_HSI,
-    .pllm = 4,
-    .pllp = 0,
-    .plln = 85,
-    .pllr = 2,
-    .sysclk_scale = RCC_CLK_DIV1,
-    .pclk1_scale = RCC_CLK_DIV1,
-    .pclk2_scale = RCC_CLK_DIV1,
-    .sysclk_frequency = 170e6,
-    .pclk1_frequency = 170e6,
-    .pclk2_frequency = 170e6,
-    .flash_wait_states = 4,
-    .vos_range = 1,
-    .boost_mode = 1,
-};
 
 enum rcc_oscs {
   RCC_OSC_HSI,
@@ -76,7 +58,7 @@ enum rcc_mco_sources {
 #define _rcc_enable_hse_bypass() (RCC->CR |= RCC_CR_HSEBYP)
 #define _rcc_disable_hse_bypass() (RCC->CR &= ~RCC_CR_HSEBYP)
 
-static uint32_t rcc_set_sysclk_div(enum rcc_clk_scales scale) {
+static uint32_t rcc_set_hclk_div(enum rcc_clk_scales scale) {
   if (!In_range(scale, RCC_CLK_DIV1, RCC_CLK_DIV512))
     return RCC_ERROR;
   uint32_t sysclk_scale;
@@ -120,7 +102,28 @@ static void rcc_set_pll_source(enum rcc_pll_sources clk_src) {
   Modify_register_field(RCC->PLLCFGR, RCC_PLLCFGR_PLLSRC, clk_src);
 }
 
-static void rcc_set_pll_scale(const struct rcc_clock_config *cfg) {
+static void rcc_set_usbclk_source(enum rcc_usbclk_sources clk_src) {
+  uint32_t usbclk_src;
+  if (clk_src == RCC_USBCLK_SOURCE_HSI48) {
+    usbclk_src = 0b00;
+    RCC->CRRCR |= RCC_CRRCR_HSI48ON;
+    while (!(RCC->CRRCR & RCC_CRRCR_HSI48RDY))
+      ;
+  }
+  if (clk_src == RCC_USBCLK_SOURCE_PPLQ)
+    usbclk_src = 0b10;
+  Modify_register_field(RCC->CCIPR, RCC_CCIPR_CLK48SEL, usbclk_src);
+}
+
+static void rcc_set_adcclk_source(rcc_clock_config_t *cfg) {
+  uint32_t adc12clk_src = cfg->adc12clk_source;
+  uint32_t adc345clk_src = cfg->adc345clk_source;
+
+  Modify_register_field(RCC->CCIPR, RCC_CCIPR_ADC12SEL, adc12clk_src);
+  Modify_register_field(RCC->CCIPR, RCC_CCIPR_ADC345SEL, adc345clk_src);
+}
+
+static void rcc_set_pll_scale(rcc_clock_config_t *cfg) {
 
   /*
    * PLL Configuration
@@ -149,8 +152,7 @@ static void rcc_set_pll_scale(const struct rcc_clock_config *cfg) {
       RCC->PLLCFGR |= RCC_PLLCFGR_PLLP;
       break;
     case 7:
-      RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLPDIV;
-      RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLP;
+      RCC->PLLCFGR &= ~(RCC_PLLCFGR_PLLPDIV | ~RCC_PLLCFGR_PLLP);
       break;
     default:
       Modify_register_field(RCC->PLLCFGR, RCC_PLLCFGR_PLLPDIV, cfg->pllp);
@@ -175,7 +177,7 @@ static void rcc_set_pll_scale(const struct rcc_clock_config *cfg) {
   }
 } // rcc_set_pll_scale
 
-void rcc_clock_init(const struct rcc_clock_config *cfg) {
+void rcc_clock_init(rcc_clock_config_t *cfg) {
 
   _rcc_enable_hsi();
   while (!_rcc_hsi_is_ready())
@@ -183,7 +185,14 @@ void rcc_clock_init(const struct rcc_clock_config *cfg) {
 
   rcc_set_sysclk_source(RCC_SYSCLK_SOURCE_HSI16);
 
+  if (cfg->pll_source == RCC_PLL_SOURCE_HSE_BYPASS) {
+    _rcc_enable_hse_bypass();
+  } else {
+    _rcc_disable_hse_bypass();
+  }
+
   if (cfg->pll_source == RCC_PLL_SOURCE_HSE ||
+      cfg->pll_source == RCC_PLL_SOURCE_HSE_BYPASS ||
       cfg->sysclk_source == RCC_SYSCLK_SOURCE_HSE) {
 
     _rcc_enable_hse();
@@ -204,7 +213,7 @@ void rcc_clock_init(const struct rcc_clock_config *cfg) {
   }
 
   // Pre-scaler Configuration
-  rcc_set_sysclk_div(cfg->sysclk_scale);
+  rcc_set_hclk_div(cfg->hclk_scale);
   rcc_set_pclk1_div(cfg->pclk1_scale);
   rcc_set_pclk2_div(cfg->pclk2_scale);
 
@@ -222,6 +231,10 @@ void rcc_clock_init(const struct rcc_clock_config *cfg) {
 
     while (!_rcc_pll_is_ready())
       ; // Wait for PLL to lock
+
+    // USB Clock Configuration
+    rcc_set_usbclk_source(cfg->usbckl_source);
+    rcc_set_adcclk_source(cfg);
   }
 
   //  Flash Configuration
@@ -231,7 +244,7 @@ void rcc_clock_init(const struct rcc_clock_config *cfg) {
 
   rcc_set_sysclk_source(cfg->sysclk_source);
 
-  volatile uint32_t sysclk_src = rcc_get_sysclk_source();
+  uint32_t sysclk_src = rcc_get_sysclk_source();
   while (sysclk_src != cfg->sysclk_source)
     ; // Wait for selected clock to be locked
 
@@ -239,4 +252,36 @@ void rcc_clock_init(const struct rcc_clock_config *cfg) {
   if (cfg->pll_source == RCC_PLL_SOURCE_HSE) {
     _rcc_disable_hsi();
   }
+}
+
+void rcc_crs_init(rcc_crs_config_t *cfg) {
+  
+  // Enable CRS peripheral clock
+  RCC->APB1ENR1 |= RCC_APB1ENR1_CRSEN;
+
+  /* Before configuration, reset CRS registers to their default values*/
+  RCC->APB1RSTR1 |= RCC_APB1RSTR1_CRSRST;
+  RCC->APB1RSTR1 &= ~RCC_APB1RSTR1_CRSRST;
+
+  uint32_t crs_cfgr_reg = 0;
+
+  /* CRS CFGR */
+  // Set CRS sync polarity
+  crs_cfgr_reg |= (cfg->sync_polarity << CRS_CFGR_SYNCPOL_Pos);
+  // Set CRS sync source
+  crs_cfgr_reg |= (cfg->sync_source << CRS_CFGR_SYNCSRC_Pos);
+  // Set CRS sync divider
+  crs_cfgr_reg |= (cfg->sync_scale << CRS_CFGR_SYNCDIV_Pos);
+  // Set CRS frequency error limit
+  crs_cfgr_reg |= (cfg->error_limit_value << CRS_CFGR_FELIM_Pos);
+  // Set CRS reload value
+  crs_cfgr_reg |= (cfg->reload_value << CRS_CFGR_RELOAD_Pos);
+
+  CRS->CFGR = crs_cfgr_reg;
+
+  /* CRS CR */
+  // Set CRS trim value
+  Modify_register_field(CRS->CR, CRS_CR_TRIM, cfg->hsi48_calibration_value);
+  // Enable CRS auto trimming and frequency error counter
+  Set_register_bit(CRS->CR, CRS_CR_AUTOTRIMEN | CRS_CR_CEN);
 }

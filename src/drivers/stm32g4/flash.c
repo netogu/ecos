@@ -1,5 +1,5 @@
-#include "drv_flash.h"
 #include "stm32g4xx.h"
+#include "drivers/stm32g4/flash.h"
 
 void flash_set_latency(uint32_t latency) {
   uint32_t reg = FLASH->ACR;
