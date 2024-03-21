@@ -9,6 +9,7 @@
 #include "drivers/stm32g4/usbpcd.h"
 #include "drivers/stm32g4/hrtim.h"
 #include "drivers/stm32g4/adc.h"
+#include "drivers/stm32g4/spi.h"
 #include "tusb.h"
 // #include "microshell.h"
 
@@ -21,6 +22,7 @@ static void board_gpio_setup(void);
 static void board_serial_setup(void);
 static void board_usb_setup(void);
 static void board_pwm_setup(void);
+static void board_spi_setup(void);
 
 #define STM32G4_NUKLEO 0
 
@@ -29,6 +31,7 @@ void board_init(void) {
   board_clock_setup();
   board_gpio_setup();
   board_serial_setup();
+  board_spi_setup();
   board_usb_setup();
   board_pwm_setup();
 
@@ -89,8 +92,10 @@ static void board_clock_setup(void) {
     };
 
   #if STM32G4_NUKLEO
+  (void) clock_170MHz_pll_hse;
   rcc_clock_init(&clock_170MHz_pll_hsi);
   #else
+  (void) clock_170MHz_pll_hsi;
   rcc_clock_init(&clock_170MHz_pll_hse);
   #endif
 
@@ -233,7 +238,41 @@ struct board_io io = {
                 .type = GPIO_TYPE_OPEN_DRAIN,
                 .pull = GPIO_PULL_NONE,
                 .speed = GPIO_SPEED_HIGH,
-                .af = GPIO_AF13}};
+                .af = GPIO_AF13},
+  //SPI
+  .spi3_miso = {.port = GPIO_PORT_B,
+                .pin = GPIO_PIN_4,
+                .mode = GPIO_MODE_ALTERNATE,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_NONE,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF6},
+
+  .spi3_mosi = {.port = GPIO_PORT_B,
+                .pin = GPIO_PIN_5,
+                .mode = GPIO_MODE_ALTERNATE,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_NONE,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF6},
+
+  .spi3_clk = { .port = GPIO_PORT_B,
+                .pin = GPIO_PIN_3,
+                .mode = GPIO_MODE_ALTERNATE,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_NONE,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF6},
+
+  .spi3_menc1_cs = {.port = GPIO_PORT_D,
+                .pin = GPIO_PIN_2,
+                .mode = GPIO_MODE_OUTPUT,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_NONE,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF0},
+
+};
 
 
 static void board_gpio_setup(void) {
@@ -255,7 +294,7 @@ static void board_gpio_setup(void) {
 
 int _write(int handle, char *data, int size) {
   int count;
-  handle = handle; //unused
+  (void)handle; //unused
   for (count = 0; count < size; count++) {
     lpuart_write((uint8_t *)data, 1);
     data++;
@@ -320,23 +359,6 @@ void _putchar(char character) {
 
 void HardFault_Handler(void) {
   __asm("BKPT #0\n");
-}
-
-//--------------------------------------------------------------------+
-// Forward USB interrupt events to TinyUSB IRQ Handler
-//--------------------------------------------------------------------+
-void USB_HP_IRQHandler(void) {
-  tud_int_handler(0);
-}
-
-uint32_t usb_lp_irq_counter = 0;
-void USB_LP_IRQHandler(void) {
-  tud_int_handler(0);
-  usb_lp_irq_counter++;
-}
-
-void USBWakeUp_IRQHandler(void) {
-  tud_int_handler(0);
 }
 
 //------------------------------------------------------+
@@ -449,4 +471,23 @@ static void board_adc_setup(void) {
 
 
   // adc_add_input(&adc1, &adc1_input);
+}
+
+//------------------------------------------------------
+// SPI Config
+//------------------------------------------------------
+
+struct spi spi3 = {
+  .instance = SPI3,
+  .data_size = 8,
+  .baudrate = SPI_BAUDRATE_PCLK_DIV_128,
+  .polarity = 0,
+  .phase = 0,
+};
+
+static void board_spi_setup(void) {
+
+  gpio_pin_set(&io.spi3_menc1_cs);
+  spi_init_master(&spi3);
+
 }

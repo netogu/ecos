@@ -1,6 +1,6 @@
 #include <ctype.h>
-#include "microshell.h"
 #include "board/bsp.h"
+#include "microshell.h"
 #include "tusb.h"
 
 /* FreeRTOS includes. */
