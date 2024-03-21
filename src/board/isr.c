@@ -1,4 +1,5 @@
 #include "board/bsp.h"
+#include "tusb.h"
 
 //------------------------------------------------------+
 // HRTIM Interrupt Handler
@@ -38,3 +39,21 @@ void HRTIM1_TIMA_IRQHandler(void) {
 //     gpio_pin_set(&io.test_pin1);
 //     gpio_pin_clear(&io.test_pin1);
 // }
+
+//--------------------------------------------------------------------+
+// USB interrupt Handler
+//--------------------------------------------------------------------+
+
+void USB_HP_IRQHandler(void) {
+  tud_int_handler(0);
+}
+
+uint32_t usb_lp_irq_counter = 0;
+void USB_LP_IRQHandler(void) {
+  tud_int_handler(0);
+  usb_lp_irq_counter++;
+}
+
+void USBWakeUp_IRQHandler(void) {
+  tud_int_handler(0);
+}

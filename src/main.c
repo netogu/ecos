@@ -1,18 +1,21 @@
 /* FreeRTOS includes. */
+#include <stdint.h>
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
 #include <timers.h>
 #include <semphr.h>
+#include "portmacro.h"
+#include "FreeRTOSConfig.h"
 
-
-#include <stdint.h>
-// #include <stdio.h>
+#include "stm32g4/gpio.h"
+#include "stm32g4/spi.h"
+#include "stm32g474xx.h"
 #include "tusb.h"
-#include "tiny_printf.h"
+// #include "tiny_printf.h"
 
 #include "board/bsp.h"
-#include "stm32g4/lpuart.h"
+// #include "stm32g4/lpuart.h"
 // #include "board/shell.h"
 #include "ush_config.h"
 
@@ -92,6 +95,12 @@ StaticTask_t cdc_task_tcb;
 StackType_t cdc_task_stack[ CDC_TASK_STACK_SIZE ];
 void cdc_task( void * parameters );
 
+#define BG_TASK_STACK_SIZE 516
+TaskHandle_t bg_task_handle;
+StaticTask_t bg_task_tcb;
+StackType_t bg_task_stack[BG_TASK_STACK_SIZE];
+static void bg_task( void *parameters );
+
 // #define SHELL_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 // TaskHandle_t shell_task_handle;
 // StaticTask_t shell_task_tcb;
@@ -110,11 +119,11 @@ int main(void)
   //                                  &serial_queue_s);
 
   led_blink_timer = xTimerCreateStatic(NULL,
-                                     pdMS_TO_TICKS(BLINK_NOT_MOUNTED),
-                                     true,
-                                     NULL,
-                                     led_blink_cb,
-                                     &led_blink_timer_s);
+                      pdMS_TO_TICKS(BLINK_NOT_MOUNTED),
+                      true,
+                      NULL,
+                      led_blink_cb,
+                      &led_blink_timer_s);
 
 
   usbd_task_handle = xTaskCreateStatic( usbd_task,
@@ -133,28 +142,45 @@ int main(void)
                       cdc_task_stack,
                       &cdc_task_tcb);
 
-  // shell_task_handle = xTaskCreateStatic( shell_task,
-  //                     "shell_task",
-  //                     configMINIMAL_STACK_SIZE,
-  //                     NULL,
-  //                     configMAX_PRIORITIES - 1,
-  //                     shell_task_stack,
-  //                     &shell_task_tcb);
+  bg_task_handle = xTaskCreateStatic( bg_task,
+                      "bg_task",
+                      BG_TASK_STACK_SIZE,
+                      NULL,
+                      configMAX_PRIORITIES - 2,
+                      bg_task_stack,
+                      &bg_task_tcb);
+
 
   xTimerStart(led_blink_timer, 0);
 
   /* Start the scheduler. */
   vTaskStartScheduler();
 
-
-
- 
-
   // Should not reach here
   return 0;
 }
 
+void bg_task( void *parameters ) {
 
+  spi_enable(&spi3);
+
+  while (1) {
+
+
+    gpio_pin_clear(&io.spi3_menc1_cs);
+
+    spi_write_byte(&spi3, 0xA6);
+    for(int i=0; i < 7; i++) {
+      spi_write_byte(&spi3, 0x00);
+    }
+
+    while (spi_is_busy(&spi3));
+    gpio_pin_set(&io.spi3_menc1_cs);
+
+    vTaskDelay(10);
+  }
+
+}
 
 void usbd_task( void *parameters )
 {   
@@ -171,7 +197,6 @@ void usbd_task( void *parameters )
   }
 
 }
-
 
 //--------------------------------------------------------------------+
 // USB CDC Device Callbacks
@@ -278,8 +303,8 @@ static void led_blink_cb(TimerHandle_t xTimer)
 {   
   /* Unused parameters. */
   ( void ) xTimer;
-  static uint32_t duty = 0;
-  static uint32_t dir = 0;
+  // static uint32_t duty = 0;
+  // static uint32_t dir = 0;
   gpio_pin_toggle(&io.led_green);
   gpio_pin_toggle(&io.led_red);
   gpio_pin_toggle(&io.led_blue);
