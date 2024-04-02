@@ -9,13 +9,13 @@ File   : bsp.h
 #include "drivers/stm32g4/hrtim.h"
 #include "drivers/stm32g4/spi.h"
 
-//------------------------------------------------------    
+//------------------------------------------------------
 // GPIOs
 //------------------------------------------------------
 
 struct board_io {
 
-  //change format to PORT_io_name e.x PA11_led_red
+  // change format to PORT_io_name e.x PA11_led_red
   gpio_t led_red;
   gpio_t led_green;
   gpio_t led_blue;
@@ -34,12 +34,17 @@ struct board_io {
   gpio_t spi3_miso;
   gpio_t spi3_clk;
   gpio_t spi3_menc1_cs;
-  //TODO create board struct and add alt func ios here too
+  gpio_t spi4_mosi;
+  gpio_t spi4_miso;
+  gpio_t spi4_clk;
+  gpio_t spi4_gd_cs;
+  gpio_t spi4_ltc_cs;
+  // TODO create board struct and add alt func ios here too
 };
 
 extern struct board_io io;
 extern struct hrtim_pwm pwma, pwmb, pwmc;
-extern struct spi spi3;
+extern struct spi spi3, spi4;
 extern uint8_t g_task_wait_flag;
 
 void board_init(void);

@@ -162,22 +162,64 @@ int main(void)
 
 void bg_task( void *parameters ) {
 
-  spi_enable(&spi3);
+
+
+  #define RW_Pos 15
+  #define CMD_Pos 11
+  #define DATA_Pos 0
+
+  #define CMD_DCR 0x02
+  #define DCR_DIS_GDUV_Pos 9
+  #define DCR_DIS_GDF_Pos 8
+  #define DCR_CLR_FLT_Pos 0
+
+  spi_enable(&spi4);
+
+  gpio_pin_set(&io.spi4_gd_cs);
+  // gpio_pin_set(&io.drive_enable);
+
+  vTaskDelay(1);
+
+
+
+  uint16_t frame = 0;
+  frame = (CMD_DCR << CMD_Pos) | (1 << DCR_DIS_GDUV_Pos) | (1 << DCR_DIS_GDF_Pos) | (1 << DCR_CLR_FLT_Pos);
+  gpio_pin_clear(&io.spi4_gd_cs);
+  spi_write(&spi4, frame);
+  while (spi_is_busy(&spi4));
+  gpio_pin_set(&io.spi4_gd_cs);
+
 
   while (1) {
 
 
-    gpio_pin_clear(&io.spi3_menc1_cs);
+    frame = (CMD_DCR << CMD_Pos) | (1 << DCR_CLR_FLT_Pos);
+    gpio_pin_clear(&io.spi4_gd_cs);
+    spi_write(&spi4, frame);
+    while (spi_is_busy(&spi4));
+    gpio_pin_set(&io.spi4_gd_cs);
 
-    spi_write_byte(&spi3, 0xA6);
-    for(int i=0; i < 7; i++) {
-      spi_write_byte(&spi3, 0x00);
+    for(uint8_t i=0; i < 100; i++) {
+      __NOP();
     }
 
-    while (spi_is_busy(&spi3));
-    gpio_pin_set(&io.spi3_menc1_cs);
+    frame = (1 << RW_Pos) | (0x00 << CMD_Pos);
+    gpio_pin_clear(&io.spi4_gd_cs);
+    spi_write(&spi4, frame);
+    while (spi_is_busy(&spi4));
+    gpio_pin_set(&io.spi4_gd_cs);
 
-    vTaskDelay(10);
+    for(uint8_t i=0; i < 100; i++) {
+      __NOP();
+    }
+
+    frame = (1 << RW_Pos) | (0x01 << CMD_Pos);
+    gpio_pin_clear(&io.spi4_gd_cs);
+    spi_write(&spi4, frame);
+    while (spi_is_busy(&spi4));
+    gpio_pin_set(&io.spi4_gd_cs);
+
+    vTaskDelay(1);
   }
 
 }
@@ -303,25 +345,25 @@ static void led_blink_cb(TimerHandle_t xTimer)
 {   
   /* Unused parameters. */
   ( void ) xTimer;
-  // static uint32_t duty = 0;
-  // static uint32_t dir = 0;
   gpio_pin_toggle(&io.led_green);
   gpio_pin_toggle(&io.led_red);
   gpio_pin_toggle(&io.led_blue);
 
-  // // increment duty up to 10 and then reverse to 0
+  // static uint32_t duty = 0;
+  // static uint32_t dir = 0;
+  // // increment duty up to 50% and then reverse to 0%
   // if (dir) {
-  //   duty--;
+  //     duty -=10;
   // } else {
-  //   duty++;
+  //   duty +=10;
   // }
-
-  // if (duty == 10) {
+  //
+  // if (duty == 1700) {
   //   dir = 1;
   // } else if (duty == 0) {
   //   dir = 0;
   // }
-
+  //
   // TIM20->CCR3 = duty;
 
 

@@ -10,6 +10,7 @@
 #include "drivers/stm32g4/hrtim.h"
 #include "drivers/stm32g4/adc.h"
 #include "drivers/stm32g4/spi.h"
+#include "stm32g474xx.h"
 #include "tusb.h"
 // #include "microshell.h"
 
@@ -239,7 +240,7 @@ struct board_io io = {
                 .pull = GPIO_PULL_NONE,
                 .speed = GPIO_SPEED_HIGH,
                 .af = GPIO_AF13},
-  //SPI
+  //SPI3
   .spi3_miso = {.port = GPIO_PORT_B,
                 .pin = GPIO_PIN_4,
                 .mode = GPIO_MODE_ALTERNATE,
@@ -271,6 +272,48 @@ struct board_io io = {
                 .pull = GPIO_PULL_NONE,
                 .speed = GPIO_SPEED_HIGH,
                 .af = GPIO_AF0},
+  //SPI4
+  .spi4_miso = {.port = GPIO_PORT_E,
+                .pin = GPIO_PIN_5,
+                .mode = GPIO_MODE_ALTERNATE,
+                .type = GPIO_TYPE_OPEN_DRAIN,
+                .pull = GPIO_PULL_UP,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF5},
+
+  .spi4_mosi = {.port = GPIO_PORT_E,
+                .pin = GPIO_PIN_6,
+                .mode = GPIO_MODE_ALTERNATE,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_NONE,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF5},
+
+  .spi4_clk = { .port = GPIO_PORT_E,
+                .pin = GPIO_PIN_2,
+                .mode = GPIO_MODE_ALTERNATE,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_NONE,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF5},
+
+  .spi4_gd_cs = {.port = GPIO_PORT_D,
+                .pin = GPIO_PIN_8,
+                .mode = GPIO_MODE_OUTPUT,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_NONE,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF0},
+
+  .spi4_ltc_cs = {.port = GPIO_PORT_D,
+                .pin = GPIO_PIN_6,
+                .mode = GPIO_MODE_OUTPUT,
+                .type = GPIO_TYPE_PUSH_PULL,
+                .pull = GPIO_PULL_NONE,
+                .speed = GPIO_SPEED_HIGH,
+                .af = GPIO_AF0},
+
+  
 
 };
 
@@ -368,15 +411,15 @@ struct hrtim_pwm pwma = {
   .timer = HRTIM_TIMER_A,
   .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
   .polarity = HRTIM_PWM_POLARITY_NORMAL,
-  .freq_hz = 10000, 
-  .deadtime_ns = 500.0,
+  .freq_hz = 50000, 
+  .deadtime_ns = 200.0,
 };
 
 struct hrtim_pwm pwmb = {
   .timer = HRTIM_TIMER_F,
   .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
   .polarity = HRTIM_PWM_POLARITY_NORMAL,
-  .freq_hz = 100000, 
+  .freq_hz = 50000, 
   .deadtime_ns = 200.0,
 };
 
@@ -384,7 +427,7 @@ struct hrtim_pwm pwmc = {
   .timer = HRTIM_TIMER_E,
   .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
   .polarity = HRTIM_PWM_POLARITY_NORMAL,
-  .freq_hz = 100000, 
+  .freq_hz = 50000, 
   .deadtime_ns = 200.0,
 };
 
@@ -421,29 +464,22 @@ static void board_pwm_setup(void) {
   hrtim_init();
   // Change HRTIM prescaler
   hrtim_pwm_init(&pwma);
-  // hrtim_pwm_init(&pwmb);
-  // hrtim_pwm_init(&pwmc);
-  hrtim_pwm_enable_fault_input(&pwma, 5);
+  hrtim_pwm_init(&pwmb);
+  hrtim_pwm_init(&pwmc);
+  // hrtim_pwm_swap_output(&pwma);
+  // hrtim_pwm_enable_fault_input(&pwma, 5);
 
-  pwm_dac_init();
+  // pwm_dac_init();
 
-  // hrtim_pwm_set_duty(&pwma, 20);
-  // hrtim_pwm_set_duty(&pwmb, 0);
-  // hrtim_pwm_set_duty(&pwmc, 0);
+  hrtim_pwm_set_duty(&pwma, 50);
+  hrtim_pwm_set_duty(&pwmb, 50);
+  hrtim_pwm_set_duty(&pwmc, 50);
   
- 
- 
-  // hrtim_pwm_set_n_cycle_run(&pwma, 3);50.0); HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxDIER |= HRTIM_TIMDIER_RSTIE;
-  // // Enable ADC1 Trigger on Timer A Reset
 
-  // HRTIM1->sCommonRegs.CR2 |= HRTIM_CR2_SWPA;
-  // hrtim_pwm_start(&pwma);
-  // hrtim_pwm_start(&pwmb);
-  // hrtim_pwm_start(&pwmc);
-  // HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TF1OEN;
-  // HRTIM1->sCommonRegs.OENR |= HRTIM_OENR_TF2OEN;
-  // // Start Timer
-  // HRTIM1->sMasterRegs.MCR |= HRTIM_MCR_TFCEN;
+  HRTIM1->sMasterRegs.MCR |= (HRTIM_MCR_TACEN | HRTIM_MCR_TFCEN | HRTIM_MCR_TECEN);
+  hrtim_pwm_start(&pwma);
+  hrtim_pwm_start(&pwmb);
+  hrtim_pwm_start(&pwmc);
 }
 
 //--------------------------------------------------------------------+
@@ -485,9 +521,21 @@ struct spi spi3 = {
   .phase = 0,
 };
 
+struct spi spi4 = {
+  .instance = SPI4,
+  .data_size = 16,
+  .baudrate = SPI_BAUDRATE_PCLK_DIV_128,
+  .polarity = 0,
+  .phase = 1,
+};
+
 static void board_spi_setup(void) {
 
   gpio_pin_set(&io.spi3_menc1_cs);
   spi_init_master(&spi3);
+
+  gpio_pin_set(&io.spi4_gd_cs);
+  gpio_pin_set(&io.spi4_ltc_cs);
+  spi_init_master(&spi4);
 
 }
