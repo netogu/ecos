@@ -8,13 +8,10 @@
 #include "portmacro.h"
 #include "FreeRTOSConfig.h"
 
-#include "stm32g4/gpio.h"
-#include "stm32g4/spi.h"
-#include "stm32g474xx.h"
+#include "board/bsp.h"
 #include "tusb.h"
 // #include "tiny_printf.h"
 
-#include "board/bsp.h"
 // #include "stm32g4/lpuart.h"
 // #include "board/shell.h"
 #include "ush_config.h"
@@ -160,69 +157,36 @@ int main(void)
   return 0;
 }
 
+//--------------------------------------------------------------------------------
+// Background Task
+//--------------------------------------------------------------------------------
 void bg_task( void *parameters ) {
 
-
-
-  #define RW_Pos 15
-  #define CMD_Pos 11
-  #define DATA_Pos 0
-
-  #define CMD_DCR 0x02
-  #define DCR_DIS_GDUV_Pos 9
-  #define DCR_DIS_GDF_Pos 8
-  #define DCR_CLR_FLT_Pos 0
-
   spi_enable(&spi4);
-
   gpio_pin_set(&io.spi4_gd_cs);
-  // gpio_pin_set(&io.drive_enable);
+
+  drv835x_drive_enable(&gate_driver);
 
   vTaskDelay(1);
 
+  drv835x_set_hs_gate_drive_strength(&gate_driver, DRV835X_IDRIVEP_1000MA, DRV835X_IDRIVEN_2000MA);
+  drv835x_set_ls_gate_drive_strength(&gate_driver, DRV835X_IDRIVEP_1000MA, DRV835X_IDRIVEN_2000MA);
 
-
-  uint16_t frame = 0;
-  frame = (CMD_DCR << CMD_Pos) | (1 << DCR_DIS_GDUV_Pos) | (1 << DCR_DIS_GDF_Pos) | (1 << DCR_CLR_FLT_Pos);
-  gpio_pin_clear(&io.spi4_gd_cs);
-  spi_write(&spi4, frame);
-  while (spi_is_busy(&spi4));
-  gpio_pin_set(&io.spi4_gd_cs);
+  drv835x_clear_faults(&gate_driver);
 
 
   while (1) {
 
-
-    frame = (CMD_DCR << CMD_Pos) | (1 << DCR_CLR_FLT_Pos);
-    gpio_pin_clear(&io.spi4_gd_cs);
-    spi_write(&spi4, frame);
-    while (spi_is_busy(&spi4));
-    gpio_pin_set(&io.spi4_gd_cs);
-
-    for(uint8_t i=0; i < 100; i++) {
-      __NOP();
-    }
-
-    frame = (1 << RW_Pos) | (0x00 << CMD_Pos);
-    gpio_pin_clear(&io.spi4_gd_cs);
-    spi_write(&spi4, frame);
-    while (spi_is_busy(&spi4));
-    gpio_pin_set(&io.spi4_gd_cs);
-
-    for(uint8_t i=0; i < 100; i++) {
-      __NOP();
-    }
-
-    frame = (1 << RW_Pos) | (0x01 << CMD_Pos);
-    gpio_pin_clear(&io.spi4_gd_cs);
-    spi_write(&spi4, frame);
-    while (spi_is_busy(&spi4));
-    gpio_pin_set(&io.spi4_gd_cs);
+    drv835x_read_faults(&gate_driver);
 
     vTaskDelay(1);
   }
 
 }
+
+//--------------------------------------------------------------------------------
+// USB Device Task
+//--------------------------------------------------------------------------------
 
 void usbd_task( void *parameters )
 {   
@@ -230,8 +194,6 @@ void usbd_task( void *parameters )
     ( void ) parameters;
 
   tusb_init();
-
-
 
   while (1) {
     tud_task();
@@ -243,8 +205,9 @@ void usbd_task( void *parameters )
 //--------------------------------------------------------------------+
 // USB CDC Device Callbacks
 //--------------------------------------------------------------------+
-// Invoked when device is mounted
+
 void tud_mount_cb(void) {
+// Invoked when device is mounted
 
   xTimerChangePeriod(led_blink_timer, pdMS_TO_TICKS(BLINK_MOUNTED), 0);
   
@@ -283,7 +246,6 @@ void cdc_task( void *parameters )
   /* Unused parameters. */
     ( void ) parameters;
 
-  char byte;
 
   shell_init();
 

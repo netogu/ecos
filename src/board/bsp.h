@@ -8,6 +8,7 @@ File   : bsp.h
 #include "drivers/stm32g4/gpio.h"
 #include "drivers/stm32g4/hrtim.h"
 #include "drivers/stm32g4/spi.h"
+#include "drivers/power/drv835x.h"
 
 //------------------------------------------------------
 // GPIOs
@@ -42,10 +43,11 @@ struct board_io {
   // TODO create board struct and add alt func ios here too
 };
 
+
 extern struct board_io io;
 extern struct hrtim_pwm pwma, pwmb, pwmc;
 extern struct spi spi3, spi4;
-extern uint8_t g_task_wait_flag;
+extern struct drv835x gate_driver; 
 
 void board_init(void);
 uint32_t millis(void);

@@ -1,4 +1,3 @@
-#include <ctype.h>
 #include "board/bsp.h"
 #include "microshell.h"
 #include "tusb.h"

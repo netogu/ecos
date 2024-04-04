@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 #include <stm32g4xx.h>
-#include "drivers/stm32g4/gpio.h"
 
 #define ADC_CLK_DOMAIN_SYSCLK_PLL 0
 
@@ -51,8 +50,10 @@ int adc_deinit(struct adc *adc);
 
 int adc_add_input(struct adc *adc, struct adc_input *channel) {
     ADC_TypeDef *adc_regs = (ADC_TypeDef *)adc->instance;
+    (void)adc_regs;
 
 
+    return 0;
 }
 
 int adc_start_sampling(struct adc *adc) {

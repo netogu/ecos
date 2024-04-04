@@ -18,6 +18,7 @@
 // Board Configuration 
 //------------------------------------------------------+
 
+
 static void board_clock_setup(void);
 static void board_gpio_setup(void);
 static void board_serial_setup(void);
@@ -411,7 +412,7 @@ struct hrtim_pwm pwma = {
   .timer = HRTIM_TIMER_A,
   .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
   .polarity = HRTIM_PWM_POLARITY_NORMAL,
-  .freq_hz = 50000, 
+  .freq_hz = 10000, 
   .deadtime_ns = 200.0,
 };
 
@@ -419,7 +420,7 @@ struct hrtim_pwm pwmb = {
   .timer = HRTIM_TIMER_F,
   .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
   .polarity = HRTIM_PWM_POLARITY_NORMAL,
-  .freq_hz = 50000, 
+  .freq_hz = 10000, 
   .deadtime_ns = 200.0,
 };
 
@@ -470,16 +471,15 @@ static void board_pwm_setup(void) {
   // hrtim_pwm_enable_fault_input(&pwma, 5);
 
   // pwm_dac_init();
-
-  hrtim_pwm_set_duty(&pwma, 50);
-  hrtim_pwm_set_duty(&pwmb, 50);
-  hrtim_pwm_set_duty(&pwmc, 50);
+  // hrtim_pwm_set_duty(&pwma, 50);
+  // hrtim_pwm_set_duty(&pwmb, 50);
+  // hrtim_pwm_set_duty(&pwmc, 50);
   
 
-  HRTIM1->sMasterRegs.MCR |= (HRTIM_MCR_TACEN | HRTIM_MCR_TFCEN | HRTIM_MCR_TECEN);
-  hrtim_pwm_start(&pwma);
-  hrtim_pwm_start(&pwmb);
-  hrtim_pwm_start(&pwmc);
+  // HRTIM1->sMasterRegs.MCR |= (HRTIM_MCR_TACEN | HRTIM_MCR_TFCEN | HRTIM_MCR_TECEN);
+  // hrtim_pwm_start(&pwma);
+  // hrtim_pwm_start(&pwmb);
+  // hrtim_pwm_start(&pwmc);
 }
 
 //--------------------------------------------------------------------+
@@ -487,27 +487,27 @@ static void board_pwm_setup(void) {
 //--------------------------------------------------------------------+
 
 
-static void board_adc_setup(void) {
-
-  struct adc adc1 = {
-    .instance = ADC1_BASE,
-    .channel_count = 1,
-  };
-
-  // struct adc_input adc1_input = {
-  //   .channel = 11,
-  //   .sample_time = ADC_SAMPLETIME_2_5,
-  //   .resolution = ADC_RESOLUTION_12B,
-  //   .alignment = ADC_ALIGNMENT_RIGHT,
-  //   .trigger = ADC_TRIGGER_SOFTWARE,
-  // };
-
-  adc_init(&adc1);
-  adc_enable(&adc1);
-
-
-  // adc_add_input(&adc1, &adc1_input);
-}
+// static void board_adc_setup(void) {
+//
+//   // struct adc adc1 = {
+//   //   .instance = ADC1_BASE,
+//   //   .channel_count = 1,
+//   // };
+//
+//   // struct adc_input adc1_input = {
+//   //   .channel = 11,
+//   //   .sample_time = ADC_SAMPLETIME_2_5,
+//   //   .resolution = ADC_RESOLUTION_12B,
+//   //   .alignment = ADC_ALIGNMENT_RIGHT,
+//   //   .trigger = ADC_TRIGGER_SOFTWARE,
+//   // };
+//   //
+//   // adc_init(&adc1);
+//   // adc_enable(&adc1);
+//
+//
+//   // adc_add_input(&adc1, &adc1_input);
+// }
 
 //------------------------------------------------------
 // SPI Config
@@ -539,3 +539,40 @@ static void board_spi_setup(void) {
   spi_init_master(&spi4);
 
 }
+
+//------------------------------------------------------
+// Gate Driver Config DRV8353
+//------------------------------------------------------
+
+
+uint8_t drv835x_spi_transfer(uint16_t data_tx, uint16_t *data_rx) {
+
+  gpio_pin_clear(&io.spi4_gd_cs);
+  spi_transfer(&spi4, data_tx, data_rx);
+  gpio_pin_set(&io.spi4_gd_cs);
+
+  return 0;
+}
+
+uint8_t drv835x_drv_en(uint8_t state) {
+  if (state) {
+    gpio_pin_set(&io.drive_enable);
+  } else {
+    gpio_pin_clear(&io.drive_enable);
+  }
+
+  return 0;
+}
+
+
+struct drv835x gate_driver = {
+  .state = 0,
+  .status = 0,
+  .vgs_status = 0,
+  .drive_enable = drv835x_drv_en,
+  .spi_transfer = drv835x_spi_transfer,
+};
+
+
+
+

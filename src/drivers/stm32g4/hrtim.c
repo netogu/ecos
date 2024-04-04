@@ -1,11 +1,9 @@
 #include <stm32g4xx.h>
 #include "drivers/stm32g4/hrtim.h"
-#include "drivers/stm32g4/gpio.h"
 
 void hrtim_pwm_set_frequency(struct hrtim_pwm *pwm, uint32_t freq_hz) {
-    uint32_t period = 0;
     uint32_t prescale = HRTIM1->sTimerxRegs[pwm->timer].TIMxCR & HRTIM_TIMCR_CK_PSC;
-    HRTIM1->sTimerxRegs[pwm->timer].PERxR = SystemCoreClock / freq_hz * 32 >> prescale + 1;
+    HRTIM1->sTimerxRegs[pwm->timer].PERxR = SystemCoreClock / freq_hz * 32 >> (prescale + 1);
 }
 
 void hrtim_pwm_set_duty(struct hrtim_pwm *pwm, uint32_t duty_pc) {
@@ -67,7 +65,6 @@ int hrtim_pwm_init(struct hrtim_pwm *pwm) {
     // Configure PWM Mode
 
     uint32_t period = 0;
-    uint32_t cmp = 0;
     uint32_t prescale = 0;
 
     if (pwm->freq_hz < 83000) {
