@@ -143,13 +143,13 @@ static void dpt_exec_callback(struct ush_object *self,
 
   char *channel = argv[2];
   if (strcmp(channel, "a") == 0) {
-    ush_printf(self, "pwma selected\r\n");
+    ush_printf(self, "Channel : A\r\n");
     pwm = &pwma;
   } else if (strcmp(channel, "b") == 0) {
-    ush_printf(self, "pwmb selected\r\n");
+    ush_printf(self, "Channel : B\r\n");
     pwm = &pwmb;
   } else if (strcmp(channel, "c") == 0) {
-    ush_printf(self, "pwmc selected\r\n");
+    ush_printf(self, "Channel : C\r\n");
     pwm = &pwmc;
   }
 
@@ -160,9 +160,9 @@ static void dpt_exec_callback(struct ush_object *self,
 
   char *mode = argv[1];
   if (strcmp(mode, "buck") == 0) {
-    ush_printf(self, "buck mode\r\n");
+    ush_printf(self, "Mode : Buck\r\n");
   } else if (strcmp(mode, "boost") == 0) {
-    ush_printf(self, "boost mode\r\n");
+    ush_printf(self, "Mode : Boost\r\n");
     hrtim_pwm_swap_output(pwm);
   } else {
     ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
@@ -171,8 +171,10 @@ static void dpt_exec_callback(struct ush_object *self,
 
   int ton = atoi(argv[3]);
   ush_printf(self, "ton: %d ns\r\n", ton);
+
   int toff = atoi(argv[4]);
   ush_printf(self, "toff: %d ns\r\n", toff);
+
   int n = atoi(argv[5]);
   if (n <= 1) {
     ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
@@ -188,6 +190,7 @@ static void dpt_exec_callback(struct ush_object *self,
   ton < 0 ? ton = 0 : ton;
   toff < 0 ? toff = 0 : toff;
 
+  hrtim_pwm_stop(pwm);
   hrtim_pwm_set_frequency(pwm, 1000000000 / (ton + toff));
   hrtim_pwm_set_duty(pwm, ton * 100 / (ton + toff));
   hrtim_pwm_set_n_cycle_run(pwm, n);
@@ -198,7 +201,7 @@ static void dpt_exec_callback(struct ush_object *self,
 static void reboot_exec_callback(struct ush_object *self,
                                  struct ush_file_descriptor const *file,
                                  int argc, char *argv[]) {
-  ush_print(self, "error: reboot not supported...");
+  NVIC_SystemReset();
 }
 
 // info file get data callback

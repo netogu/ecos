@@ -7,25 +7,63 @@
 
 void HRTIM1_TIMA_IRQHandler(void) {
 
-    /* REP Interrupt Routine */
-    if (HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxISR & HRTIM_TIMISR_REP) { 
-        // Disable continuous mode
-        HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxCR &= ~(HRTIM_TIMCR_CONT);
-        // Clear REP interrupt
-        HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxICR |= HRTIM_TIMICR_REPC;
-    }
+  /* REP Interrupt Routine - TIMA */
+  if (HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxISR & HRTIM_TIMISR_REP) {
+    // Disable continuous mode
+    HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxCR &= ~(HRTIM_TIMCR_CONT);
+    // Clear REP interrupt
+    HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxICR |= HRTIM_TIMICR_REPC;
+  }
 
-    
-    /* RESET Roll-Over Interupt */
-    if (HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxISR & HRTIM_TIMISR_RST) { 
-        // Togle test pin
-        // gpio_pin_set(&io.test_pin1);
-        // gpio_pin_clear(&io.test_pin1);
-        // Clear RST interrupt
-        HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxICR |= HRTIM_TIMICR_RSTC;
-    }
+  /* RESET Roll-Over Interupt */
+  if (HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxISR & HRTIM_TIMISR_RST) {
+    // Togle test pin
+    // gpio_pin_set(&io.test_pin1);
+    // gpio_pin_clear(&io.test_pin1);
+    // Clear RST interrupt
+    HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxICR |= HRTIM_TIMICR_RSTC;
+  }
 }
 
+void HRTIM1_TIME_IRQHandler(void) {
+
+  /* REP Interrupt Routine - TIME */
+  if (HRTIM1->sTimerxRegs[HRTIM_TIM_E].TIMxISR & HRTIM_TIMISR_REP) {
+    // Disable continuous mode
+    HRTIM1->sTimerxRegs[HRTIM_TIM_E].TIMxCR &= ~(HRTIM_TIMCR_CONT);
+    // Clear REP interrupt
+    HRTIM1->sTimerxRegs[HRTIM_TIM_E].TIMxICR |= HRTIM_TIMICR_REPC;
+  }
+
+  /* RESET Roll-Over Interupt */
+  if (HRTIM1->sTimerxRegs[HRTIM_TIM_E].TIMxISR & HRTIM_TIMISR_RST) {
+    // Togle test pin
+    // gpio_pin_set(&io.test_pin1);
+    // gpio_pin_clear(&io.test_pin1);
+    // Clear RST interrupt
+    HRTIM1->sTimerxRegs[HRTIM_TIM_E].TIMxICR |= HRTIM_TIMICR_RSTC;
+  }
+}
+
+void HRTIM1_TIMF_IRQHandler(void) {
+
+  /* REP Interrupt Routine - TIMF */
+  if (HRTIM1->sTimerxRegs[HRTIM_TIM_F].TIMxISR & HRTIM_TIMISR_REP) {
+    // Disable continuous mode
+    HRTIM1->sTimerxRegs[HRTIM_TIM_F].TIMxCR &= ~(HRTIM_TIMCR_CONT);
+    // Clear REP interrupt
+    HRTIM1->sTimerxRegs[HRTIM_TIM_F].TIMxICR |= HRTIM_TIMICR_REPC;
+  }
+
+  /* RESET Roll-Over Interupt */
+  if (HRTIM1->sTimerxRegs[HRTIM_TIM_F].TIMxISR & HRTIM_TIMISR_RST) {
+    // Togle test pin
+    // gpio_pin_set(&io.test_pin1);
+    // gpio_pin_clear(&io.test_pin1);
+    // Clear RST interrupt
+    HRTIM1->sTimerxRegs[HRTIM_TIM_F].TIMxICR |= HRTIM_TIMICR_RSTC;
+  }
+}
 //------------------------------------------------------+
 // ADC Interrupt Handler
 //------------------------------------------------------+
@@ -44,9 +82,7 @@ void HRTIM1_TIMA_IRQHandler(void) {
 // USB interrupt Handler
 //--------------------------------------------------------------------+
 
-void USB_HP_IRQHandler(void) {
-  tud_int_handler(0);
-}
+void USB_HP_IRQHandler(void) { tud_int_handler(0); }
 
 uint32_t usb_lp_irq_counter = 0;
 void USB_LP_IRQHandler(void) {
@@ -54,6 +90,4 @@ void USB_LP_IRQHandler(void) {
   usb_lp_irq_counter++;
 }
 
-void USBWakeUp_IRQHandler(void) {
-  tud_int_handler(0);
-}
+void USBWakeUp_IRQHandler(void) { tud_int_handler(0); }
