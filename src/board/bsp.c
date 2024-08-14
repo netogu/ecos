@@ -4,12 +4,14 @@
 #include "board/bsp.h"
 #include <stdint.h>
 
+#include "drivers/stm32g4/hrtim.h"
+#include "drivers/stm32g4/spi.h"
+#include "drivers/stm32g4/rcc.h"
 #include "drivers/stm32g4/adc.h"
 #include "drivers/stm32g4/gpio.h"
 #include "drivers/stm32g4/adc.h"
 #include "drivers/stm32g4/uart.h"
 #include "drivers/stm32g4/usbpcd.h"
-#include "stm32g474xx.h"
 #include "tusb.h"
 // #include "microshell.h"
 
