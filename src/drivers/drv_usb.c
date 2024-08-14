@@ -7,7 +7,7 @@
 static StaticSemaphore_t usb_mutex_buffer;
 SemaphoreHandle_t usb_mutex;
 
-static char usb_serialno[USB_STR_SERIALNO_LEN] = "00000000";
+// static char usb_serialno[USB_STR_SERIALNO_LEN] = "00000000";
 
 // void usb_get_serialno(void) {
 //     uint8_t id[8];

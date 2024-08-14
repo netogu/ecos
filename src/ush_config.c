@@ -1,6 +1,7 @@
 #include "board/bsp.h"
 #include "microshell.h"
 // #include "drivers/drv_usb.h"
+#include "drivers/hal.h"
 #include "tusb.h"
 
 /* FreeRTOS includes. */
@@ -145,7 +146,8 @@ static void ocp_exec_callback(struct ush_object *self, struct ush_file_descripto
 
     // TIM20.3 at 50% duty cycle maps to the OCP threshold at 100%
     float duty = threshold_pc * 1/2.0;
-    duty > 0.5 ? 0.5 : duty < 0.0 ? 0.0 : duty;
+    duty = (duty > 0.5) ? 0.5 : ((duty < 0.0) ? 0.0 : duty);
+
     uint32_t period = TIM20->ARR;
     duty = period * duty + 0.5;
     TIM20->CCR3 = (uint32_t) duty;

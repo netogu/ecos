@@ -6,7 +6,10 @@
 #include <semphr.h>
 
 
+#define NOCHAR                  '\0'
+
 // ----------------------------- USB -----------------------------
+#define USB_STR_SERIALNO_LEN    8
 
 extern SemaphoreHandle_t usb_mutex;
 

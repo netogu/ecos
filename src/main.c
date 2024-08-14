@@ -164,7 +164,7 @@ int main(void)
 //--------------------------------------------------------------------------------
 void bg_task( void *parameters ) {
 
-  struct board_descriptor *board = board_get_handler();
+  // struct board_descriptor *board = board_get_handler();
 
   // spi_enable(&brd->spi4);
   // gpio_pin_set(&brd->io.spi4_gd_cs);
@@ -176,7 +176,7 @@ void bg_task( void *parameters ) {
 
   // drv835x_clear_faults(&brd->gate_driver);
 
-  char *msg = "Hello World!\r\n";
+  // char *msg = "Hello World!\r\n";
   while (1) {
 
     // drv835x_read_faults(&brd->gate_driver);

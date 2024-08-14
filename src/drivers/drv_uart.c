@@ -36,10 +36,10 @@ int cli_uart_putc(char tx_char) {
 }
 
 char cli_uart_getc(void) {
-
+    int status = 0;
     char readchar = NOCHAR;
     if (xSemaphoreTake(uart_mutex, 10) == pdTRUE) {
-        int status = uart_read(serial_port, (uint8_t *) &readchar, 1);
+        status = uart_read(serial_port, (uint8_t *) &readchar, 1);
         xSemaphoreGive(uart_mutex);
     }
     return readchar;
