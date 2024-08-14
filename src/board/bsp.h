@@ -9,12 +9,14 @@ File   : bsp.h
 #include "drivers/stm32g4/hrtim.h"
 #include "drivers/stm32g4/spi.h"
 #include "drivers/power/drv835x.h"
+#include "drivers/stm32g4/uart.h"
 
 //------------------------------------------------------
 // GPIOs
 //------------------------------------------------------
 
-struct board_io {
+
+struct gpio {
 
   // change format to PORT_io_name e.x PA11_led_red
   gpio_t led_red;
@@ -43,12 +45,25 @@ struct board_io {
   // TODO create board struct and add alt func ios here too
 };
 
+struct board_descriptor {
+  struct gpio io;
+  struct hrtim_pwm pwma;
+  struct hrtim_pwm pwmb;
+  struct hrtim_pwm pwmc;
+  struct spi spi3;
+  struct spi spi4;
+  struct drv835x gate_driver;
+  uart_t lpuart1;
+};
 
-extern struct board_io io;
-extern struct hrtim_pwm pwma, pwmb, pwmc;
-extern struct spi spi3, spi4;
-extern struct drv835x gate_driver; 
+// extern struct gpio io;
+// extern struct hrtim_pwm pwma, pwmb, pwmc;
+// extern struct spi spi3, spi4;
+// extern struct drv835x gate_driver; 
 
-void board_init(void);
+extern struct board board;
+
+struct board_descriptor *board_get_handler(void);
+int board_init(void);
 uint32_t millis(void);
 void delay_ms(uint32_t ms);

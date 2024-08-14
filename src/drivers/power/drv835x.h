@@ -4,6 +4,7 @@
  *--------------------------------------------------------*/
 #pragma once
 #include <stdint.h>
+#include <stddef.h>
 
 enum drv835x_state {
   DRV835X_STATE_DISABLED,
@@ -49,12 +50,17 @@ enum drv835x_idrivep {
   DRV835X_IDRIVEP_1000MA,
 };
 
+
+struct drv835x_interface {
+  uint8_t (*drive_enable)(uint8_t state);
+  uint8_t (*spi_transfer)(uint16_t in, uint16_t *out);
+};
+
 struct drv835x {
+  struct drv835x_interface *io;
   uint16_t state;
   uint16_t status;
   uint16_t vgs_status;
-  uint8_t (*drive_enable)(uint8_t state);
-  uint8_t (*spi_transfer)(uint16_t in, uint16_t *out);
 };
 
 void drv835x_init(struct drv835x *self);

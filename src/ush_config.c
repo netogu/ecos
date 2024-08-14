@@ -1,12 +1,38 @@
 #include "board/bsp.h"
 #include "drivers/stm32g4/hrtim.h"
 #include "microshell.h"
+// #include "drivers/drv_usb.h"
 #include "tusb.h"
 
 /* FreeRTOS includes. */
 #include "task.h"
 
+#define NOCHAR '\0'
+
+
+#define CLI_UART
+// #define CLI_USB
+
 // non-blocking read interface
+static int ush_read(struct ush_object *self, char *ch)
+{
+    char readchar = NOCHAR;
+    
+
+    #ifdef CLI_USB
+    if (tud_cdc_connected() && tud_cdc_available() > 0) {
+        // Write single byte if mutex is available
+        readchar = cli_usb_getc();
+    }
+    #else
+    readchar = cli_uart_getc();
+    #endif
+
+    if (readchar != NOCHAR) {
+        *ch = readchar;
+        return 1;
+    }
+    return 0;
 static int ush_read(struct ush_object *self, char *ch) {
   // should be implemented as a FIFO
 
@@ -18,10 +44,20 @@ static int ush_read(struct ush_object *self, char *ch) {
 }
 
 // non-blocking write interface
+static int ush_write(struct ush_object *self, char ch)
+{
+    #ifdef CLI_USB
+    return cli_usb_putc(ch);
+    #else
+    return cli_uart_putc(ch);
+    #endif
 static int ush_write(struct ush_object *self, char ch) {
   // should be implemented as a FIFO
   return (tud_cdc_write_char(ch) == 1);
 }
+
+
+
 
 // I/O interface descriptor
 static const struct ush_io_interface ush_iface = {
@@ -257,6 +293,14 @@ static const struct ush_file_descriptor cmd_files[] = {
         .description = "sets ocp threshold (%)",
         .help = "usage: ocp < 0 to 100 >",
         .exec = ocp_exec_callback,
+    },
+    {
+        .name = "pwma_duty",
+        .description = "set pwma duty cycle (%)",
+        .help = "usage: pwma_duty <duty:0-100>",
+        .exec = pwma_set_duty_cb,
+    }
+};
     }};
 
 // root directory handler
@@ -278,6 +322,11 @@ void shell_init(void) {
                  sizeof(root_files) / sizeof(root_files[0]));
 }
 
+
+void inline shell_update(void)
+{
+    // service microshell instance
+    ush_service(&ush);
 void shell_update(void) {
   // service microshell instance
   ush_service(&ush);
