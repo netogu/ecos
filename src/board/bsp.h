@@ -9,6 +9,7 @@ File   : bsp.h
 #include "drivers/stm32g4/hrtim.h"
 #include "drivers/stm32g4/spi.h"
 #include "drivers/power/drv835x.h"
+#include "drivers/stm32g4/uart.h"
 
 //------------------------------------------------------
 // GPIOs
@@ -52,6 +53,7 @@ struct board_descriptor {
   struct spi spi3;
   struct spi spi4;
   struct drv835x gate_driver;
+  uart_t lpuart1;
 };
 
 // extern struct gpio io;

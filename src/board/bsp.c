@@ -292,6 +292,35 @@ static struct board_descriptor brd = (struct board_descriptor) {
     .polarity = 0,
     .phase = 1,
   },
+
+  .lpuart1 = (uart_t) {
+    .tx_pin = (gpio_t) {
+      .port = GPIO_PORT_A,
+      .pin = GPIO_PIN_2,
+      .mode = GPIO_MODE_ALTERNATE,
+      .type = GPIO_TYPE_PUSH_PULL,
+      .pull = GPIO_PULL_NONE,
+      .speed = GPIO_SPEED_LOW,
+      .af = GPIO_AF12,
+    },
+    .rx_pin = (gpio_t) {
+      .port = GPIO_PORT_A,
+      .pin = GPIO_PIN_3,
+      .mode = GPIO_MODE_ALTERNATE,
+      .type = GPIO_TYPE_PUSH_PULL,
+      .pull = GPIO_PULL_NONE,
+      .speed = GPIO_SPEED_LOW,
+      .af = GPIO_AF12,
+    },
+    .config = {
+      .baudrate = 115200,
+      .mode = LPUART_MODE_RX_TX,
+      .word_length = LPUART_DATA_BITS_8,
+      .stop_bits = LPUART_STOP_BITS_1,
+      .parity = LPUART_PARITY_NONE,
+      .flow_control = LPUART_FLOW_CONTROL_NONE,
+    },
+  }
 };
 
 static void board_clock_setup(void);
@@ -310,7 +339,7 @@ int board_init(void) {
 
   board_clock_setup();
   board_gpio_setup();
-  // board_serial_setup();
+  board_serial_setup();
   board_spi_setup();
   board_usb_setup();
   board_pwm_setup();
@@ -391,213 +420,6 @@ static void board_clock_setup() {
 //------------------------------------------------------
 
 
-// struct gpio io = {
-
-//   // Status LEDs
-//   .led_red = {.port = GPIO_PORT_B,
-//                 .pin = GPIO_PIN_6,
-//                 .mode = GPIO_MODE_OUTPUT,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_UP,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF0,},
-
-//   #if STM32G4_NUKLEO
-//   .led_green = {.port = GPIO_PORT_A,
-//                 .pin = GPIO_PIN_5,
-//                 .mode = GPIO_MODE_OUTPUT,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_UP,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF0,},
-//   #else
-//   .led_green = {.port = GPIO_PORT_B,
-//                 .pin = GPIO_PIN_7,
-//                 .mode = GPIO_MODE_OUTPUT,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_UP,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF0,},
-//   #endif
-
-//   .led_blue = {.port = GPIO_PORT_B,
-//                 .pin = GPIO_PIN_8,
-//                 .mode = GPIO_MODE_OUTPUT,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_UP,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF0,},
-
-//   .drive_enable = {.port = GPIO_PORT_C,
-//                 .pin = GPIO_PIN_13,
-//                 .mode = GPIO_MODE_OUTPUT,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_UP,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF0,},
-
-//   //HRTIM_CHA1
-//   .pwm_ah = {.port = GPIO_PORT_A,
-//                 .pin = GPIO_PIN_8,
-//                 .mode = GPIO_MODE_ALTERNATE,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_UP,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF13,},
-
-//   //HRTIM_CHA2
-//   .pwm_al = {.port = GPIO_PORT_A,
-//                 .pin = GPIO_PIN_9,
-//                 .mode = GPIO_MODE_ALTERNATE,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_UP,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF13,},
-
-//   //HRTIM_CHF1
-//   .pwm_bh = {.port = GPIO_PORT_C,
-//                 .pin = GPIO_PIN_6,
-//                 .mode = GPIO_MODE_ALTERNATE,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_UP,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF13,},
-//   //HRTIM_CHF2
-//   .pwm_bl = {.port = GPIO_PORT_C,
-//                 .pin = GPIO_PIN_7,
-//                 .mode = GPIO_MODE_ALTERNATE,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_UP,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF13,},
-//   //HRTIM_CHE1
-//   .pwm_ch = {.port = GPIO_PORT_C,
-//                 .pin = GPIO_PIN_8,
-//                 .mode = GPIO_MODE_ALTERNATE,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_UP,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF3,},
-//   //HRTIM_CHE2
-//   .pwm_cl = {.port = GPIO_PORT_C,
-//                 .pin = GPIO_PIN_9,
-//                 .mode = GPIO_MODE_ALTERNATE,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_UP,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF3,},
-
-//   // Test pin on 'pwm_dac2' pin
-//   .test_pin0 = {.port = GPIO_PORT_F,
-//                 .pin = GPIO_PIN_9,
-//                 .mode = GPIO_MODE_OUTPUT,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_UP,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF0,},
-
-//   .adc11_test = {.port = GPIO_PORT_A,
-//                 .pin = GPIO_PIN_0,
-//                 .mode = GPIO_MODE_ANALOG,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_NONE,
-//                 .speed = GPIO_SPEED_LOW,
-//                 .af = GPIO_AF0,},
-
-//   .pwm_dac_ocp_th = {.port = GPIO_PORT_F,
-//                 .pin = GPIO_PIN_2,
-//                 .mode = GPIO_MODE_ALTERNATE,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_NONE,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF2,},
-
-//   // HRTIM1_FLT5
-//   .flt_ocp_n = {.port = GPIO_PORT_B,
-//                 .pin = GPIO_PIN_0,
-//                 .mode = GPIO_MODE_ALTERNATE,
-//                 .type = GPIO_TYPE_OPEN_DRAIN,
-//                 .pull = GPIO_PULL_NONE,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF13},
-//   //SPI3
-//   .spi3_miso = {.port = GPIO_PORT_B,
-//                 .pin = GPIO_PIN_4,
-//                 .mode = GPIO_MODE_ALTERNATE,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_NONE,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF6},
-
-//   .spi3_mosi = {.port = GPIO_PORT_B,
-//                 .pin = GPIO_PIN_5,
-//                 .mode = GPIO_MODE_ALTERNATE,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_NONE,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF6},
-
-//   .spi3_clk = { .port = GPIO_PORT_B,
-//                 .pin = GPIO_PIN_3,
-//                 .mode = GPIO_MODE_ALTERNATE,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_NONE,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF6},
-
-//   .spi3_menc1_cs = {.port = GPIO_PORT_D,
-//                 .pin = GPIO_PIN_2,
-//                 .mode = GPIO_MODE_OUTPUT,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_NONE,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF0},
-//   //SPI4
-//   .spi4_miso = {.port = GPIO_PORT_E,
-//                 .pin = GPIO_PIN_5,
-//                 .mode = GPIO_MODE_ALTERNATE,
-//                 .type = GPIO_TYPE_OPEN_DRAIN,
-//                 .pull = GPIO_PULL_UP,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF5},
-
-//   .spi4_mosi = {.port = GPIO_PORT_E,
-//                 .pin = GPIO_PIN_6,
-//                 .mode = GPIO_MODE_ALTERNATE,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_NONE,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF5},
-
-//   .spi4_clk = { .port = GPIO_PORT_E,
-//                 .pin = GPIO_PIN_2,
-//                 .mode = GPIO_MODE_ALTERNATE,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_NONE,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF5},
-
-//   .spi4_gd_cs = {.port = GPIO_PORT_D,
-//                 .pin = GPIO_PIN_8,
-//                 .mode = GPIO_MODE_OUTPUT,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_NONE,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF0},
-
-//   .spi4_ltc_cs = {.port = GPIO_PORT_D,
-//                 .pin = GPIO_PIN_6,
-//                 .mode = GPIO_MODE_OUTPUT,
-//                 .type = GPIO_TYPE_PUSH_PULL,
-//                 .pull = GPIO_PULL_NONE,
-//                 .speed = GPIO_SPEED_HIGH,
-//                 .af = GPIO_AF0},
-
-  
-
-// };
-
-
 static void board_gpio_setup() {
 
   for (int i = 0; i < sizeof(brd.io) / sizeof(gpio_t); i++) {
@@ -625,44 +447,10 @@ static void board_gpio_setup() {
 //   return count;
 // }
 
-// static void board_serial_setup(void) {
-
-//     gpio_t lpuart_tx = {
-//       .port = GPIO_PORT_A,
-//       .pin = GPIO_PIN_2,
-//       .mode = GPIO_MODE_ALTERNATE,
-//       .type = GPIO_TYPE_PUSH_PULL,
-//       .pull = GPIO_PULL_NONE,
-//       .speed = GPIO_SPEED_LOW,
-//       .af = GPIO_AF12,
-//     };
-
-//     gpio_t lpuart_rx = {
-//       .port = GPIO_PORT_A,
-//       .pin = GPIO_PIN_3,
-//       .mode = GPIO_MODE_ALTERNATE,
-//       .type = GPIO_TYPE_PUSH_PULL,
-//       .pull = GPIO_PULL_NONE,
-//       .speed = GPIO_SPEED_LOW,
-//       .af = GPIO_AF12,
-//     };
-
-//     gpio_pin_init(&lpuart_tx);
-//     gpio_pin_init(&lpuart_rx);
-    
-//     lpuart_config_t lpuart_config = {
-//       .clock_source = LPUART_CLOCK_SOURCE_PCLK,
-//       .clock_prescale = LPUART_CLOCK_PRESCALER_1,
-//       .baudrate = 115200,
-//       .mode = LPUART_MODE_RX_TX,
-//       .word_length = LPUART_DATA_BITS_8,
-//       .stop_bits = LPUART_STOP_BITS_1,
-//       .parity = LPUART_PARITY_NONE,
-//       .flow_control = LPUART_FLOW_CONTROL_NONE,
-//     };
+static void board_serial_setup(void) {
   
-//     uart_init(&lpuart_config);
-// }
+    uart_init(&brd.lpuart1);
+}
 
 
 //------------------------------------------------------

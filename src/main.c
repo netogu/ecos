@@ -140,13 +140,13 @@ int main(void)
                       cdc_task_stack,
                       &cdc_task_tcb);
 
-  // bg_task_handle = xTaskCreateStatic( bg_task,
-  //                     "bg_task",
-  //                     BG_TASK_STACK_SIZE,
-  //                     NULL,
-  //                     configMAX_PRIORITIES - 2,
-  //                     bg_task_stack,
-  //                     &bg_task_tcb);
+  bg_task_handle = xTaskCreateStatic( bg_task,
+                      "bg_task",
+                      BG_TASK_STACK_SIZE,
+                      NULL,
+                      configMAX_PRIORITIES - 2,
+                      bg_task_stack,
+                      &bg_task_tcb);
 
 
   xTimerStart(led_blink_timer, 0);
@@ -177,12 +177,16 @@ void bg_task( void *parameters ) {
 
   // drv835x_clear_faults(&brd->gate_driver);
 
-
+  char *msg = "Hello World!\r\n";
   while (1) {
 
     // drv835x_read_faults(&brd->gate_driver);
+    for (int i = 0; i < strlen(msg); i++) {
+      // xQueueSend(serial_queue, &msg[i], 0);
+      uart_write_byte(&brd->lpuart1, msg[i]);
+    }
 
-    vTaskDelay(1);
+    vTaskDelay(100);
   }
 
 }

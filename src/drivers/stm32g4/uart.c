@@ -80,25 +80,17 @@ void uart_init(uart_t *self) {
 
 
 
-void uart_write(uart_t *self, uint8_t *data, uint32_t len) {
+void uart_write_byte(uart_t *self, uint8_t byte) {
 
-    uint32_t *uart = self->uart_instance;
-
-    for (uint32_t i = 0; i < len; i++) {
-        while (!(LPUART1->ISR & USART_ISR_TC));
-        LPUART1->TDR = data[i];
-    }
+    while (!(LPUART1->ISR & USART_ISR_TC));
+    LPUART1->TDR = byte;
     
 }
 
 
-void uart_read(uart_t *self, uint8_t *data, uint32_t len) {
+uint8_t uart_read_byte(uart_t *self) {
 
-    uint32_t *uart = self->uart_instance;
-
-    for (uint32_t i = 0; i < len; i++) {
-        while (!(LPUART1->ISR & USART_ISR_RXNE));
-        data[i] = LPUART1->RDR;
-    }
+    while (!(LPUART1->ISR & USART_ISR_RXNE));
+    return LPUART1->RDR;
     
 }

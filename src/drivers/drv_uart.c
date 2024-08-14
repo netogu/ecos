@@ -25,7 +25,7 @@ int cli_uart_init(void) {
 int cli_uart_putc(char tx_char) {
     int status = 0;
     if (xSemaphoreTake(uart_mutex, 10) == pdTRUE) {
-        status = lpuart_write(serial_port, &tx_char, 1);
+        status = uart_write(serial_port, &tx_char, 1);
         xSemaphoreGive(uart_mutex);
     }
     return status;
@@ -34,7 +34,7 @@ int cli_uart_putc(char tx_char) {
 char cli_uart_getc(void) {
     char readchar = NOCHAR;
     if (xSemaphoreTake(uart_mutex, 10) == pdTRUE) {
-        readchar = lpuart_read(serial_port, &readchar, 1);
+        readchar = uart_read(serial_port, &readchar, 1);
         xSemaphoreGive(uart_mutex);
     }
     return readchar;

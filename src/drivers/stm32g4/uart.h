@@ -71,19 +71,16 @@ typedef struct {
     gpio_t rx_pin;
     struct {
         uint32_t baudrate;
-        uint8_t clock_source;
-        uint8_t clock_prescale;
-        uint8_t word_length;
-        uint8_t stop_bits;
-        uint8_t parity;
-        uint8_t mode;
-        uint8_t flow_control;
-        uint8_t one_bit_sample;
+        lpuart_word_length_t word_length;
+        lpuart_stop_bits_t stop_bits;
+        lpuart_parity_t parity;
+        lpuart_mode_t mode;
+        lpuart_flow_control_t flow_control;
     }config;
 } uart_t;
 
 
 void uart_init(uart_t *self);
-void uart_write(uart_t *self, uint8_t *data, uint32_t len);
-void uart_read(uart_t *self, uint8_t *data, uint32_t len);
+void uart_write_byte(uart_t *self, uint8_t byte);
+uint8_t uart_read_byte(uart_t *self);
 
