@@ -17,6 +17,7 @@ OPT = -Og
 #######################################
 DEBUGER_PATH = openocd
 DEBUGER_CONF = src/board/openocd.cfg
+GDB = arm-none-eabi-gdb
 
 #######################################
 # paths
@@ -209,7 +210,7 @@ flash:
 # Debug (openocd)
 #######################################
 debug:
-	$(DEBUGER_PATH) -f $(DEBUGER_CONF) & gdb-multiarch -ex 'target extended-remote localhost:3333' $(BUILD_DIR)/$(TARGET).elf
+	$(DEBUGER_PATH) -f $(DEBUGER_CONF) & $(GDB) -ex 'target extended-remote localhost:3333' $(BUILD_DIR)/$(TARGET).elf
 #######################################
 # dependencies
 #######################################

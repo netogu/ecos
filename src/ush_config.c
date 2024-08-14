@@ -1,18 +1,26 @@
 #include "board/bsp.h"
 #include "microshell.h"
+// #include "drivers/drv_usb.h"
 #include "tusb.h"
 
 /* FreeRTOS includes. */
 #include "task.h"
 
+#define NOCHAR '\0'
+
 // non-blocking read interface
 static int ush_read(struct ush_object *self, char *ch)
 {
-    // should be implemented as a FIFO
+    char readchar = NOCHAR;
 
-    if (tud_cdc_available() > 0) {
-        *ch = tud_cdc_read_char();
-        return 1;
+    if (tud_cdc_connected() && tud_cdc_available() > 0) {
+        // Write single byte if mutex is available
+        readchar = cli_usb_getc();
+
+        if (readchar != NOCHAR) {
+            *ch = readchar;
+            return 1;
+        }
     }
     return 0;
 }
@@ -20,9 +28,11 @@ static int ush_read(struct ush_object *self, char *ch)
 // non-blocking write interface
 static int ush_write(struct ush_object *self, char ch)
 {
-    // should be implemented as a FIFO
-    return (tud_cdc_write_char(ch) == 1);
+    return cli_usb_putc(ch);
 }
+
+
+
 
 // I/O interface descriptor
 static const struct ush_io_interface ush_iface = {
@@ -55,6 +65,8 @@ static const struct ush_descriptor ush_desc = {
 // drive enable callback
 static void drv_en_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
+    struct board_descriptor *brd = board_get_handler();
+
     // arguments count validation
     if (argc != 2) {
         // return predefined error message
@@ -65,10 +77,10 @@ static void drv_en_callback(struct ush_object *self, struct ush_file_descriptor 
     // arguments validation
     if (strcmp(argv[1], "1") == 0) {
         // turn gate driver on
-        gpio_pin_set(&io.drive_enable);
+        gpio_pin_set(&brd->io.drive_enable);
     } else if (strcmp(argv[1], "0") == 0) {
         // turn gate driver off
-        gpio_pin_clear(&io.drive_enable);
+        gpio_pin_clear(&brd->io.drive_enable);
     } else {
         // return predefined error message
         ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
@@ -79,6 +91,8 @@ static void drv_en_callback(struct ush_object *self, struct ush_file_descriptor 
 // drive enable callback
 static void mpwr_en_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
+    struct board_descriptor *brd = board_get_handler();
+
     // arguments count validation
     if (argc != 2) {
         // return predefined error message
@@ -89,10 +103,10 @@ static void mpwr_en_callback(struct ush_object *self, struct ush_file_descriptor
     // arguments validation
     if (strcmp(argv[1], "1") == 0) {
         // turn gate driver on
-        gpio_pin_set(&io.test_pin0);
+        gpio_pin_set(&brd->io.test_pin0);
     } else if (strcmp(argv[1], "0") == 0) {
         // turn VM efuse driver off
-        gpio_pin_clear(&io.test_pin0);
+        gpio_pin_clear(&brd->io.test_pin0);
     } else {
         // return predefined error message
         ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
@@ -128,6 +142,7 @@ static void ocp_exec_callback(struct ush_object *self, struct ush_file_descripto
 // dpt test callback
 static void dpt_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
+    struct board_descriptor *brd = board_get_handler();
 
     // arguments count validation
     if (argc < 3) {
@@ -136,29 +151,7 @@ static void dpt_exec_callback(struct ush_object *self, struct ush_file_descripto
         return;
     }
 
-    struct hrtim_pwm *pwm = &pwma;
-
-    // // Get PWM Channel argument
-    // char channel = argv[1];
-    // // channel = (channel <= 'Z' && channel >= 'A') ? channel + 32 : channel;
-    // switch (channel){
-    //     case 'a':
-    //     pwm = &pwma;
-    //     break;
-    //     case 'b':
-    //     pwm = &pwmb;
-    //     break;
-    //     case 'c':
-    //     pwm = &pwmc;
-    //     break;
-    //     default:
-    //     break;
-    // }
-
-    // if (pwm == NULL) {
-    //     ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
-    //     return;
-    // }
+    struct hrtim_pwm *pwm = &brd->pwma;
 
     int ton = atoi(argv[1]);
     ush_printf(self, "ton: %d ns\r\n", ton);
@@ -193,7 +186,6 @@ static void reboot_exec_callback(struct ush_object *self, struct ush_file_descri
     ush_print(self, "error: reboot not supported...");
 }
 
-
 // info file get data callback
 size_t info_get_data_callback(struct ush_object *self, struct ush_file_descriptor const *file, uint8_t **data)
 {
@@ -204,9 +196,6 @@ size_t info_get_data_callback(struct ush_object *self, struct ush_file_descripto
     // return data size
     return strlen(info);
 }
-
-
-
 
 // root directory files descriptor
 static const struct ush_file_descriptor root_files[] = {
@@ -270,7 +259,8 @@ void shell_init(void)
 
 }
 
-void shell_update(void)
+
+void inline shell_update(void)
 {
     // service microshell instance
     ush_service(&ush);

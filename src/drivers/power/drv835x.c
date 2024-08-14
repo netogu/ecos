@@ -80,41 +80,43 @@
 
 #define DRV8353_FRAME(rw, addr, data) ((rw << 15) | (addr << 11) | (data))
 
-void drv835x_init(struct drv835x *self);
+void drv835x_init(struct drv835x *self) {
+  self->io->drive_enable(0);
+}
 
 void drv835x_drive_enable(struct drv835x *self) {
-  self->drive_enable(1);
+  self->io->drive_enable(1);
 }
 
 void drv835x_drive_disable(struct drv835x *self) {
-  self->drive_enable(0);
+  self->io->drive_enable(0);
 }
 
 void drv835x_read_faults(struct drv835x *self) {
   uint16_t frame = DRV8353_FRAME(0, DRV8353_FAULT_STATUS_REG, 0);
-  self->spi_transfer(frame, &self->status);
+  self->io->spi_transfer(frame, &self->status);
   frame = DRV8353_FRAME(0, DRV8353_VGS_STATUS_REG, 0);
-  self->spi_transfer(frame, &self->vgs_status);
+  self->io->spi_transfer(frame, &self->vgs_status);
 }
 
 void drv835x_clear_faults(struct drv835x *self) {
   uint16_t frame = DRV8353_FRAME(1, DRV8353_DRIVER_CTRL_REG, 1 << DRV8353_DRIVER_CTRL_CLR_FAULT_Pos);
   uint16_t data_rx;
-  self->spi_transfer(frame, &data_rx);
+  self->io->spi_transfer(frame, &data_rx);
 }
 
 void drv835x_set_hs_gate_drive_strength(struct drv835x *self, enum drv835x_idrivep idrvp, enum drv835x_idriven idrvn){
   uint16_t data = (idrvp << DRV8353_GD_HS_IDRIVEP_HS_Pos) | (idrvn << DRV8353_GD_HS_IDRIVEN_HS_Pos);
   uint16_t frame = DRV8353_FRAME(1, DRV8353_GD_HS_REG, data);
   uint16_t data_rx;
-  self->spi_transfer(frame, &data_rx);
+  self->io->spi_transfer(frame, &data_rx);
 }
 
 void drv835x_set_ls_gate_drive_strength(struct drv835x *self, enum drv835x_idrivep idrvp, enum drv835x_idriven idrvn){
   uint16_t data = (idrvp << DRV8353_GD_LS_IDRIVEP_LS_Pos) | (idrvn << DRV8353_GD_LS_IDRIVEN_LS_Pos);
   uint16_t frame = DRV8353_FRAME(1, DRV8353_GD_LS_REG, data);
   uint16_t data_rx;
-  self->spi_transfer(frame, &data_rx);
+  self->io->spi_transfer(frame, &data_rx);
 }
 
 

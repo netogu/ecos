@@ -15,6 +15,7 @@
 // #include "stm32g4/lpuart.h"
 // #include "board/shell.h"
 #include "ush_config.h"
+// #include "drivers/drv_usb.h"
 
 /* Blink pattern
 * - 250 ms  : device not mounted
@@ -105,9 +106,9 @@ static void bg_task( void *parameters );
 // void shell_task( void * parameters );
 
 
+
 int main(void) 
 {
-
   board_init();
 
   // serial_queue = xQueueCreateStatic(SERIAL_QUEUE_LENGTH,
@@ -127,7 +128,7 @@ int main(void)
                       "usb_task",
                       USB_TASK_STACK_SIZE,
                       NULL,
-                      configMAX_PRIORITIES - 1,
+                      configMAX_PRIORITIES - 2,
                       usbd_task_stack,
                       &usbd_task_tcb);
 
@@ -135,17 +136,17 @@ int main(void)
                       "cdc_task",
                       CDC_TASK_STACK_SIZE,
                       NULL,
-                      configMAX_PRIORITIES - 2,
+                      configMAX_PRIORITIES - 3,
                       cdc_task_stack,
                       &cdc_task_tcb);
 
-  bg_task_handle = xTaskCreateStatic( bg_task,
-                      "bg_task",
-                      BG_TASK_STACK_SIZE,
-                      NULL,
-                      configMAX_PRIORITIES - 2,
-                      bg_task_stack,
-                      &bg_task_tcb);
+  // bg_task_handle = xTaskCreateStatic( bg_task,
+  //                     "bg_task",
+  //                     BG_TASK_STACK_SIZE,
+  //                     NULL,
+  //                     configMAX_PRIORITIES - 2,
+  //                     bg_task_stack,
+  //                     &bg_task_tcb);
 
 
   xTimerStart(led_blink_timer, 0);
@@ -162,22 +163,24 @@ int main(void)
 //--------------------------------------------------------------------------------
 void bg_task( void *parameters ) {
 
-  spi_enable(&spi4);
-  gpio_pin_set(&io.spi4_gd_cs);
+  struct board_descriptor *brd = board_get_handler();
 
-  drv835x_drive_enable(&gate_driver);
+  // spi_enable(&brd->spi4);
+  // gpio_pin_set(&brd->io.spi4_gd_cs);
+
+  // drv835x_drive_enable(&brd->gate_driver);
 
   vTaskDelay(1);
 
-  drv835x_set_hs_gate_drive_strength(&gate_driver, DRV835X_IDRIVEP_1000MA, DRV835X_IDRIVEN_2000MA);
-  drv835x_set_ls_gate_drive_strength(&gate_driver, DRV835X_IDRIVEP_1000MA, DRV835X_IDRIVEN_2000MA);
+  // drv835x_set_hs_gate_drive_strength(&brd->gate_driver, DRV835X_IDRIVEP_1000MA, DRV835X_IDRIVEN_2000MA);
+  // drv835x_set_ls_gate_drive_strength(&brd->gate_driver, DRV835X_IDRIVEP_1000MA, DRV835X_IDRIVEN_2000MA);
 
-  drv835x_clear_faults(&gate_driver);
+  // drv835x_clear_faults(&brd->gate_driver);
 
 
   while (1) {
 
-    drv835x_read_faults(&gate_driver);
+    // drv835x_read_faults(&brd->gate_driver);
 
     vTaskDelay(1);
   }
@@ -193,11 +196,13 @@ void usbd_task( void *parameters )
   /* Unused parameters. */
     ( void ) parameters;
 
-  tusb_init();
+  // usb_device_init();
+  cli_usb_init();
 
   while (1) {
     tud_task();
     tud_cdc_write_flush();
+    vTaskDelay(4);
   }
 
 }
@@ -246,39 +251,17 @@ void cdc_task( void *parameters )
   /* Unused parameters. */
     ( void ) parameters;
 
-
   shell_init();
-
 
   while (1) {
 
-    // connected() check for DTR bit
-    // Most but not all terminal client set this when making connection
-    // if ( tud_cdc_connected() )
-    {
-      // // There are data available
-      // while (tud_cdc_available()) {
-      //   uint8_t buf[64];
-
-      //   // read and echo back
-      //   uint32_t count = tud_cdc_read(buf, sizeof(buf));
-      //   (void) count;
-
-      //   // Echo back
-      //   // Note: Skip echo by commenting out write() and write_flush()
-      //   // for throughput test e.g
-      //   //    $ dd if=/dev/zero of=/dev/ttyACM0 count=10000
-      //   tud_cdc_write(buf, count);
-      // }
-      shell_update();
-
-      tud_cdc_write_flush();
-    }
-
+    shell_update();
     vTaskDelay(1);
-
   }
+
+
 }
+
 
 
 // Invoked when cdc when line state changed e.g connected/disconnected
@@ -305,29 +288,12 @@ void tud_cdc_rx_cb(uint8_t itf) {
 
 static void led_blink_cb(TimerHandle_t xTimer)
 {   
+  struct board_descriptor *brd = board_get_handler();
   /* Unused parameters. */
   ( void ) xTimer;
-  gpio_pin_toggle(&io.led_green);
-  gpio_pin_toggle(&io.led_red);
-  gpio_pin_toggle(&io.led_blue);
-
-  // static uint32_t duty = 0;
-  // static uint32_t dir = 0;
-  // // increment duty up to 50% and then reverse to 0%
-  // if (dir) {
-  //     duty -=10;
-  // } else {
-  //   duty +=10;
-  // }
-  //
-  // if (duty == 1700) {
-  //   dir = 1;
-  // } else if (duty == 0) {
-  //   dir = 0;
-  // }
-  //
-  // TIM20->CCR3 = duty;
-
+  gpio_pin_toggle(&brd->io.led_green);
+  gpio_pin_toggle(&brd->io.led_red);
+  gpio_pin_toggle(&brd->io.led_blue);
 
 }
 /*-----------------------------------------------------------*/
@@ -335,4 +301,3 @@ static void led_blink_cb(TimerHandle_t xTimer)
 void _init(void) {
   // printf("init\r\n");
 }
-

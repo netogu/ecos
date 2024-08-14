@@ -48,10 +48,8 @@ void USB_HP_IRQHandler(void) {
   tud_int_handler(0);
 }
 
-uint32_t usb_lp_irq_counter = 0;
 void USB_LP_IRQHandler(void) {
   tud_int_handler(0);
-  usb_lp_irq_counter++;
 }
 
 void USBWakeUp_IRQHandler(void) {

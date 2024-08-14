@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "stm32g4xx.h"
+#include "stm32g4/gpio.h"
 
 
 typedef enum {
@@ -64,19 +64,26 @@ typedef enum {
 } lpaurt_clock_prescaler_t;
 
 
+
 typedef struct {
-    uint32_t baudrate;
-    uint8_t clock_source;
-    uint8_t clock_prescale;
-    uint8_t word_length;
-    uint8_t stop_bits;
-    uint8_t parity;
-    uint8_t mode;
-    uint8_t flow_control;
-    uint8_t one_bit_sample;
-} lpuart_config_t;
+    volatile uint32_t *uart_instance;
+    gpio_t tx_pin;
+    gpio_t rx_pin;
+    struct {
+        uint32_t baudrate;
+        uint8_t clock_source;
+        uint8_t clock_prescale;
+        uint8_t word_length;
+        uint8_t stop_bits;
+        uint8_t parity;
+        uint8_t mode;
+        uint8_t flow_control;
+        uint8_t one_bit_sample;
+    }config;
+} uart_t;
 
 
-void lpuart_init(lpuart_config_t *config);
-void lpuart_write(uint8_t *data, uint32_t len);
+void uart_init(uart_t *self);
+void uart_write(uart_t *self, uint8_t *data, uint32_t len);
+void uart_read(uart_t *self, uint8_t *data, uint32_t len);
 
