@@ -92,4 +92,5 @@ void uart_write_byte(uart_t *self, uint8_t byte);
 int uart_write_byte_nb(uart_t *self, uint8_t byte);
 int uart_read_byte_nb(uart_t *self, uint8_t *byte);
 int uart_is_busy(uart_t *self);
-int uart_write(uart_t *self, uint8_t *data, uint16_t len);
+int uart_write(uart_t *self, uint8_t *data, uint16_t size);
+int uart_read(uart_t *self, uint8_t *data, uint16_t size);

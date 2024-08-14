@@ -29,7 +29,7 @@ int cli_uart_putc(char tx_char) {
     
     int status = 0;
     if (xSemaphoreTake(uart_mutex, 10) == pdTRUE) {
-        status = uart_write_byte_nb(serial_port,(uint8_t) &tx_char);
+        status = uart_write(serial_port, (uint8_t *) &tx_char, 1);
         xSemaphoreGive(uart_mutex);
     }
     return status;
@@ -39,7 +39,7 @@ char cli_uart_getc(void) {
 
     char readchar = NOCHAR;
     if (xSemaphoreTake(uart_mutex, 10) == pdTRUE) {
-        int status = uart_read_byte_nb(serial_port, (uint8_t *) &readchar);
+        int status = uart_read(serial_port, (uint8_t *) &readchar, 1);
         xSemaphoreGive(uart_mutex);
     }
     return readchar;

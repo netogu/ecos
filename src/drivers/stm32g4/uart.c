@@ -138,3 +138,16 @@ int uart_write(uart_t *self, uint8_t *data, uint16_t len) {
     LPUART1->CR1 |= USART_CR1_TXEIE;
     return len;
 }
+
+int uart_read(uart_t *self, uint8_t *data, uint16_t size) {
+    uint16_t bytes_read = 0;
+
+    while (bytes_read < size && self->rx_head != self->rx_tail) {
+        data[bytes_read] = self->rx_buffer[self->rx_tail];
+        self->rx_tail = (self->rx_tail + 1) % UART_RX_BUFFER_SIZE;
+        bytes_read++;
+    }
+
+    // Return the number of bytes successfully read from the buffer
+    return bytes_read;
+}

@@ -180,8 +180,8 @@ void bg_task( void *parameters ) {
   while (1) {
 
     // drv835x_read_faults(&brd->gate_driver);
-    uart_write(&board->lpuart1, msg, strlen(msg));
-    vTaskDelay(10);
+    // uart_write(&board->lpuart1, msg, strlen(msg));
+    vTaskDelay(100);
   }
 
 }
@@ -256,12 +256,12 @@ void cdc_task( void *parameters )
 
   cli_uart_init(&board->lpuart1);
 
-  // shell_init();
+  shell_init();
 
   while (1) {
 
-    // shell_update();
-    vTaskDelay(5);
+    shell_update();
+    vTaskDelay(1);
   }
 
 
