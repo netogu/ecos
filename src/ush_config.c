@@ -8,19 +8,28 @@
 
 #define NOCHAR '\0'
 
+
+#define CLI_UART
+// #define CLI_USB
+
 // non-blocking read interface
 static int ush_read(struct ush_object *self, char *ch)
 {
     char readchar = NOCHAR;
+    
 
+    #ifdef CLI_USB
     if (tud_cdc_connected() && tud_cdc_available() > 0) {
         // Write single byte if mutex is available
         readchar = cli_usb_getc();
+    }
+    #else
+    readchar = cli_uart_getc();
+    #endif
 
-        if (readchar != NOCHAR) {
-            *ch = readchar;
-            return 1;
-        }
+    if (readchar != NOCHAR) {
+        *ch = readchar;
+        return 1;
     }
     return 0;
 }
@@ -28,7 +37,11 @@ static int ush_read(struct ush_object *self, char *ch)
 // non-blocking write interface
 static int ush_write(struct ush_object *self, char ch)
 {
+    #ifdef CLI_USB
     return cli_usb_putc(ch);
+    #else
+    return cli_uart_putc(ch);
+    #endif
 }
 
 

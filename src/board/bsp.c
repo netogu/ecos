@@ -294,6 +294,7 @@ static struct board_descriptor brd = (struct board_descriptor) {
   },
 
   .lpuart1 = (uart_t) {
+
     .tx_pin = (gpio_t) {
       .port = GPIO_PORT_A,
       .pin = GPIO_PIN_2,

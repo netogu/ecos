@@ -55,3 +55,40 @@ void USB_LP_IRQHandler(void) {
 void USBWakeUp_IRQHandler(void) {
   tud_int_handler(0);
 }
+
+
+//--------------------------------------------------------------------+
+// UART interrupt Handler
+//--------------------------------------------------------------------+
+
+void LPUART1_IRQHandler(void) {
+  uint16_t next_head;
+  uint8_t data;
+  struct board_descriptor *brd = board_get_handler();
+
+  // Received a byte
+  if (LPUART1->ISR & USART_ISR_RXNE) {
+    data = (uint8_t) LPUART1->RDR & 0xFF;
+    next_head = (brd->lpuart1.rx_head + 1) % UART_RX_BUFFER_SIZE;
+
+    if (next_head != brd->lpuart1.rx_tail) {
+      // If not full, add data to buffer
+      brd->lpuart1.rx_buffer[brd->lpuart1.rx_head] = data;
+      brd->lpuart1.rx_head = next_head;
+    }
+    // Clear RXNE flag by reading data
+  }
+
+  // Empty data register
+  if (LPUART1->ISR & USART_ISR_TXE) {
+    if (brd->lpuart1.tx_head != brd->lpuart1.tx_tail) {
+      // If not empty, send data
+      LPUART1->TDR = brd->lpuart1.tx_buffer[brd->lpuart1.tx_tail];
+      brd->lpuart1.tx_tail = (brd->lpuart1.tx_tail + 1) % UART_TX_BUFFER_SIZE;
+    } else {
+      // If empty, disable TXE interrupt
+      LPUART1->CR1 &= ~USART_CR1_TXEIE;
+    }
+    // ISR Cleared by writing data to TDR
+  }
+}

@@ -63,12 +63,19 @@ typedef enum {
     LPUART_CLOCK_PRESCALER_256 = 11,
 } lpaurt_clock_prescaler_t;
 
-
+#define UART_RX_BUFFER_SIZE 128
+#define UART_TX_BUFFER_SIZE 128
 
 typedef struct {
     volatile uint32_t *uart_instance;
     gpio_t tx_pin;
     gpio_t rx_pin;
+    uint8_t rx_buffer[UART_RX_BUFFER_SIZE];
+    uint8_t tx_buffer[UART_TX_BUFFER_SIZE];
+    uint8_t rx_head;
+    uint8_t rx_tail;
+    uint8_t tx_head;
+    uint8_t tx_tail;
     struct {
         uint32_t baudrate;
         lpuart_word_length_t word_length;
@@ -82,5 +89,7 @@ typedef struct {
 
 void uart_init(uart_t *self);
 void uart_write_byte(uart_t *self, uint8_t byte);
-uint8_t uart_read_byte(uart_t *self);
-
+int uart_write_byte_nb(uart_t *self, uint8_t byte);
+int uart_read_byte_nb(uart_t *self, uint8_t *byte);
+int uart_is_busy(uart_t *self);
+int uart_write(uart_t *self, uint8_t *data, uint16_t len);

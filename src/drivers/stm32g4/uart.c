@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "stm32g4xx.h"
 #include "stm32g4/uart.h"
 
@@ -75,6 +76,12 @@ void uart_init(uart_t *self) {
 
         // Enable LPUART
         LPUART1->CR1 |= (USART_CR1_UE);
+
+        // Enable LPUART RXNE interrupt
+        LPUART1->CR1 |= (USART_CR1_RXNEIE);
+        // Enable LPUART TXE interrupt
+        LPUART1->CR1 |= (USART_CR1_TXEIE);
+        NVIC_EnableIRQ(LPUART1_IRQn);
         
 }
 
@@ -82,15 +89,52 @@ void uart_init(uart_t *self) {
 
 void uart_write_byte(uart_t *self, uint8_t byte) {
 
-    while (!(LPUART1->ISR & USART_ISR_TC));
+    while (!(LPUART1->ISR & USART_ISR_TXE));
     LPUART1->TDR = byte;
+    while (!(LPUART1->ISR & USART_ISR_TC)){
+        // wait for transmission complete
+    }
     
 }
+// non-blocking write byte
+int uart_write_byte_nb(uart_t *self, uint8_t byte) {
 
+    if (LPUART1->ISR & USART_ISR_TXE) {
+        LPUART1->TDR = byte;
+        return 1;
+    }
+    return 0;
+}
+// non-blocking read byte
+int uart_read_byte_nb(uart_t *self, uint8_t *byte) {
+    if (LPUART1->ISR & USART_ISR_RXNE) {
+        *byte = LPUART1->RDR;
+        return 1;
+    }
+    return 0;
+}
 
-uint8_t uart_read_byte(uart_t *self) {
+// check if uart is busy
+int uart_is_busy(uart_t *self) {
+    if (LPUART1->ISR & USART_ISR_BUSY) {
+        return 1;
+    }
+    return 0;
+}
 
-    while (!(LPUART1->ISR & USART_ISR_RXNE));
-    return LPUART1->RDR;
-    
+int uart_write(uart_t *self, uint8_t *data, uint16_t len) {
+    uint16_t next_head;
+
+    for (uint16_t i = 0; i < len; i++) {
+        next_head = (self->tx_head + 1) % UART_TX_BUFFER_SIZE;
+        if (next_head == self->tx_tail) {
+            // buffer is full 
+            return i;
+        }
+        self->tx_buffer[self->tx_head] = data[i];
+        self->tx_head = next_head;
+    }
+    // Enable TXE interrupt
+    LPUART1->CR1 |= USART_CR1_TXEIE;
+    return len;
 }

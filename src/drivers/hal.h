@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <FreeRTOS.h>
 #include <semphr.h>
-#include "stm32g4/uart.h"
 
 
 
@@ -23,7 +22,7 @@ char cli_usb_getc(void);
 
 extern SemaphoreHandle_t uart_mutex;
 
-int cli_uart_init(void);
+int cli_uart_init(uart_t *port);
 int cli_uart_putc(char tx_char);
 char cli_uart_getc(void);
 

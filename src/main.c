@@ -15,6 +15,7 @@
 // #include "stm32g4/lpuart.h"
 // #include "board/shell.h"
 #include "ush_config.h"
+#include "hal.h"
 // #include "drivers/drv_usb.h"
 
 /* Blink pattern
@@ -163,14 +164,12 @@ int main(void)
 //--------------------------------------------------------------------------------
 void bg_task( void *parameters ) {
 
-  struct board_descriptor *brd = board_get_handler();
+  struct board_descriptor *board = board_get_handler();
 
   // spi_enable(&brd->spi4);
   // gpio_pin_set(&brd->io.spi4_gd_cs);
 
   // drv835x_drive_enable(&brd->gate_driver);
-
-  vTaskDelay(1);
 
   // drv835x_set_hs_gate_drive_strength(&brd->gate_driver, DRV835X_IDRIVEP_1000MA, DRV835X_IDRIVEN_2000MA);
   // drv835x_set_ls_gate_drive_strength(&brd->gate_driver, DRV835X_IDRIVEP_1000MA, DRV835X_IDRIVEN_2000MA);
@@ -181,12 +180,8 @@ void bg_task( void *parameters ) {
   while (1) {
 
     // drv835x_read_faults(&brd->gate_driver);
-    for (int i = 0; i < strlen(msg); i++) {
-      // xQueueSend(serial_queue, &msg[i], 0);
-      uart_write_byte(&brd->lpuart1, msg[i]);
-    }
-
-    vTaskDelay(100);
+    uart_write(&board->lpuart1, msg, strlen(msg));
+    vTaskDelay(10);
   }
 
 }
@@ -200,8 +195,10 @@ void usbd_task( void *parameters )
   /* Unused parameters. */
     ( void ) parameters;
 
+
   // usb_device_init();
-  cli_usb_init();
+  // cli_usb_init();
+  tusb_init();
 
   while (1) {
     tud_task();
@@ -255,12 +252,16 @@ void cdc_task( void *parameters )
   /* Unused parameters. */
     ( void ) parameters;
 
-  shell_init();
+  struct board_descriptor *board = board_get_handler();
+
+  cli_uart_init(&board->lpuart1);
+
+  // shell_init();
 
   while (1) {
 
-    shell_update();
-    vTaskDelay(1);
+    // shell_update();
+    vTaskDelay(5);
   }
 
 
