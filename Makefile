@@ -87,6 +87,7 @@ LDSCRIPT = src/drivers/stm32g4/linker_script.ld
 # binaries
 #######################################
 PREFIX = arm-none-eabi-
+PREFIX = ~/Dev/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-
 # The gcc compiler bin path can be either defined in make command via GCC_PATH variable (> make GCC_PATH=xxx)
 # either it can be added to the PATH environment variable.
 ifdef GCC_PATH
@@ -131,7 +132,7 @@ C_DEFS =  \
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
-CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
+CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -std=gnu11
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2

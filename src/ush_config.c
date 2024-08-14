@@ -193,6 +193,32 @@ static void dpt_exec_callback(struct ush_object *self, struct ush_file_descripto
 
 }
 
+// PWMA Set Duty Callback
+static void pwma_set_duty_cb(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
+{
+    struct board_descriptor *brd = board_get_handler();
+
+    // arguments count validation
+    if (argc < 2) {
+        // return predefined error message
+        ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+        return;
+    }
+
+    struct hrtim_pwm *pwm = &brd->pwma;
+
+    int duty = atoi(argv[1]);
+    ush_printf(self, "duty: %d %%\r\n", duty);
+
+
+
+    // hrtim_pwm_set_frequency(pwm, 1000000000/(ton + toff));
+    hrtim_pwm_set_duty(pwm, duty);
+    // hrtim_pwm_start(pwm);
+
+}
+
+
 // reboot cmd file execute callback
 static void reboot_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
@@ -250,6 +276,12 @@ static const struct ush_file_descriptor cmd_files[] = {
         .description = "sets ocp threshold (%)",
         .help = "usage: ocp < 0 to 100 >",
         .exec = ocp_exec_callback,
+    },
+    {
+        .name = "pwma_duty",
+        .description = "set pwma duty cycle (%)",
+        .help = "usage: pwma_duty <duty:0-100>",
+        .exec = pwma_set_duty_cb,
     }
 };
 

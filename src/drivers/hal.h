@@ -6,10 +6,6 @@
 #include <semphr.h>
 
 
-
-#define UART_RX_BUFFER_SIZE  64
-#define UART_TX_BUFFER_SIZE  64
-
 // ----------------------------- USB -----------------------------
 
 extern SemaphoreHandle_t usb_mutex;

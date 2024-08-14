@@ -515,13 +515,13 @@ static void board_pwm_setup(void) {
   // hrtim_pwm_enable_fault_input(&pwma, 5);
 
   // pwm_dac_init();
-  // hrtim_pwm_set_duty(&pwma, 50);
+  hrtim_pwm_set_duty(&brd.pwma, 1);
   // hrtim_pwm_set_duty(&pwmb, 50);
   // hrtim_pwm_set_duty(&pwmc, 50);
   
 
-  // HRTIM1->sMasterRegs.MCR |= (HRTIM_MCR_TACEN | HRTIM_MCR_TFCEN | HRTIM_MCR_TECEN);
-  // hrtim_pwm_start(&pwma);
+  HRTIM1->sMasterRegs.MCR |= (HRTIM_MCR_TACEN | HRTIM_MCR_TFCEN | HRTIM_MCR_TECEN);
+ hrtim_pwm_start(&brd.pwma);
   // hrtim_pwm_start(&pwmb);
   // hrtim_pwm_start(&pwmc);
 }

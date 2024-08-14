@@ -261,7 +261,7 @@ void cdc_task( void *parameters )
   while (1) {
 
     shell_update();
-    vTaskDelay(1);
+    // vTaskDelay(1);
   }
 
 
