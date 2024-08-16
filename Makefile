@@ -36,12 +36,14 @@ FREERTOS = src/external/freertos
 ######################################
 # C sources
 C_SOURCES = $(wildcard src/*.c) 
+C_SOURCES += $(wildcard src/board/*.c) 
+C_SOURCES += $(wildcard src/shell/*.c) 
+C_SOURCES += $(wildcard src/rtos/*.c) 
 C_SOURCES += $(wildcard src/external/*.c)
 C_SOURCES += $(wildcard src/drivers/*.c) 
 C_SOURCES += $(wildcard src/drivers/*/*.c) 
 C_SOURCES += $(wildcard src/lib/*.c)
 C_SOURCES += $(wildcard $(TINYPRINTF)/*.c)
-C_SOURCES += $(wildcard src/board/*.c) 
 C_SOURCES += $(wildcard $(TINYUSB)/*.c)
 C_SOURCES += $(wildcard $(TINYUSB)/*/*.c)
 C_SOURCES += $(wildcard $(TINYUSB)/*/*/*.c)
@@ -64,6 +66,11 @@ AS_INCLUDES =
 
 # C includes
 C_INCLUDES =  \
+-Isrc \
+-Isrc/drivers \
+-Isrc/shell \
+-Isrc/board \
+-Isrc/rtos \
 -Isrc/external/CMSIS/Device/ST/STM32G4xx/Include \
 -Isrc/external/CMSIS/Include \
 -Isrc/external/tinyusb/src \
@@ -74,8 +81,6 @@ C_INCLUDES =  \
 -I$(MICROSHELL)/inc \
 -I$(FREERTOS)/include \
 -I$(FREERTOS)/portable/GCC/ARM_CM4F \
--Isrc \
--Isrc/drivers \
 
 #######################################
 # LDFLAGS
@@ -87,7 +92,7 @@ LDSCRIPT = src/drivers/stm32g4/linker_script.ld
 # binaries
 #######################################
 PREFIX = arm-none-eabi-
-PREFIX = ~/Dev/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-
+# PREFIX = ~/Dev/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-
 # The gcc compiler bin path can be either defined in make command via GCC_PATH variable (> make GCC_PATH=xxx)
 # either it can be added to the PATH environment variable.
 ifdef GCC_PATH
