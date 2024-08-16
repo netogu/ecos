@@ -1,3 +1,3 @@
-# STM32G4 Minimal Project Template
+# [mocOS]
 
-Minimal Template using STM32G4 CMSIS headers
+mocOs is a firmware framework designed with the control of power electronics and electric machines in mind
