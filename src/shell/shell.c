@@ -1,11 +1,6 @@
-#include "board/bsp.h"
-#include "microshell.h"
-// #include "drivers/drv_usb.h"
-#include "drivers/hal.h"
-#include "tusb.h"
-
-/* FreeRTOS includes. */
-#include "task.h"
+#include "rtos.h"
+#include "bsp.h"
+#include "shell.h"
 
 #define NOCHAR '\0'
 
@@ -73,7 +68,7 @@ static const struct ush_descriptor ush_desc = {
     .output_buffer = ush_out_buf,               // working output buffer
     .output_buffer_size = sizeof(ush_out_buf),  // working output buffer size
     .path_max_length = PATH_MAX_SIZE,           // path maximum length (stack)
-    .hostname = "stm32",                      // hostname (in prompt)
+    .hostname = "MOC",                          // hostname (in prompt)
 };
 
 // drive enable callback
@@ -166,7 +161,7 @@ static void dpt_exec_callback(struct ush_object *self, struct ush_file_descripto
         return;
     }
 
-    struct hrtim_pwm *pwm = &brd->pwma;
+    pwm_t *pwm = &brd->pwma;
 
     int ton = atoi(argv[1]);
     ush_printf(self, "ton: %d ns\r\n", ton);
@@ -188,10 +183,10 @@ static void dpt_exec_callback(struct ush_object *self, struct ush_file_descripto
     ton < 0 ? ton = 0 : ton;
     toff < 0 ? toff = 0 : toff;
 
-    hrtim_pwm_set_frequency(pwm, 1000000000/(ton + toff));
-    hrtim_pwm_set_duty(pwm, ton*100/(ton + toff));
-    hrtim_pwm_set_n_cycle_run(pwm, n);
-    hrtim_pwm_start(pwm);
+    pwm_set_frequency(pwm, 1000000000/(ton + toff));
+    pwm_set_duty(pwm, ton*100/(ton + toff));
+    pwm_set_n_cycle_run(pwm, n);
+    pwm_start(pwm);
 
 }
 
@@ -215,7 +210,7 @@ static void pwma_set_duty_cb(struct ush_object *self, struct ush_file_descriptor
 
 
     // hrtim_pwm_set_frequency(pwm, 1000000000/(ton + toff));
-    hrtim_pwm_set_duty(pwm, duty);
+    pwm_set_duty(pwm, duty);
     // hrtim_pwm_start(pwm);
 
 }

@@ -62,8 +62,6 @@ extern "C" {
 #define USH_ASSERT(cond) { }
 
 
-void shell_init(void);
-void shell_update(void);
 
 #ifdef __cplusplus
 }

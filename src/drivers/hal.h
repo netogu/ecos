@@ -2,8 +2,8 @@
 #define DRIVER_STM32G4_HAL_H
 
 #include <stdint.h>
-#include <FreeRTOS.h>
-#include <semphr.h>
+#include "rtos.h"
+#include "stm32g4/uart.h"
 
 
 #define NOCHAR                  '\0'

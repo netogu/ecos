@@ -42,7 +42,7 @@
  * See http://www.freertos.org/a00110.html.
  *----------------------------------------------------------*/
 
-#include "board/bsp.h"
+#include "stm32g4xx.h"
 
 
 extern uint32_t SystemCoreClock;
