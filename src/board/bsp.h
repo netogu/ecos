@@ -5,8 +5,11 @@ File   : bsp.h
 
 #pragma once
 
+#include "tusb.h"
+#include "hal.h"
+
 #include "drivers/stm32g4/gpio.h"
-#include "drivers/stm32g4/hrtim.h"
+#include "drivers/stm32g4/pwm.h"
 #include "drivers/stm32g4/spi.h"
 #include "drivers/power/drv835x.h"
 #include "drivers/stm32g4/uart.h"
@@ -16,7 +19,7 @@ File   : bsp.h
 //------------------------------------------------------
 
 
-struct gpio {
+struct brd_gpio_s {
 
   // change format to PORT_io_name e.x PA11_led_red
   gpio_t led_red;
@@ -46,10 +49,10 @@ struct gpio {
 };
 
 struct board_descriptor {
-  struct gpio io;
-  struct hrtim_pwm pwma;
-  struct hrtim_pwm pwmb;
-  struct hrtim_pwm pwmc;
+  struct brd_gpio_s io;
+  pwm_t pwma;
+  pwm_t pwmb;
+  pwm_t pwmc;
   struct spi spi3;
   struct spi spi4;
   struct drv835x gate_driver;
@@ -61,7 +64,6 @@ struct board_descriptor {
 // extern struct spi spi3, spi4;
 // extern struct drv835x gate_driver; 
 
-extern struct board board;
 
 struct board_descriptor *board_get_handler(void);
 int board_init(void);

@@ -1,28 +1,23 @@
-/* FreeRTOS includes. */
-#include <stdint.h>
-#include <FreeRTOS.h>
-#include <task.h>
-#include <queue.h>
-#include <timers.h>
-#include <semphr.h>
-#include "portmacro.h"
-#include "FreeRTOSConfig.h"
+/* +-------------------------------------------------------+ */
+/* |                               _____   ____            | */
+/* |                              /\  __`\/\  _`\          | */
+/* |       ___ ___     ___     ___\ \ \/\ \ \,\L\_\        | */
+/* |     /' __` __`\  / __`\  /'___\ \ \ \ \/_\__ \        | */
+/* |     /\ \/\ \/\ \/\ \L\ \/\ \__/\ \ \_\ \/\ \L\ \      | */
+/* |     \ \_\ \_\ \_\ \____/\ \____\\ \_____\ `\____\     | */
+/* |      \/_/\/_/\/_/\/___/  \/____/ \/_____/\/_____/     | */
+/* +-------------------------------------------------------+ */
 
-#include "board/bsp.h"
-#include "tusb.h"
-// #include "tiny_printf.h"
-
-// #include "stm32g4/lpuart.h"
-// #include "board/shell.h"
-#include "ush_config.h"
-#include "hal.h"
-// #include "drivers/drv_usb.h"
+#include "rtos.h"
+#include "shell.h"
+#include "bsp.h"
 
 /* Blink pattern
 * - 250 ms  : device not mounted
 * - 1000 ms : device mounted
 * - 2500 ms : device is suspended
 */
+
 enum {
  BLINK_NOT_MOUNTED = 1000,
  BLINK_MOUNTED = 200,
@@ -58,6 +53,7 @@ api::Status Os::cmdPs(lib::console::ConsoleBase& console, lib::console::Argument
     task_status_array.size(),
     &total_run_time
   );
+}
 */
 
 /*-----------------------------------------------------------*/
@@ -108,8 +104,7 @@ static void bg_task( void *parameters );
 
 
 
-int main(void) 
-{
+int main(void) {
   board_init();
 
   // serial_queue = xQueueCreateStatic(SERIAL_QUEUE_LENGTH,
@@ -190,8 +185,7 @@ void bg_task( void *parameters ) {
 // USB Device Task
 //--------------------------------------------------------------------------------
 
-void usbd_task( void *parameters )
-{   
+void usbd_task( void *parameters ) {   
   /* Unused parameters. */
     ( void ) parameters;
 
@@ -247,14 +241,22 @@ void tud_resume_cb(void) {
 // USB CDC Task
 //--------------------------------------------------------------------+
 
-void cdc_task( void *parameters )
-{   
+#import "shell_header.h"
+
+void cdc_task( void *parameters ) {   
   /* Unused parameters. */
     ( void ) parameters;
 
   struct board_descriptor *board = board_get_handler();
 
   cli_uart_init(&board->lpuart1);
+  
+
+
+  for (int i = 0; i < strlen(shell_head); i++) {
+    cli_uart_putc(shell_head[i]);
+    vTaskDelay(1);
+  }
 
   shell_init();
 
@@ -291,8 +293,7 @@ void tud_cdc_rx_cb(uint8_t itf) {
 // BLINKING TASK
 //--------------------------------------------------------------------+
 
-static void led_blink_cb(TimerHandle_t xTimer)
-{   
+static void led_blink_cb(TimerHandle_t xTimer) {   
   struct board_descriptor *brd = board_get_handler();
   /* Unused parameters. */
   ( void ) xTimer;
@@ -301,8 +302,7 @@ static void led_blink_cb(TimerHandle_t xTimer)
   gpio_pin_toggle(&brd->io.led_blue);
 
 }
-/*-----------------------------------------------------------*/
 
-void _init(void) {
-  // printf("init\r\n");
+void _init() {
+// printf("Hello World!\n");
 }

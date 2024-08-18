@@ -35,19 +35,23 @@ FREERTOS = src/external/freertos
 # Sources
 ######################################
 # C sources
-C_SOURCES = $(wildcard src/*.c) 
+C_SOURCES = $(wildcard src/main.c) 
 C_SOURCES += $(wildcard src/board/*.c) 
 C_SOURCES += $(wildcard src/shell/*.c) 
 C_SOURCES += $(wildcard src/rtos/*.c) 
 C_SOURCES += $(wildcard src/external/*.c)
 C_SOURCES += $(wildcard src/drivers/*.c) 
-C_SOURCES += $(wildcard src/drivers/*/*.c) 
+C_SOURCES += $(wildcard src/drivers/stm32g4/*.c) 
+C_SOURCES += $(wildcard src/drivers/power/*.c) 
 C_SOURCES += $(wildcard src/lib/*.c)
 C_SOURCES += $(wildcard $(TINYPRINTF)/*.c)
-C_SOURCES += $(wildcard $(TINYUSB)/*.c)
-C_SOURCES += $(wildcard $(TINYUSB)/*/*.c)
-C_SOURCES += $(wildcard $(TINYUSB)/*/*/*.c)
-C_SOURCES += $(wildcard $(TINYUSB)/*/*/*/*.c)
+C_SOURCES += $(wildcard $(TINYUSB)/tusb.c)
+C_SOURCES += $(wildcard $(TINYUSB)/common/*.c)
+C_SOURCES += $(wildcard $(TINYUSB)/device/*.c)
+C_SOURCES += $(wildcard $(TINYUSB)/typec/*.c)
+C_SOURCES += $(wildcard $(TINYUSB)/class/cdc/*.c)
+C_SOURCES += $(wildcard $(TINYUSB)/portable/st/stm32_fsdev/dcd_stm32_fsdev.c)
+C_SOURCES += $(wildcard $(TINYUSB)/portable/st/typec/typec_stm32.c)
 C_SOURCES += $(wildcard $(MICROSHELL)/src/*.c)
 C_SOURCES += $(wildcard $(MICROSHELL)/src/commands/*.c)
 C_SOURCES += $(wildcard $(FREERTOS)/*.c)
@@ -86,7 +90,7 @@ C_INCLUDES =  \
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = src/drivers/stm32g4/linker_script.ld
+LDSCRIPT = src/board/linker_script.ld
 
 #######################################
 # binaries

@@ -4,7 +4,6 @@
 #include "board/bsp.h"
 #include <stdint.h>
 
-#include "drivers/stm32g4/hrtim.h"
 #include "drivers/stm32g4/spi.h"
 #include "drivers/stm32g4/rcc.h"
 #include "drivers/stm32g4/adc.h"
@@ -32,7 +31,11 @@
 
 static struct board_descriptor brd = (struct board_descriptor) {
 
-  .io = (struct gpio) 
+  //--------------------------------------------------------------------+
+  // GPIO
+  //--------------------------------------------------------------------+
+
+  .io = (struct brd_gpio_s) 
   { 
     .led_red = (gpio_t) {   
       .port = GPIO_PORT_B,
@@ -254,28 +257,52 @@ static struct board_descriptor brd = (struct board_descriptor) {
       .af = GPIO_AF0},
   },
 
-  .pwma = (struct hrtim_pwm) {
-    .timer = HRTIM_TIMER_A,
-    .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
-    .polarity = HRTIM_PWM_POLARITY_NORMAL,
-    .freq_hz = 10000, 
+  //--------------------------------------------------------------------+
+  // PWM
+  //--------------------------------------------------------------------+
+
+  .pwma = (pwm_t) {
+    .timer_id = PWM_HRTIM1,
+    .timer_channel = 0,
+    .options = {
+      .output_mode = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
+      .polarity = HRTIM_PWM_POLARITY_NORMAL,
+      .deadtime = 200,
+    },
+    .freq_hz = 100000,
+    .duty_cycle = 50,
     .deadtime_ns = 200.0,
   },
 
-  .pwmb = (struct hrtim_pwm) {
-    .timer = HRTIM_TIMER_F,
-    .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
-    .polarity = HRTIM_PWM_POLARITY_NORMAL,
-    .freq_hz = 10000, 
+  .pwmb = (pwm_t) {
+    .timer_id = PWM_HRTIM1,
+    .timer_channel = 1,
+    .options = {
+      .output_mode = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
+      .polarity = HRTIM_PWM_POLARITY_NORMAL,
+      .deadtime = 200,
+    },
+    .freq_hz = 100000,
+    .duty_cycle = 50,
     .deadtime_ns = 200.0,
   },
-  .pwmc = (struct hrtim_pwm) {
-    .timer = HRTIM_TIMER_E,
-    .output = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
-    .polarity = HRTIM_PWM_POLARITY_NORMAL,
-    .freq_hz = 10000, 
+
+  .pwmc = (pwm_t) {
+    .timer_id = PWM_HRTIM1,
+    .timer_channel = 2,
+    .options = {
+      .output_mode = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
+      .polarity = HRTIM_PWM_POLARITY_NORMAL,
+      .deadtime = 200,
+    },
+    .freq_hz = 100000,
+    .duty_cycle = 50,
     .deadtime_ns = 200.0,
   },
+
+  //--------------------------------------------------------------------+
+  // SPI
+  //--------------------------------------------------------------------+
 
   .spi3 = (struct spi) {
     .instance = SPI3,
@@ -292,6 +319,10 @@ static struct board_descriptor brd = (struct board_descriptor) {
     .polarity = 0,
     .phase = 1,
   },
+
+  //--------------------------------------------------------------------+
+  // UART
+  //--------------------------------------------------------------------+
 
   .lpuart1 = (uart_t) {
 
@@ -497,22 +528,20 @@ static void pwm_dac_init(void) {
 
 static void board_pwm_setup(void) {
 
-  hrtim_init();
-  // Change HRTIM prescaler
-  hrtim_pwm_init(&brd.pwma);
-  hrtim_pwm_init(&brd.pwmb);
-  hrtim_pwm_init(&brd.pwmc);
+  pwm_init(&brd.pwma);
+  pwm_init(&brd.pwmb);
+  pwm_init(&brd.pwmc);
   // hrtim_pwm_swap_output(&pwma);
   // hrtim_pwm_enable_fault_input(&pwma, 5);
 
   // pwm_dac_init();
-  hrtim_pwm_set_duty(&brd.pwma, 1);
+  pwm_set_duty(&brd.pwma, 1);
   // hrtim_pwm_set_duty(&pwmb, 50);
   // hrtim_pwm_set_duty(&pwmc, 50);
   
 
   HRTIM1->sMasterRegs.MCR |= (HRTIM_MCR_TACEN | HRTIM_MCR_TFCEN | HRTIM_MCR_TECEN);
- hrtim_pwm_start(&brd.pwma);
+  pwm_start(&brd.pwma);
   // hrtim_pwm_start(&pwmb);
   // hrtim_pwm_start(&pwmc);
 }
