@@ -1,5 +1,5 @@
 # [uMOC]
-'''
+```
 .----------------------.
 |                      |
 |     ┬ ┬╔╦╗╔═╗╔═╗     |
@@ -7,7 +7,7 @@
 |     └─┘╩ ╩╚═╝╚═╝     |
 |                      |
 '----------------------'
-'''
+```
 
 uMOC is a CMSIS/FreeRTOS firmware framework designed with the control of power electronics and electric machines in mind.
 **Supported Devices** - STM32G474
