@@ -1,23 +1,19 @@
-# [mocOS]
-
+# [uMOC]
 '''
-·································································
-:                                         ███████     █████████ :
-:                                       ███░░░░░███  ███░░░░░███:
-: █████████████    ██████   ██████     ███     ░░███░███    ░░░ :
-:░░███░░███░░███  ███░░███ ███░░███   ░███      ░███░░█████████ :
-: ░███ ░███ ░███ ░███ ░███░███ ░░░    ░███      ░███ ░░░░░░░░███:
-: ░███ ░███ ░███ ░███ ░███░███  ███   ░░███     ███  ███    ░███:
-: █████░███ █████░░██████ ░░██████     ░░░███████░  ░░█████████ :
-:░░░░░ ░░░ ░░░░░  ░░░░░░   ░░░░░░        ░░░░░░░     ░░░░░░░░░  :
-·································································
+.----------------------.
+|                      |
+|     ┬ ┬╔╦╗╔═╗╔═╗     |
+|     │ │║║║║ ║║       |
+|     └─┘╩ ╩╚═╝╚═╝     |
+|                      |
+'----------------------'
 '''
 
-mocOS is a CMSIS/FreeRTOS firmware framework designed with the control of power electronics and electric machines in mind.
+uMOC is a CMSIS/FreeRTOS firmware framework designed with the control of power electronics and electric machines in mind.
 **Supported Devices** - STM32G474
 
 ## Acknowledgements
-mocOS is built from the amazing open source contribution of others. Thank you!
+uMOC is built from the amazing open source contribution of others. Thank you!
 - FreeRTOS
 - microshell
 - TinyUSB
