@@ -160,7 +160,7 @@ int main(void) {
 //--------------------------------------------------------------------------------
 void bg_task( void *parameters ) {
 
-  // struct board_descriptor *board = board_get_handler();
+  // struct board_descriptor *board = board_get_descriptor();
 
   // spi_enable(&brd->spi4);
   // gpio_pin_set(&brd->io.spi4_gd_cs);
@@ -248,7 +248,7 @@ void cdc_task( void *parameters ) {
   /* Unused parameters. */
     ( void ) parameters;
 
-  struct board_descriptor *board = board_get_handler();
+  struct board_descriptor *board = board_get_descriptor();
 
   cli_uart_init(&board->lpuart1);
   
@@ -295,7 +295,7 @@ void tud_cdc_rx_cb(uint8_t itf) {
 //--------------------------------------------------------------------+
 
 static void led_blink_cb(TimerHandle_t xTimer) {   
-  struct board_descriptor *brd = board_get_handler();
+  struct board_descriptor *brd = board_get_descriptor();
   /* Unused parameters. */
   ( void ) xTimer;
   gpio_pin_toggle(&brd->io.led_green);

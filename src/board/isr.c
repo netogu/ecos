@@ -100,7 +100,7 @@ void USBWakeUp_IRQHandler(void) {
 void LPUART1_IRQHandler(void) {
   uint16_t next_head;
   uint8_t data;
-  struct board_descriptor *brd = board_get_handler();
+  struct board_descriptor *brd = board_get_descriptor();
 
   // Received a byte
   if (LPUART1->ISR & USART_ISR_RXNE) {

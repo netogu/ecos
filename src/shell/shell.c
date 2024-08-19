@@ -74,7 +74,7 @@ static const struct ush_descriptor ush_desc = {
 // drive enable callback
 static void drv_en_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
-    struct board_descriptor *brd = board_get_handler();
+    struct board_descriptor *brd = board_get_descriptor();
 
     // arguments count validation
     if (argc != 2) {
@@ -100,7 +100,7 @@ static void drv_en_callback(struct ush_object *self, struct ush_file_descriptor 
 // drive enable callback
 static void mpwr_en_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
-    struct board_descriptor *brd = board_get_handler();
+    struct board_descriptor *brd = board_get_descriptor();
 
     // arguments count validation
     if (argc != 2) {
@@ -152,7 +152,7 @@ static void ocp_exec_callback(struct ush_object *self, struct ush_file_descripto
 // dpt test callback
 static void dpt_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
-    struct board_descriptor *brd = board_get_handler();
+    struct board_descriptor *brd = board_get_descriptor();
 
     // arguments count validation
     if (argc < 3) {
@@ -197,7 +197,7 @@ static void dpt_exec_callback(struct ush_object *self, struct ush_file_descripto
 // PWMA Set Duty Callback
 static void pwma_set_duty_cb(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
-    struct board_descriptor *brd = board_get_handler();
+    struct board_descriptor *brd = board_get_descriptor();
 
     // arguments count validation
     if (argc < 2) {

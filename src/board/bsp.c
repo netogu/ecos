@@ -1,8 +1,7 @@
 
 #include <stdint.h>
 
-#include "board/bsp.h"
-#include <stdint.h>
+#include "bsp.h"
 
 #include "drivers/stm32g4/spi.h"
 #include "drivers/stm32g4/rcc.h"
@@ -12,7 +11,6 @@
 #include "drivers/stm32g4/uart.h"
 #include "drivers/stm32g4/usbpcd.h"
 #include "tusb.h"
-// #include "microshell.h"
 
 //------------------------------------------------------+
 // Board Variant
@@ -360,7 +358,12 @@ static void board_pwm_setup(void);
 static void board_spi_setup(void);
 static void board_gate_driver_setup(void);
 
-struct board_descriptor *board_get_handler(void) {
+/**
+ * @brief Get the board descriptor object 
+ * 
+ * @return struct board_descriptor* 
+ */
+struct board_descriptor *board_get_descriptor(void) {
   return &brd;
 }
 

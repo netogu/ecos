@@ -59,7 +59,7 @@ struct board_descriptor {
 // extern struct drv835x gate_driver; 
 
 
-struct board_descriptor *board_get_handler(void);
+struct board_descriptor *board_get_descriptor(void);
 int board_init(void);
 uint32_t millis(void);
 void delay_ms(uint32_t ms);
