@@ -26,12 +26,6 @@ struct brd_gpio_s {
   gpio_t led_green;
   gpio_t led_blue;
   gpio_t drive_enable;
-  gpio_t pwm_ah;
-  gpio_t pwm_al;
-  gpio_t pwm_bh;
-  gpio_t pwm_bl;
-  gpio_t pwm_ch;
-  gpio_t pwm_cl;
   gpio_t test_pin0;
   gpio_t adc11_test;
   gpio_t pwm_dac_ocp_th;

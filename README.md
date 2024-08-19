@@ -4,12 +4,16 @@
 |                      |
 |     ┬ ┬╔╦╗╔═╗╔═╗     |
 |     │ │║║║║ ║║       |
-|     └─┘╩ ╩╚═╝╚═╝     |
+|     └─|╩ ╩╚═╝╚═╝     |
 |                      |
 '----------------------'
 ```
 
-uMOC is a CMSIS/FreeRTOS firmware framework designed with the control of power electronics and electric machines in mind.
+uMOC is an open-source firmware framework designed with the control of power electronics and electric machines in mind.
+**Features**
+- Collection of common PWM topologies
+- Collection of power electronics testing tools
+
 **Supported Devices** - STM32G474
 
 ## Acknowledgements

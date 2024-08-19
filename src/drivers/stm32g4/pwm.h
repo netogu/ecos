@@ -6,72 +6,63 @@
 
 #define HRTIM_DT_COUNT_PER_NS(__DT_NS__) (__DT_NS__ / 0.73 + 0.5) // From RM0440 Table 221
 
-
-#define HRTIM_TIM_A 0
-#define HRTIM_TIM_B 1
-#define HRTIM_TIM_C 2
-#define HRTIM_TIM_D 3
-#define HRTIM_TIM_E 4
-#define HRTIM_TIM_F 5
-
-enum timer_e {
-    HRTIM_TIMER_A,
-    HRTIM_TIMER_B,
-    HRTIM_TIMER_C,
-    HRTIM_TIMER_D,
-    HRTIM_TIMER_E,
-    HRTIM_TIMER_F
-};
-
-enum pwm_output_mode_e {
-    HRTIM_PWM_OUTPUT_SINGLE,
-    HRTIM_PWM_OUTPUT_COMPLEMENTARY,
-};
-
-enum pwm_polarity_e {
-    HRTIM_PWM_POLARITY_NORMAL,
-    HRTIM_PWM_POLARITY_INVERTED
-};
-
-enum pwm_timer_e {
-    
-    PWM_TIMER_A,
-    PWM_TIMER_B,
-    PWM_TIMER_C,
-    PWM_TIMER_D,
-    PWM_TIMER_E,
-    PWM_TIMER_F
-
-};
-
-enum pwm_timer_id_e {
-    PWM_HRTIM1,
-};
-
 typedef struct pwm_s {
-    gpio_t pin;
-    enum pwm_timer_id_e timer_id;
-    uint8_t timer_channel;
+    gpio_t pwmh_pin;
+    gpio_t pwml_pin;
     struct pwm_options_s {
-        enum pwm_output_mode_e output_mode;
-        enum pwm_polarity_e polarity;
-        uint32_t deadtime;
+        enum pwm_timer_e {
+            PWM_TIMER_HRTIM1,
+        } pwm_timer;
+        uint16_t  pwm_channel;
+        enum pwm_output_mode_e {
+            HRTIM_PWM_OUTPUT_SINGLE,
+            HRTIM_PWM_OUTPUT_COMPLEMENTARY,
+        } output_mode;
+        enum pwm_polarity_e {
+            HRTIM_PWM_POLARITY_NORMAL,
+            HRTIM_PWM_POLARITY_INVERTED
+        } polarity;
     } options;
-
-    uint32_t freq_hz;
-    float duty_cycle;
-    float deadtime_ns;
 } pwm_t;
 
+typedef struct pwm_3phase_s {
+    pwm_t *pwm_h[3];
+    enum pwm_3phase_mode_e {
+        PWM_3PHASE_MODE_3PWM,
+        PWM_3PHASE_MODE_6PWM,
+    } mode;
+} pwm_3ph_t;
+
+// STM32G474 Defines
+#define PWM_HRTIM_TIM_A 0
+#define PWM_HRTIM_TIM_B 1
+#define PWM_HRTIM_TIM_C 2
+#define PWM_HRTIM_TIM_D 3
+#define PWM_HRTIM_TIM_E 4
+#define PWM_HRTIM_TIM_F 5
 // factory function that configures an existing pwm_t object
 
-int pwm_init(pwm_t *pwm);
-int pwm_set_frequency(pwm_t *pwm, uint32_t freq_hz);
-int pwm_set_duty(pwm_t *pwm, float duty_pc);
-int pwm_start(pwm_t *pwm);
-int pwm_stop(pwm_t *pwm);
-int pwm_set_n_cycle_run(pwm_t *pwm, uint32_t cycles);
-int pwm_enable_fault_input(pwm_t *pwm, uint32_t fault);
-int pwm_swap_output(pwm_t *pwm);
+// ------------------------------------------------------
+// PWM
+// ------------------------------------------------------
+int pwm_init(pwm_t *self, uint32_t freq_hz, uint32_t dt_ns);
+int pwm_start(pwm_t *self);
+int pwm_stop(pwm_t *self);
+int pwm_set_frequency(pwm_t *self, uint32_t freq_hz);
+int pwm_set_duty(pwm_t *self, float duty_u);
+int pwm_set_deadtime(pwm_t *self, uint32_t dt_ns);
+int pwm_set_n_cycle_run(pwm_t *self, uint32_t cycles);
+int pwm_enable_fault_input(pwm_t *self, uint32_t fault);
+int pwm_swap_output(pwm_t *self);
+
+// ------------------------------------------------------
+// 3-Phase PWM
+// ------------------------------------------------------
+int pwm_3ph_init(pwm_3ph_t *self, uint32_t freq_hz, uint32_t dt_ns);
+int pwm_3ph_start(pwm_3ph_t *self);
+int pwm_3ph_stop(pwm_3ph_t *self);
+int pwm_3ph_set_frequency(pwm_3ph_t *self, uint32_t freq_hz);
+int pwm_3ph_set_duty(pwm_3ph_t *self, float d1_u, float d2_u, float d3_u);
+
 // void pwm_set_adc_trigger(pwm_t *pwm, uint32_t adc_trig);
 

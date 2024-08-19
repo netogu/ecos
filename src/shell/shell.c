@@ -177,8 +177,12 @@ static void dpt_exec_callback(struct ush_object *self, struct ush_file_descripto
 
 
     // hrtim_pwm_stop(&pwm1);
-    ton += pwm->deadtime_ns;
-    toff += pwm->deadtime_ns;
+    // get deadtime from HRTIM registers and convert to ns
+    // uint32_t deadtime_ns = HRTIM1->sCommonRegs.DTR & HRTIM_DTR_DTF_Msk;
+    uint32_t deadtime_ns = 0;
+
+    ton += deadtime_ns;
+    toff += deadtime_ns;
 
     ton < 0 ? ton = 0 : ton;
     toff < 0 ? toff = 0 : toff;
@@ -202,16 +206,12 @@ static void pwma_set_duty_cb(struct ush_object *self, struct ush_file_descriptor
         return;
     }
 
-    struct hrtim_pwm *pwm = &brd->pwma;
+     pwm_t *pwm = &brd->pwma;
 
     int duty = atoi(argv[1]);
     ush_printf(self, "duty: %d %%\r\n", duty);
 
-
-
-    // hrtim_pwm_set_frequency(pwm, 1000000000/(ton + toff));
-    pwm_set_duty(pwm, duty);
-    // hrtim_pwm_start(pwm);
+    pwm_set_duty(pwm, (float)duty/100.0);
 
 }
 

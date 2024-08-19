@@ -84,60 +84,6 @@ static struct board_descriptor brd = (struct board_descriptor) {
       .speed = GPIO_SPEED_HIGH,
       .af = GPIO_AF0,},
 
-    .pwm_ah = (gpio_t) { 
-      .port = GPIO_PORT_A,
-      .pin = GPIO_PIN_8, 
-      .mode = GPIO_MODE_ALTERNATE,
-      .type = GPIO_TYPE_PUSH_PULL,
-      .pull = GPIO_PULL_UP,
-      .speed = GPIO_SPEED_HIGH,
-      .af = GPIO_AF13,},
-
-    .pwm_al = (gpio_t) { 
-      .port = GPIO_PORT_A,
-      .pin = GPIO_PIN_9, 
-      .mode = GPIO_MODE_ALTERNATE,
-      .type = GPIO_TYPE_PUSH_PULL,
-      .pull = GPIO_PULL_UP,
-      .speed = GPIO_SPEED_HIGH,
-      .af = GPIO_AF13,},
-
-    .pwm_bh = (gpio_t) { 
-      .port = GPIO_PORT_C,
-      .pin = GPIO_PIN_6, 
-      .mode = GPIO_MODE_ALTERNATE,
-      .type = GPIO_TYPE_PUSH_PULL,
-      .pull = GPIO_PULL_UP,
-      .speed = GPIO_SPEED_HIGH,
-      .af = GPIO_AF13,},
-
-    .pwm_bl = (gpio_t) { 
-      .port = GPIO_PORT_C,
-      .pin = GPIO_PIN_7, 
-      .mode = GPIO_MODE_ALTERNATE,
-      .type = GPIO_TYPE_PUSH_PULL,
-      .pull = GPIO_PULL_UP,
-      .speed = GPIO_SPEED_HIGH,
-      .af = GPIO_AF13,},
-
-    .pwm_ch = (gpio_t) { 
-      .port = GPIO_PORT_C,
-      .pin = GPIO_PIN_8, 
-      .mode = GPIO_MODE_ALTERNATE,
-      .type = GPIO_TYPE_PUSH_PULL,
-      .pull = GPIO_PULL_UP,
-      .speed = GPIO_SPEED_HIGH,
-      .af = GPIO_AF3,},
-
-    .pwm_cl = (gpio_t) { 
-      .port = GPIO_PORT_C,
-      .pin = GPIO_PIN_9, 
-      .mode = GPIO_MODE_ALTERNATE,
-      .type = GPIO_TYPE_PUSH_PULL,
-      .pull = GPIO_PULL_UP,
-      .speed = GPIO_SPEED_HIGH,
-      .af = GPIO_AF3,},
-
     .test_pin0 = (gpio_t) { 
       .port = GPIO_PORT_F,
       .pin = GPIO_PIN_9, 
@@ -262,42 +208,93 @@ static struct board_descriptor brd = (struct board_descriptor) {
   //--------------------------------------------------------------------+
 
   .pwma = (pwm_t) {
-    .timer_id = PWM_HRTIM1,
-    .timer_channel = 0,
+
+    .pwmh_pin = (gpio_t) {
+      .port = GPIO_PORT_A,
+      .pin = GPIO_PIN_8,
+      .mode = GPIO_MODE_ALTERNATE,
+      .type = GPIO_TYPE_PUSH_PULL,
+      .pull = GPIO_PULL_NONE,
+      .speed = GPIO_SPEED_HIGH,
+      .af = GPIO_AF13,
+    },
+    
+    .pwml_pin = (gpio_t) {
+      .port = GPIO_PORT_A,
+      .pin = GPIO_PIN_9,
+      .mode = GPIO_MODE_ALTERNATE,
+      .type = GPIO_TYPE_PUSH_PULL,
+      .pull = GPIO_PULL_NONE,
+      .speed = GPIO_SPEED_HIGH,
+      .af = GPIO_AF13,
+    },
+
     .options = {
+      .pwm_timer = PWM_TIMER_HRTIM1,
+      .pwm_channel = PWM_HRTIM_TIM_A,
       .output_mode = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
       .polarity = HRTIM_PWM_POLARITY_NORMAL,
-      .deadtime = 200,
     },
-    .freq_hz = 100000,
-    .duty_cycle = 50,
-    .deadtime_ns = 200.0,
   },
 
   .pwmb = (pwm_t) {
-    .timer_id = PWM_HRTIM1,
-    .timer_channel = 1,
+
+    .pwmh_pin = (gpio_t) {
+      .port = GPIO_PORT_C,
+      .pin = GPIO_PIN_6,
+      .mode = GPIO_MODE_ALTERNATE,
+      .type = GPIO_TYPE_PUSH_PULL,
+      .pull = GPIO_PULL_NONE,
+      .speed = GPIO_SPEED_HIGH,
+      .af = GPIO_AF13,
+    },
+
+    .pwml_pin = (gpio_t) {
+      .port = GPIO_PORT_C,
+      .pin = GPIO_PIN_7,
+      .mode = GPIO_MODE_ALTERNATE,
+      .type = GPIO_TYPE_PUSH_PULL,
+      .pull = GPIO_PULL_NONE,
+      .speed = GPIO_SPEED_HIGH,
+      .af = GPIO_AF13,
+    },
+    
     .options = {
+      .pwm_timer = PWM_TIMER_HRTIM1,
+      .pwm_channel = PWM_HRTIM_TIM_F,
       .output_mode = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
       .polarity = HRTIM_PWM_POLARITY_NORMAL,
-      .deadtime = 200,
     },
-    .freq_hz = 100000,
-    .duty_cycle = 50,
-    .deadtime_ns = 200.0,
   },
 
   .pwmc = (pwm_t) {
-    .timer_id = PWM_HRTIM1,
-    .timer_channel = 2,
+
+    .pwmh_pin = (gpio_t) {
+      .port = GPIO_PORT_C,
+      .pin = GPIO_PIN_8,
+      .mode = GPIO_MODE_ALTERNATE,
+      .type = GPIO_TYPE_PUSH_PULL,
+      .pull = GPIO_PULL_NONE,
+      .speed = GPIO_SPEED_HIGH,
+      .af = GPIO_AF3,
+    },
+
+    .pwml_pin = (gpio_t) {
+      .port = GPIO_PORT_C,
+      .pin = GPIO_PIN_9,
+      .mode = GPIO_MODE_ALTERNATE,
+      .type = GPIO_TYPE_PUSH_PULL,
+      .pull = GPIO_PULL_NONE,
+      .speed = GPIO_SPEED_HIGH,
+      .af = GPIO_AF3,
+    },
+
     .options = {
+      .pwm_timer = PWM_TIMER_HRTIM1,
+      .pwm_channel = PWM_HRTIM_TIM_E,
       .output_mode = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
       .polarity = HRTIM_PWM_POLARITY_NORMAL,
-      .deadtime = 200,
     },
-    .freq_hz = 100000,
-    .duty_cycle = 50,
-    .deadtime_ns = 200.0,
   },
 
   //--------------------------------------------------------------------+
@@ -528,22 +525,36 @@ static void pwm_dac_init(void) {
 
 static void board_pwm_setup(void) {
 
-  pwm_init(&brd.pwma);
-  pwm_init(&brd.pwmb);
-  pwm_init(&brd.pwmc);
+  static pwm_3ph_t pwm3ph = {
+    .mode = PWM_3PHASE_MODE_6PWM,
+    .pwm_h = {&brd.pwma, &brd.pwmb, &brd.pwmc},
+  };
+
+  pwm_3ph_init(&pwm3ph, 50000, 200);
+  pwm_3ph_set_duty(&pwm3ph, 0.25, 0.5, 0.75);
+  pwm_3ph_start(&pwm3ph);
+
+  // pwm_init(&brd.pwma, 90000, 200);
+  // pwm_init(&brd.pwmb, 90000, 200);
+  // pwm_init(&brd.pwmc, 90000, 200);
+
   // hrtim_pwm_swap_output(&pwma);
   // hrtim_pwm_enable_fault_input(&pwma, 5);
 
   // pwm_dac_init();
-  pwm_set_duty(&brd.pwma, 1);
-  // hrtim_pwm_set_duty(&pwmb, 50);
-  // hrtim_pwm_set_duty(&pwmc, 50);
+  // pwm_set_duty(&brd.pwma, 0.25);
+  // pwm_set_duty(&brd.pwmb, 0.50);
+  // pwm_set_duty(&brd.pwmc, 0.80);
+  // pwm_swap_output(&brd.pwma);
+  pwm_swap_output(&brd.pwmb);
+  // pwm_swap_output(&brd.pwmc);
   
 
-  HRTIM1->sMasterRegs.MCR |= (HRTIM_MCR_TACEN | HRTIM_MCR_TFCEN | HRTIM_MCR_TECEN);
-  pwm_start(&brd.pwma);
-  // hrtim_pwm_start(&pwmb);
-  // hrtim_pwm_start(&pwmc);
+  // HRTIM1->sMasterRegs.MCR |= (HRTIM_MCR_TACEN | HRTIM_MCR_TFCEN | HRTIM_MCR_TECEN);
+  // pwm_start(&brd.pwma);
+  // pwm_start(&brd.pwmb);
+  // pwm_start(&brd.pwmc);
+
 }
 
 //--------------------------------------------------------------------+

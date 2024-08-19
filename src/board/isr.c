@@ -8,60 +8,60 @@
 void HRTIM1_TIMA_IRQHandler(void) {
 
   /* REP Interrupt Routine - TIMA */
-  if (HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxISR & HRTIM_TIMISR_REP) {
+  if (HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_A].TIMxISR & HRTIM_TIMISR_REP) {
     // Disable continuous mode
-    HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxCR &= ~(HRTIM_TIMCR_CONT);
+    HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_A].TIMxCR &= ~(HRTIM_TIMCR_CONT);
     // Clear REP interrupt
-    HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxICR |= HRTIM_TIMICR_REPC;
+    HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_A].TIMxICR |= HRTIM_TIMICR_REPC;
   }
 
   /* RESET Roll-Over Interupt */
-  if (HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxISR & HRTIM_TIMISR_RST) {
+  if (HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_A].TIMxISR & HRTIM_TIMISR_RST) {
     // Togle test pin
     // gpio_pin_set(&io.test_pin1);
     // gpio_pin_clear(&io.test_pin1);
     // Clear RST interrupt
-    HRTIM1->sTimerxRegs[HRTIM_TIM_A].TIMxICR |= HRTIM_TIMICR_RSTC;
+    HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_A].TIMxICR |= HRTIM_TIMICR_RSTC;
   }
 }
 
 void HRTIM1_TIME_IRQHandler(void) {
 
   /* REP Interrupt Routine - TIME */
-  if (HRTIM1->sTimerxRegs[HRTIM_TIM_E].TIMxISR & HRTIM_TIMISR_REP) {
+  if (HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_E].TIMxISR & HRTIM_TIMISR_REP) {
     // Disable continuous mode
-    HRTIM1->sTimerxRegs[HRTIM_TIM_E].TIMxCR &= ~(HRTIM_TIMCR_CONT);
+    HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_E].TIMxCR &= ~(HRTIM_TIMCR_CONT);
     // Clear REP interrupt
-    HRTIM1->sTimerxRegs[HRTIM_TIM_E].TIMxICR |= HRTIM_TIMICR_REPC;
+    HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_E].TIMxICR |= HRTIM_TIMICR_REPC;
   }
 
   /* RESET Roll-Over Interupt */
-  if (HRTIM1->sTimerxRegs[HRTIM_TIM_E].TIMxISR & HRTIM_TIMISR_RST) {
+  if (HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_E].TIMxISR & HRTIM_TIMISR_RST) {
     // Togle test pin
     // gpio_pin_set(&io.test_pin1);
     // gpio_pin_clear(&io.test_pin1);
     // Clear RST interrupt
-    HRTIM1->sTimerxRegs[HRTIM_TIM_E].TIMxICR |= HRTIM_TIMICR_RSTC;
+    HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_E].TIMxICR |= HRTIM_TIMICR_RSTC;
   }
 }
 
 void HRTIM1_TIMF_IRQHandler(void) {
 
   /* REP Interrupt Routine - TIMF */
-  if (HRTIM1->sTimerxRegs[HRTIM_TIM_F].TIMxISR & HRTIM_TIMISR_REP) {
+  if (HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_F].TIMxISR & HRTIM_TIMISR_REP) {
     // Disable continuous mode
-    HRTIM1->sTimerxRegs[HRTIM_TIM_F].TIMxCR &= ~(HRTIM_TIMCR_CONT);
+    HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_F].TIMxCR &= ~(HRTIM_TIMCR_CONT);
     // Clear REP interrupt
-    HRTIM1->sTimerxRegs[HRTIM_TIM_F].TIMxICR |= HRTIM_TIMICR_REPC;
+    HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_F].TIMxICR |= HRTIM_TIMICR_REPC;
   }
 
   /* RESET Roll-Over Interupt */
-  if (HRTIM1->sTimerxRegs[HRTIM_TIM_F].TIMxISR & HRTIM_TIMISR_RST) {
+  if (HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_F].TIMxISR & HRTIM_TIMISR_RST) {
     // Togle test pin
     // gpio_pin_set(&io.test_pin1);
     // gpio_pin_clear(&io.test_pin1);
     // Clear RST interrupt
-    HRTIM1->sTimerxRegs[HRTIM_TIM_F].TIMxICR |= HRTIM_TIMICR_RSTC;
+    HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_F].TIMxICR |= HRTIM_TIMICR_RSTC;
   }
 }
 //------------------------------------------------------+

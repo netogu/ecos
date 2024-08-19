@@ -18,7 +18,7 @@ USH_SHELL_FONT_COLOR_RED
 "|                      |\r\n"
 "|     ┬ ┬╔╦╗╔═╗╔═╗     |\r\n"
 "|     │ │║║║║ ║║       |\r\n"
-"|     └─┘╩ ╩╚═╝╚═╝     |\r\n"
+"|     └─|╩ ╩╚═╝╚═╝     |\r\n"
 "|                      |\r\n"
 "'----------------------'\r\n"
 xstr(MOCOS_VERSION_MAJOR) "." xstr(MOCOS_VERSION_MINOR) // add version number to header
