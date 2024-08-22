@@ -8,6 +8,7 @@ File   : bsp.h
 #include "tusb.h"
 #include "hal.h"
 
+#include "drivers/stm32g4/adc.h"
 #include "drivers/stm32g4/gpio.h"
 #include "drivers/stm32g4/pwm.h"
 #include "drivers/stm32g4/spi.h"
@@ -27,7 +28,6 @@ struct brd_gpio_s {
   gpio_t led_blue;
   gpio_t drive_enable;
   gpio_t test_pin0;
-  gpio_t adc11_test;
   gpio_t pwm_dac_ocp_th;
   gpio_t flt_ocp_n;
   gpio_t spi3_mosi;
@@ -42,11 +42,12 @@ struct brd_gpio_s {
   // TODO create board struct and add alt func ios here too
 };
 
-struct board_descriptor {
+const struct board_descriptor {
   struct brd_gpio_s io;
   pwm_t pwma;
   pwm_t pwmb;
   pwm_t pwmc;
+  adc_input_t adc_vbus;
   struct spi spi3;
   struct spi spi4;
   struct drv835x gate_driver;

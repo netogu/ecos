@@ -3,6 +3,7 @@
 
 #include "bsp.h"
 
+#include "drivers/stm32g4/adc.h"
 #include "drivers/stm32g4/spi.h"
 #include "drivers/stm32g4/rcc.h"
 #include "drivers/stm32g4/adc.h"
@@ -10,7 +11,12 @@
 #include "drivers/stm32g4/adc.h"
 #include "drivers/stm32g4/uart.h"
 #include "drivers/stm32g4/usbpcd.h"
+
+#include "tiny_printf.h"
+
 #include "tusb.h"
+
+void HardFault_Handler(void) { __asm("BKPT #0\n"); }
 
 //------------------------------------------------------+
 // Board Variant
@@ -90,16 +96,6 @@ static struct board_descriptor brd = (struct board_descriptor) {
       .pull = GPIO_PULL_UP,
       .speed = GPIO_SPEED_HIGH,
       .af = GPIO_AF0,}, 
-
-
-    .adc11_test = (gpio_t) { 
-      .port = GPIO_PORT_A,
-      .pin = GPIO_PIN_0, 
-      .mode = GPIO_MODE_ANALOG,
-      .type = GPIO_TYPE_PUSH_PULL,
-      .pull = GPIO_PULL_NONE,
-      .speed = GPIO_SPEED_LOW,
-      .af = GPIO_AF0,},
 
     .pwm_dac_ocp_th = (gpio_t) { 
       .port = GPIO_PORT_F,
@@ -347,11 +343,33 @@ static struct board_descriptor brd = (struct board_descriptor) {
       .parity = LPUART_PARITY_NONE,
       .flow_control = LPUART_FLOW_CONTROL_NONE,
     },
+  },
+
+  //--------------------------------------------------------------------+
+  // ADC Inputs
+  //--------------------------------------------------------------------+
+
+  .adc_vbus = (adc_input_t) {
+    .name = "vbus",
+    .pin = (gpio_t) {
+      .port = GPIO_PORT_A,
+      .pin = GPIO_PIN_0,
+      .mode = GPIO_MODE_ANALOG,
+      .type = GPIO_TYPE_PUSH_PULL,
+      .pull = GPIO_PULL_NONE,
+      .speed = GPIO_SPEED_LOW,
+      .af = GPIO_AF0,
+    },
+    .channel = 11,
+    .scale = 0.0,
+    .offset = 0.0,
+    .units = "V",
   }
 };
 
 static void board_clock_setup(void);
 static void board_gpio_setup(void);
+static void board_adc_setup(void);
 static void board_serial_setup(void);
 static void board_usb_setup(void);
 static void board_pwm_setup(void);
@@ -369,13 +387,18 @@ struct board_descriptor *board_get_descriptor(void) {
 
 int board_init(void) {
 
+
   board_clock_setup();
   board_gpio_setup();
   board_serial_setup();
+  //Clear Terminal
+  printf("\033[2J\033[1;1H");
+  printf("\r\nInitializing Board Drivers\r\n");
   board_spi_setup();
   board_usb_setup();
   board_pwm_setup();
   board_gate_driver_setup();
+  board_adc_setup();
 
   return 0;
   //TODO return error aggregation
@@ -477,6 +500,10 @@ static void board_gpio_setup() {
 //   return count;
 // }
 
+void _putchar(char character) {
+  uart_write(&brd.lpuart1, (uint8_t *)&character, 1);
+}
+
 static void board_serial_setup(void) {
   
     uart_init(&brd.lpuart1);
@@ -493,9 +520,7 @@ static void board_usb_setup(void) {
   usbpcd_init();
 }
 
-void _putchar(char character) { tud_cdc_write_char(character); }
 
-void HardFault_Handler(void) { __asm("BKPT #0\n"); }
 
 //------------------------------------------------------+
 // PWM Config
@@ -634,6 +659,37 @@ static void board_gate_driver_setup(void) {
   brd.gate_driver.io = &drv835x_io;
 }
 
+
+//------------------------------------------------------
+// ADC Config
+//------------------------------------------------------
+void board_adc_setup(void) {
+
+  adc_input_t adc1_input_array[1];
+  adc_t adc1 = {
+    .instance = ADC1_BASE,
+    .inputs.array = adc1_input_array,
+    .inputs.size = 1,
+  };
+  
+  printf("adc1 instance: %p\r\n", adc1.instance);
+
+
+  struct adc_options_s adc1_options = {
+    .clk_domain = ADC_CLK_DOMAIN_SYSCLK_PLL,
+    .resolution = ADC_RESOLUTION_12BIT,
+    .data_alignment = ADC_DATA_ALIGN_RIGHT,
+    .scan_mode = ADC_SCAN_MODE_SINGLE,
+    .eoc_selection = ADC_EOC_SEQ_CONV,
+  };
+  
+  printf("adc1 options: %p\r\n", &adc1_options);
+  printf("adc_options size: %d\r\n", sizeof(adc1_options));
+
+
+  // adc_init(&adc1);
+
+}
 
 
 

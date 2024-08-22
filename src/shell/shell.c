@@ -222,6 +222,12 @@ static void reboot_exec_callback(struct ush_object *self, struct ush_file_descri
     ush_print(self, "error: reboot not supported...");
 }
 
+// clear cmd file execute callback
+static void clear_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
+{
+    ush_print(self,"\033[2J\033[1;1H"); 
+}
+
 // info file get data callback
 size_t info_get_data_callback(struct ush_object *self, struct ush_file_descriptor const *file, uint8_t **data)
 {
@@ -251,6 +257,12 @@ static const struct ush_file_descriptor cmd_files[] = {
         .description = "reboot device",
         .help = NULL,
         .exec = reboot_exec_callback,
+    },
+    {
+        .name = "clear",
+        .description = "clear terminal",
+        .help = NULL,
+        .exec = clear_exec_callback,
     },
     {
         .name = "dpt",                       
