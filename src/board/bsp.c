@@ -16,6 +16,11 @@
 
 #include "tusb.h"
 
+#include "log.h"
+
+extern uint32_t g_isr_count_uart_tx;
+extern uint32_t g_isr_count_uart_rx;
+
 void HardFault_Handler(void) { __asm("BKPT #0\n"); }
 
 //------------------------------------------------------+
@@ -348,22 +353,23 @@ static struct board_descriptor brd = (struct board_descriptor) {
   //--------------------------------------------------------------------+
   // ADC Inputs
   //--------------------------------------------------------------------+
-
-  .adc_vbus = (adc_input_t) {
-    .name = "vbus",
-    .pin = (gpio_t) {
-      .port = GPIO_PORT_A,
-      .pin = GPIO_PIN_0,
-      .mode = GPIO_MODE_ANALOG,
-      .type = GPIO_TYPE_PUSH_PULL,
-      .pull = GPIO_PULL_NONE,
-      .speed = GPIO_SPEED_LOW,
-      .af = GPIO_AF0,
-    },
-    .channel = 11,
-    .scale = 0.0,
-    .offset = 0.0,
-    .units = "V",
+  .analog_in = {
+    .vbus = (adc_input_t) {
+      .name = "vbus",
+      .channel = 0, 
+      .pin = (gpio_t) {
+        .port = GPIO_PORT_A,
+        .pin = GPIO_PIN_0,
+        .mode = GPIO_MODE_ANALOG,
+        .type = GPIO_TYPE_PUSH_PULL,
+        .pull = GPIO_PULL_NONE,
+        .speed = GPIO_SPEED_LOW,
+        .af = GPIO_AF0,
+      },
+      .scale = 1.0,
+      .offset = 0.0,
+      .units = "V",
+    }
   }
 };
 
@@ -391,15 +397,27 @@ int board_init(void) {
   board_clock_setup();
   board_gpio_setup();
   board_serial_setup();
-  //Clear Terminal
-  printf("\033[2J\033[1;1H");
-  printf("\r\nInitializing Board Drivers\r\n");
-  board_spi_setup();
+  LOG_CLEAR();
+  LOG_OK("Core Init");
+  // board_spi_setup();
+  // board_gate_driver_setup();
+  LOG_FAIL("SPI Init");
   board_usb_setup();
+  LOG_OK("USB Init");
   board_pwm_setup();
-  board_gate_driver_setup();
+  LOG_OK("PWM Init");
   board_adc_setup();
+  LOG_OK("ADC Init");
 
+  LOG_INFO("\r\nBoard Init Complete\r\n");
+
+  // for (int i = 0; i < 10; i++) {
+  //   printf("%d,%d,%d,%d,%d\r\n", uart_get_tx_buffer_count(&brd.lpuart1),
+  //                                brd.lpuart1.tx_head,
+  //                                brd.lpuart1.tx_tail, 
+  //                                g_isr_count_uart_tx, 
+  //                                g_isr_count_uart_rx);
+  // }
   return 0;
   //TODO return error aggregation
 
@@ -485,21 +503,7 @@ static void board_gpio_setup() {
 // UART Config
 //------------------------------------------------------
 
-// Hook to printf
-// void _putchar(char character) {
-//   lpuart_write((uint8_t *)&character, 1);
-// }
-
-// int _write(int handle, char *data, int size) {
-//   int count;
-//   (void)handle; //unused
-//   for (count = 0; count < size; count++) {
-//     uart_write((uint8_t *)data, 1);
-//     data++;
-//   }
-//   return count;
-// }
-
+// printf redirect to UART
 void _putchar(char character) {
   uart_write(&brd.lpuart1, (uint8_t *)&character, 1);
 }
@@ -585,32 +589,6 @@ static void board_pwm_setup(void) {
 
 }
 
-//--------------------------------------------------------------------+
-// ADC Config
-//--------------------------------------------------------------------+
-
-// static void board_adc_setup(void) {
-//
-//   // struct adc adc1 = {
-//   //   .instance = ADC1_BASE,
-//   //   .channel_count = 1,
-//   // };
-//
-//   // struct adc_input adc1_input = {
-//   //   .channel = 11,
-//   //   .sample_time = ADC_SAMPLETIME_2_5,
-//   //   .resolution = ADC_RESOLUTION_12B,
-//   //   .alignment = ADC_ALIGNMENT_RIGHT,
-//   //   .trigger = ADC_TRIGGER_SOFTWARE,
-//   // };
-//   //
-//   // adc_init(&adc1);
-//   // adc_enable(&adc1);
-//
-//
-//   // adc_add_input(&adc1, &adc1_input);
-// }
-
 //------------------------------------------------------
 // SPI Config
 //------------------------------------------------------
@@ -665,29 +643,15 @@ static void board_gate_driver_setup(void) {
 //------------------------------------------------------
 void board_adc_setup(void) {
 
-  adc_input_t adc1_input_array[1];
-  adc_t adc1 = {
-    .instance = ADC1_BASE,
-    .inputs.array = adc1_input_array,
-    .inputs.size = 1,
+  static adc_t adc1 = {
+    .instance = ADC_INSTANCE_1,
   };
+
+  // adc_intput_t *adc1_regular_inputs[] = {&brd.analog_in.vbus};
+
+
   
-  printf("adc1 instance: %p\r\n", adc1.instance);
-
-
-  struct adc_options_s adc1_options = {
-    .clk_domain = ADC_CLK_DOMAIN_SYSCLK_PLL,
-    .resolution = ADC_RESOLUTION_12BIT,
-    .data_alignment = ADC_DATA_ALIGN_RIGHT,
-    .scan_mode = ADC_SCAN_MODE_SINGLE,
-    .eoc_selection = ADC_EOC_SEQ_CONV,
-  };
-  
-  printf("adc1 options: %p\r\n", &adc1_options);
-  printf("adc_options size: %d\r\n", sizeof(adc1_options));
-
-
-  // adc_init(&adc1);
+  adc_init(&adc1);
 
 }
 

@@ -19,35 +19,31 @@ File   : bsp.h
 // GPIOs
 //------------------------------------------------------
 
-
-struct brd_gpio_s {
-
-  // change format to PORT_io_name e.x PA11_led_red
-  gpio_t led_red;
-  gpio_t led_green;
-  gpio_t led_blue;
-  gpio_t drive_enable;
-  gpio_t test_pin0;
-  gpio_t pwm_dac_ocp_th;
-  gpio_t flt_ocp_n;
-  gpio_t spi3_mosi;
-  gpio_t spi3_miso;
-  gpio_t spi3_clk;
-  gpio_t spi3_menc1_cs;
-  gpio_t spi4_mosi;
-  gpio_t spi4_miso;
-  gpio_t spi4_clk;
-  gpio_t spi4_gd_cs;
-  gpio_t spi4_ltc_cs;
-  // TODO create board struct and add alt func ios here too
-};
-
 const struct board_descriptor {
-  struct brd_gpio_s io;
+  struct brd_gpio_s {
+    gpio_t led_red;
+    gpio_t led_green;
+    gpio_t led_blue;
+    gpio_t drive_enable;
+    gpio_t test_pin0;
+    gpio_t pwm_dac_ocp_th;
+    gpio_t flt_ocp_n;
+    gpio_t spi3_mosi;
+    gpio_t spi3_miso;
+    gpio_t spi3_clk;
+    gpio_t spi3_menc1_cs;
+    gpio_t spi4_mosi;
+    gpio_t spi4_miso;
+    gpio_t spi4_clk;
+    gpio_t spi4_gd_cs;
+    gpio_t spi4_ltc_cs;
+  } io;
   pwm_t pwma;
   pwm_t pwmb;
   pwm_t pwmc;
-  adc_input_t adc_vbus;
+  struct brd_analog_in_s {
+    adc_input_t vbus;
+  } analog_in;
   struct spi spi3;
   struct spi spi4;
   struct drv835x gate_driver;

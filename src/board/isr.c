@@ -5,6 +5,9 @@
 // HRTIM Interrupt Handler
 //------------------------------------------------------+
 
+volatile uint32_t g_isr_count_uart_tx = 0;
+volatile uint32_t g_isr_count_uart_rx = 0;
+
 void HRTIM1_TIMA_IRQHandler(void) {
 
   /* REP Interrupt Routine - TIMA */
@@ -102,6 +105,8 @@ void LPUART1_IRQHandler(void) {
   uint8_t data;
   struct board_descriptor *brd = board_get_descriptor();
 
+    
+    
   // Received a byte
   if (LPUART1->ISR & USART_ISR_RXNE) {
     data = (uint8_t) LPUART1->RDR & 0xFF;
@@ -113,18 +118,31 @@ void LPUART1_IRQHandler(void) {
       brd->lpuart1.rx_head = next_head;
     }
     // Clear RXNE flag by reading data
+    g_isr_count_uart_rx++;
   }
 
   // Empty data register
   if (LPUART1->ISR & USART_ISR_TXE) {
+    uint16_t next_tail;
+
     if (brd->lpuart1.tx_head != brd->lpuart1.tx_tail) {
       // If not empty, send data
+      next_tail = (brd->lpuart1.tx_tail + 1) % UART_TX_BUFFER_SIZE;
       LPUART1->TDR = brd->lpuart1.tx_buffer[brd->lpuart1.tx_tail];
-      brd->lpuart1.tx_tail = (brd->lpuart1.tx_tail + 1) % UART_TX_BUFFER_SIZE;
+      brd->lpuart1.tx_tail = next_tail;
+
     } else {
       // If empty, disable TXE interrupt
       LPUART1->CR1 &= ~USART_CR1_TXEIE;
     }
     // ISR Cleared by writing data to TDR
+
+  }
+
+  // Transmission complete
+  if (LPUART1->ISR & USART_ISR_TC) {
+    g_isr_count_uart_tx++;
+    // Clear TC flag
+    LPUART1->ICR |= USART_ICR_TCCF;
   }
 }

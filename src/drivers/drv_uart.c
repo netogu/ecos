@@ -35,6 +35,8 @@ int cli_uart_putc(char tx_char) {
     return status;
 }
 
+
+
 char cli_uart_getc(void) {
     int status = 0;
     char readchar = NOCHAR;

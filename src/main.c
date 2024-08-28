@@ -1,11 +1,11 @@
  /*
- .----------------------.
- |                      |
- |     ┬ ┬╔╦╗╔═╗╔═╗     |
- |     │ │║║║║ ║║       |
- |     └─|╩ ╩╚═╝╚═╝     |
- |                      |
- '----------------------'
+ .---------------------.
+ |                     |
+ |     ╔╦╗╔═╗╔═╗       |
+ |     ║║║║ ║║         |
+ |     ╩ ╩╚═╝╚═╝       |
+ |                     |
+ '---------------------'
 
  */
 
@@ -106,8 +106,8 @@ static void bg_task( void *parameters );
 
 
 int main(void) {
-  board_init();
 
+  board_init();
   // serial_queue = xQueueCreateStatic(SERIAL_QUEUE_LENGTH,
   //                                  sizeof(SERIAL_QUEUE_TYPE),
   //                                  &serial_queue_storage[0],
@@ -147,6 +147,9 @@ int main(void) {
 
 
   xTimerStart(led_blink_timer, 0);
+  
+
+  printf("Starting FreeRTOS Scheduler\r\n");
 
   /* Start the scheduler. */
   vTaskStartScheduler();
@@ -160,7 +163,7 @@ int main(void) {
 //--------------------------------------------------------------------------------
 void bg_task( void *parameters ) {
 
-  // struct board_descriptor *board = board_get_descriptor();
+  struct board_descriptor *brd = board_get_descriptor();
 
   // spi_enable(&brd->spi4);
   // gpio_pin_set(&brd->io.spi4_gd_cs);
@@ -177,7 +180,9 @@ void bg_task( void *parameters ) {
 
     // drv835x_read_faults(&brd->gate_driver);
     // uart_write(&board->lpuart1, msg, strlen(msg));
-    vTaskDelay(100);
+    // ush_printf("TX Buffer: %d\r\n", uart_get_tx_buffer_count(&brd->lpuart1));
+    
+    vTaskDelay(500);
   }
 
 }
@@ -254,10 +259,12 @@ void cdc_task( void *parameters ) {
   
 
 
+  // Print Shell Header
   for (int i = 0; i < strlen(shell_head); i++) {
     cli_uart_putc(shell_head[i]);
     vTaskDelay(1);
   }
+
 
   shell_init();
 

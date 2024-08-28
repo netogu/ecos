@@ -10,85 +10,61 @@
 // ADC Sample Hold Time
 // Tconv = Sample Time + 12.5 ADC clock cycles
 // ------------------------------------------------------+
+#define _FLAG(x) (1 << (x))
+#define ADC_CHANNEL_1 _FLAG(0)
+#define ADC_CHANNEL_2 _FLAG(1)
+#define ADC_CHANNEL_3 _FLAG(2)
+#define ADC_CHANNEL_4 _FLAG(3)
+#define ADC_CHANNEL_5 _FLAG(4)
+#define ADC_CHANNEL_6 _FLAG(5)
+#define ADC_CHANNEL_7 _FLAG(6)
+#define ADC_CHANNEL_8 _FLAG(7)
+#define ADC_CHANNEL_9 _FLAG(8)
+#define ADC_CHANNEL_10 _FLAG(9)
+#define ADC_CHANNEL_11 _FLAG(10)
+#define ADC_CHANNEL_12 _FLAG(11)
+#define ADC_CHANNEL_13 _FLAG(12)
+#define ADC_CHANNEL_14 _FLAG(13)
+#define ADC_CHANNEL_15 _FLAG(14)
+#define ADC_CHANNEL_16 _FLAG(15)
+#define ADC_CHANNEL_OPAMP_1 _FLAG(16)
+#define ADC_CHANNEL_OPAMP_2 _FLAG(17)
+#define ADC_CHANNEL_OPAMP_3 _FLAG(18)
+#define ADC_CHANNEL_OPAMP_4 _FLAG(19)
+#define ADC_CHANNEL_OPAMP_5 _FLAG(20)
+#define ADC_CHANNEL_OPAMP_6 _FLAG(21)
+#define ADC_CHANNEL_VTS _FLAG(22)
+#define ADC_CHANNEL_VTS _FLAG(23)
+#define ADC_CHANNEL_VBAT_DIV_3 _FLAG(24)
+#define ADC_CHANNEL_VREFINT _FLAG(25)
 
-#define ADC_OP_CLK_DOMAN_SYSCLK_PLL 0
-#define ADC_OP_CLK_DOMAN_SYSCLK 1
-#define ADC_OP_RESOLUTION_6BIT 0
-#define ADC_OP_RESOLUTION_8BIT 1
-#define ADC_OP_RESOLUTION_10BIT 2
-#define ADC_OP_RESOLUTION_12BIT 3
 
-enum adc_sample_time_e {
-    ADC_SAMPLE_TIME_2_5_CYCLES,
-    ADC_SAMPLE_TIME_6_5_CYCLES,
-    ADC_SAMPLE_TIME_12_5_CYCLES,
-    ADC_SAMPLE_TIME_24_5_CYCLES,
-    ADC_SAMPLE_TIME_47_5_CYCLES,
-    ADC_SAMPLE_TIME_92_5_CYCLES,
-    ADC_SAMPLE_TIME_247_5_CYCLES,
-    ADC_SAMPLE_TIME_640_5_CYCLES,
-};
-
-enum adc_input_type_e {
-    ADC_INPUT_TYPE_SINGLE_ENDED,
-    ADC_INPUT_TYPE_DIFFERENTIAL,
-};
-
-enum adc_convertion_mode_e {
-    ADC_CONV_MODE_REGULAR,
-    ADC_CONV_MODE_INJECTED,
-};
 
 typedef struct adc_input_s {
     char *name;
-    gpio_t pin;
     uint8_t channel;
+    gpio_t pin;
     float scale;
     float offset;
     char *units;
-    uint32_t value_raw;
-    float value;
+    uint32_t *data;
 } adc_input_t;
 
+typedef struct adc_input_s adc_input_t;
+
 typedef struct adc_s {
-    uint32_t *instance;
-    struct {
-        uint16_t size;
-        uint16_t *array;
-    } inputs;
+    enum adc_instance_e {
+        ADC_INSTANCE_1,
+        ADC_INSTANCE_2,
+        ADC_INSTANCE_3,
+        ADC_INSTANCE_4,
+        ADC_INSTANCE_5,
+    } instance;
+    struct adc_options_s {
+        uint32_t config;
+    } options;
+    uint32_t channel_data[18];
 } adc_t;
-
-struct adc_options_s {
-    enum {
-        ADC_CLK_DOMAIN_SYSCLK_PLL,
-    } clk_domain;
-
-    enum {
-        ADC_RESOLUTION_6BIT = 0,
-        ADC_RESOLUTION_8BIT = 1,
-        ADC_RESOLUTION_10BIT = 2,
-        ADC_RESOLUTION_12BIT = 3,
-    } resolution;
-
-    enum {
-        ADC_DATA_ALIGN_RIGHT,
-        ADC_DATA_ALIGN_LEFT,
-    } data_alignment;
-
-    enum {
-        ADC_SCAN_MODE_SINGLE,
-        ADC_SCAN_MODE_CONTINUOUS,
-    } scan_mode;
-
-    enum {
-        ADC_EOC_SEQ_CONV,
-        ADC_EOC_SINGLE_CONV,
-    } eoc_selection;
-};
-
-    
-
-
 
 
 

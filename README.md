@@ -1,15 +1,15 @@
 # [uMOC]
 ```
-.----------------------.
-|                      |
-|     ┬ ┬╔╦╗╔═╗╔═╗     |
-|     │ │║║║║ ║║       |
-|     └─|╩ ╩╚═╝╚═╝     |
-|                      |
-'----------------------'
+.---------------------.
+|                     |
+|     ╔╦╗╔═╗╔═╗       |
+|     ║║║║ ║║         |
+|     ╩ ╩╚═╝╚═╝       |
+|                     |
+'---------------------'
 ```
 
-uMOC is an open-source firmware framework designed with the control of power electronics and electric machines in mind.
+MOC is an open-source firmware framework designed with the control of power electronics and electric machines in mind.
 **Features**
 - Collection of common PWM topologies
 - Collection of power electronics testing tools
@@ -17,7 +17,7 @@ uMOC is an open-source firmware framework designed with the control of power ele
 **Supported Devices** - STM32G474
 
 ## Acknowledgements
-uMOC is built from the amazing open source contribution of others. Thank you!
+MOC is built from the amazing open source contribution of others. Thank you!
 - FreeRTOS
 - microshell
 - TinyUSB

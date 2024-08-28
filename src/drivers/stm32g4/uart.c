@@ -2,11 +2,45 @@
 #include "stm32g4xx.h"
 #include "stm32g4/uart.h"
 
+typedef enum {
+    LPUART_STATUS_OK = 0,
+    LPUART_STATUS_ERROR = 1,
+    LPUART_STATUS_BUSY = 2,
+    LPUART_STATUS_TIMEOUT = 3,
+} lpuart_status_t;
+
+typedef enum {
+    LPUART_CLOCK_SOURCE_PCLK = 0,
+    LPUART_CLOCK_SOURCE_SYSCLK = 1,
+    LPUART_CLOCK_SOURCE_HSI = 2,
+    LPUART_CLOCK_SOURCE_LSE = 3,
+} lpuart_clock_source_t;
+
+typedef enum { 
+    LPUART_CLOCK_PRESCALER_1 = 0,
+    LPUART_CLOCK_PRESCALER_2 = 1,
+    LPUART_CLOCK_PRESCALER_4 = 2,
+    LPUART_CLOCK_PRESCALER_6 = 3,
+    LPUART_CLOCK_PRESCALER_8 = 4,
+    LPUART_CLOCK_PRESCALER_10 = 5,
+    LPUART_CLOCK_PRESCALER_12 = 6,
+    LPUART_CLOCK_PRESCALER_16 = 7,
+    LPUART_CLOCK_PRESCALER_32 = 8,
+    LPUART_CLOCK_PRESCALER_64 = 9,
+    LPUART_CLOCK_PRESCALER_128 = 10,
+    LPUART_CLOCK_PRESCALER_256 = 11,
+} lpaurt_clock_prescaler_t;
+
+
 
 void uart_init(uart_t *self) {
 
 
-        // UART Base
+        // Clear Buffers
+        self->rx_head = 0;
+        self->rx_tail = 0;
+        self->tx_head = 0;
+        self->tx_tail = 0;
         
         // Configure GPIOs
         gpio_pin_init(&self->tx_pin);
@@ -81,10 +115,17 @@ void uart_init(uart_t *self) {
         LPUART1->CR1 |= (USART_CR1_RXNEIE);
         // Enable LPUART TXE interrupt
         LPUART1->CR1 |= (USART_CR1_TXEIE);
+        // Enable LPUART TC interrupt
+        LPUART1->CR1 |= (USART_CR1_TCIE);
+
         NVIC_EnableIRQ(LPUART1_IRQn);
         
 }
 
+
+int uart_get_tx_buffer_count(uart_t *self) {
+    return (self->tx_head - self->tx_tail) % UART_TX_BUFFER_SIZE;
+}
 
 
 void uart_write_byte(uart_t *self, uint8_t byte) {
