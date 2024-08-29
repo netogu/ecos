@@ -100,49 +100,73 @@ void USBWakeUp_IRQHandler(void) {
 // UART interrupt Handler
 //--------------------------------------------------------------------+
 
-void LPUART1_IRQHandler(void) {
-  uint16_t next_head;
+
+static inline void uart_receive_byte(uart_t *self) {
   uint8_t data;
-  struct board_descriptor *brd = board_get_descriptor();
+  uint16_t next_head;
 
-    
-    
-  // Received a byte
-  if (LPUART1->ISR & USART_ISR_RXNE) {
-    data = (uint8_t) LPUART1->RDR & 0xFF;
-    next_head = (brd->lpuart1.rx_head + 1) % UART_RX_BUFFER_SIZE;
+  data = (uint8_t) self->instance->RDR & 0xFF;
+  next_head = (self->rx_head + 1) % UART_RX_BUFFER_SIZE;
 
-    if (next_head != brd->lpuart1.rx_tail) {
-      // If not full, add data to buffer
-      brd->lpuart1.rx_buffer[brd->lpuart1.rx_head] = data;
-      brd->lpuart1.rx_head = next_head;
-    }
-    // Clear RXNE flag by reading data
-    g_isr_count_uart_rx++;
+  if (next_head != self->rx_tail) {
+    // If not full, add data to buffer
+    self->rx_buffer[self->rx_head] = data;
+    self->rx_head = next_head;
   }
+  // Clear RXNE flag by reading data
+}
 
-  // Empty data register
-  if (LPUART1->ISR & USART_ISR_TXE) {
+static inline void uart_send_byte(uart_t *self) {
     uint16_t next_tail;
 
-    if (brd->lpuart1.tx_head != brd->lpuart1.tx_tail) {
+    if (self->tx_head != self->tx_tail) {
       // If not empty, send data
-      next_tail = (brd->lpuart1.tx_tail + 1) % UART_TX_BUFFER_SIZE;
-      LPUART1->TDR = brd->lpuart1.tx_buffer[brd->lpuart1.tx_tail];
-      brd->lpuart1.tx_tail = next_tail;
+      next_tail = (self->tx_tail + 1) % UART_TX_BUFFER_SIZE;
+      self->instance->TDR = self->tx_buffer[self->tx_tail];
+      self->tx_tail = next_tail;
 
     } else {
       // If empty, disable TXE interrupt
-      LPUART1->CR1 &= ~USART_CR1_TXEIE;
+      self->instance->CR1 &= ~USART_CR1_TXEIE;
     }
     // ISR Cleared by writing data to TDR
 
+}
+
+void LPUART1_IRQHandler(void) {
+
+  struct board_descriptor *brd = board_get_descriptor();
+
+  // Received a byte on LPUART1
+  if (LPUART1->ISR & USART_ISR_RXNE) {
+    uart_receive_byte(&brd->lpuart1);
+    g_isr_count_uart_rx++;
   }
 
-  // Transmission complete
-  if (LPUART1->ISR & USART_ISR_TC) {
+
+  // Ready to send byte on LPUART1
+  if (LPUART1->ISR & USART_ISR_TXE) {
+    uart_send_byte(&brd->lpuart1);
     g_isr_count_uart_tx++;
-    // Clear TC flag
-    LPUART1->ICR |= USART_ICR_TCCF;
   }
+
+
+}
+
+void USART3_IRQHandler(void) {
+
+  struct board_descriptor *brd = board_get_descriptor();
+
+  // Received a byte on USART3
+  if (USART3->ISR & USART_ISR_RXNE) {
+    uart_receive_byte(&brd->usart3);
+    g_isr_count_uart_rx++;
+  }
+
+  // Ready to send byte on USART3
+  if (USART3->ISR & USART_ISR_TXE) {
+    uart_send_byte(&brd->usart3);
+    g_isr_count_uart_tx++;
+  }
+
 }

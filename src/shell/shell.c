@@ -220,7 +220,7 @@ static void pwma_set_duty_cb(struct ush_object *self, struct ush_file_descriptor
 // reboot cmd file execute callback
 static void reboot_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
-    ush_print(self, "error: reboot not supported...");
+    NVIC_SystemReset();
 }
 
 // clear cmd file execute callback

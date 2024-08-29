@@ -20,26 +20,26 @@ typedef struct uart_s {
     uint8_t tx_tail;
     struct uart_config_s {
         uint32_t baudrate;
-        enum lpuart_word_len_e {
+        enum uart_word_len_e {
             UART_DATA_BITS_8 = 0,
             UART_DATA_BITS_9 = 1,
             UART_DATA_BITS_7 = 2,
         } word_length;
-        enum lpuart_stop_bits_e {
+        enum uart_stop_bits_e {
             UART_STOP_BITS_1 = 0,
             UART_STOP_BITS_2 = 2,
         } stop_bits;
-        enum lpuart_parity_e {
+        enum uart_parity_e {
             UART_PARITY_EVEN = 0,
             UART_PARITY_ODD = 1,
             UART_PARITY_NONE = 2,
         } parity;
-        enum lpuart_mode_e {
+        enum uart_mode_e {
             UART_MODE_RX = 0,
             UART_MODE_TX = 1,
             UART_MODE_RX_TX = 2,
         } mode;
-        enum lpuart_flow_control_e {
+        enum uart_flow_control_e {
             UART_FLOW_CONTROL_NONE = 0,
             UART_FLOW_CONTROL_RTS = 1,
             UART_FLOW_CONTROL_CTS = 2,

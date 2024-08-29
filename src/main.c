@@ -1,17 +1,15 @@
 /*
-.-----------------------------------.
-|                                   |
-|                                   |
-|      ██████   ██████   ██████     |
-|     ███░░███ ███░░███ ███░░███    |
-|    ░███████ ░███ ░░░ ░███ ░███    |
-|    ░███░░░  ░███  ███░███ ░███    |
-|    ░░██████ ░░██████ ░░██████     |
-|     ░░░░░░   ░░░░░░   ░░░░░░      |
-|                                   |
-|                                   |
-|                                   |
-'-----------------------------------'
+·····································
+:                                   :
+:                                   :
+:       .::       .:::   .::        :
+:     .:   .::  .::    .::  .::     :
+:    .::::: .::.::    .::    .::    :
+:    .:         .::    .::  .::     :
+:      .::::      .:::   .::        :
+:                                   :
+:                                   :
+·····································
 Energy Controller
 */
 
@@ -261,7 +259,13 @@ void cdc_task( void *parameters ) {
 
   struct board_descriptor *board = board_get_descriptor();
 
+  #ifdef SHELL_INTERFACE_USB
+    cli_usb_init();
+  #elif defined(SHELL_INTERFACE_USART3)
+    cli_uart_init(&board->usart3);
+  #else
   cli_uart_init(&board->lpuart1);
+  #endif
 
   // Print Shell Header
   for (int i = 0; i < strlen(shell_head); i++) {
@@ -309,8 +313,10 @@ static void led_blink_cb(TimerHandle_t xTimer) {
   /* Unused parameters. */
   ( void ) xTimer;
   gpio_pin_toggle(&brd->io.led_green);
-  gpio_pin_toggle(&brd->io.led_red);
-  gpio_pin_toggle(&brd->io.led_blue);
+  // gpio_pin_toggle(&brd->io.led_red);
+  // gpio_pin_toggle(&brd->io.led_blue);
+  gpio_pin_set(&brd->io.led_blue);  
+  gpio_pin_set(&brd->io.led_red);
 
 }
 

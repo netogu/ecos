@@ -15,10 +15,22 @@ File   : bsp.h
 #include "drivers/power/drv835x.h"
 #include "drivers/stm32g4/uart.h"
 
+//------------------------------------------------------+
+// Board Variant
+//------------------------------------------------------+
+// #define STM32G4_NUKLEO
+#define STM32G4_F50
+
+//------------------------------------------------------+
+// Shell Interface Selection
+//------------------------------------------------------+
+// #define SHELL_INTERFACE_USB
+#define SHELL_INTERFACE_USART3
+// #define SHELL_INTERFACE_LPUART1
+
 //------------------------------------------------------
 // GPIOs
 //------------------------------------------------------
-
 const struct board_descriptor {
   struct brd_gpio_s {
     gpio_t led_red;
@@ -48,6 +60,7 @@ const struct board_descriptor {
   struct spi spi4;
   struct drv835x gate_driver;
   uart_t lpuart1;
+  uart_t usart3;
 };
 
 // extern struct gpio io;

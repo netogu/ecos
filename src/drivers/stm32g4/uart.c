@@ -27,25 +27,29 @@
 
 static void lpuart_init(uart_t *self) {
 
-    
-        // Set LPUART clock source to PCLK
-        RCC->CCIPR &= ~(RCC_CCIPR_LPUART1SEL);
-        RCC->CCIPR |= (UART_CLOCK_SOURCE_PCLK << RCC_CCIPR_LPUART1SEL_Pos);
+    // Set LPUART clock source to PCLK
+    RCC->CCIPR &= ~(RCC_CCIPR_LPUART1SEL);
+    RCC->CCIPR |= (UART_CLOCK_SOURCE_PCLK << RCC_CCIPR_LPUART1SEL_Pos);
 
-        // Enable LPUART clock
-        RCC->APB1ENR2 |= RCC_APB1ENR2_LPUART1EN;
-        uint32_t tmpreg = RCC->APB1ENR2;
-        (void)tmpreg;
-        
-        NVIC_EnableIRQ(LPUART1_IRQn);
+    // Enable LPUART clock
+    RCC->APB1ENR2 |= RCC_APB1ENR2_LPUART1EN;
+    uint32_t tmpreg = RCC->APB1ENR2;
+    (void)tmpreg;
+    
+    NVIC_EnableIRQ(LPUART1_IRQn);
         
 }
 
 static void usart3_init(uart_t *self) {
+    // Set USART3 clock source to PCLK
+    RCC->CCIPR &= ~(RCC_CCIPR_USART3SEL);
+    RCC->CCIPR |= (UART_CLOCK_SOURCE_PCLK << RCC_CCIPR_USART3SEL_Pos);
+
     // Enable USART3 clock
     RCC->APB1ENR1 |= RCC_APB1ENR1_USART3EN;
     uint32_t tmpreg = RCC->APB1ENR1;
     (void)tmpreg;
+
     // Enable USART3 interrupt
     NVIC_EnableIRQ(USART3_IRQn);
 }
@@ -76,9 +80,16 @@ void uart_init(uart_t *self) {
     self->instance->CR1 &= ~(USART_CR1_UE);
     self->instance->CR1 = 0x00;
 
-    // Set baudrate
-    uint32_t usartdiv = SystemCoreClock / self->config.baudrate * 256;
-    self->instance->BRR = usartdiv & 0x0FFFFF; // 20 bits
+    if (self->instance == LPUART1) {
+        // Set baudrate
+        uint32_t usartdiv = SystemCoreClock / self->config.baudrate * 256;
+        self->instance->BRR = usartdiv & 0x0FFFFF; // 20 bits
+    } else {
+        // Set baudrate
+        uint32_t usartdiv = SystemCoreClock / self->config.baudrate;
+        self->instance->BRR = usartdiv & 0x0FFFF; // 16 bits
+    }
+
 
     // Set data bits
     // 8 bits by default
@@ -138,9 +149,9 @@ int uart_get_tx_buffer_count(uart_t *self) {
 
 void uart_write_byte(uart_t *self, uint8_t byte) {
 
-    while (!(LPUART1->ISR & USART_ISR_TXE));
-    LPUART1->TDR = byte;
-    while (!(LPUART1->ISR & USART_ISR_TC)){
+    while (!(self->instance->ISR & USART_ISR_TXE));
+    self->instance->TDR = byte;
+    while (!(self->instance->ISR & USART_ISR_TC)){
         // wait for transmission complete
     }
     
@@ -148,16 +159,16 @@ void uart_write_byte(uart_t *self, uint8_t byte) {
 // non-blocking write byte
 int uart_write_byte_nb(uart_t *self, uint8_t byte) {
 
-    if (LPUART1->ISR & USART_ISR_TXE) {
-        LPUART1->TDR = byte;
+    if (self->instance->ISR & USART_ISR_TXE) {
+        self->instance->TDR = byte;
         return 1;
     }
     return 0;
 }
 // non-blocking read byte
 int uart_read_byte_nb(uart_t *self, uint8_t *byte) {
-    if (LPUART1->ISR & USART_ISR_RXNE) {
-        *byte = LPUART1->RDR;
+    if (self->instance->ISR & USART_ISR_RXNE) {
+        *byte = self->instance->RDR;
         return 1;
     }
     return 0;
@@ -165,7 +176,7 @@ int uart_read_byte_nb(uart_t *self, uint8_t *byte) {
 
 // check if uart is busy
 int uart_is_busy(uart_t *self) {
-    if (LPUART1->ISR & USART_ISR_BUSY) {
+    if (self->instance->ISR & USART_ISR_BUSY) {
         return 1;
     }
     return 0;
@@ -184,7 +195,7 @@ int uart_write(uart_t *self, uint8_t *data, uint16_t len) {
         self->tx_head = next_head;
     }
     // Enable TXE interrupt
-    LPUART1->CR1 |= USART_CR1_TXEIE;
+    self->instance->CR1 |= USART_CR1_TXEIE;
     return len;
 }
 

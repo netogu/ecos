@@ -23,26 +23,75 @@ extern uint32_t g_isr_count_uart_rx;
 
 void HardFault_Handler(void) { __asm("BKPT #0\n"); }
 
-//------------------------------------------------------+
-// Board Variant
-//------------------------------------------------------+
-#define STM32G4_NUKLEO
 
 //------------------------------------------------------+
 // Clock Selection
 //------------------------------------------------------+
+#ifdef STM32G4_NUKLEO
 #define CLOCK_SETUP_HSI_16MHZ_170MHZ
-// #define CLOCK_SETUP_HSE_24MHZ_170MHZ
+#else
+#define CLOCK_SETUP_HSE_24MHZ_170MHZ
+#endif
 
 //------------------------------------------------------+
 // Board Configuration
 //------------------------------------------------------+
 
+static void board_clock_setup(void);
+static void board_gpio_setup(void);
+static void board_adc_setup(void);
+static void board_uart_setup(void);
+static void board_usb_setup(void);
+static void board_pwm_setup(void);
+static void board_spi_setup(void);
+static void board_gate_driver_setup(void);
+static struct board_descriptor brd;
+
+/**
+ * @brief Get the board descriptor object 
+ * 
+ * @return struct board_descriptor* 
+ */
+struct board_descriptor *board_get_descriptor(void) {
+  return &brd;
+}
+
+/**
+ * @brief Initialize the board
+ * 
+ * @return Error code 
+ */
+int board_init(void) {
+
+
+  board_clock_setup();
+  board_gpio_setup();
+  board_uart_setup();
+  LOG_CLEAR();
+  LOG_OK("Core Init");
+  // board_spi_setup();
+  // board_gate_driver_setup();
+  LOG_FAIL("SPI Init");
+  board_usb_setup();
+  LOG_OK("USB Init");
+  board_pwm_setup();
+  LOG_OK("PWM Init");
+  board_adc_setup();
+  LOG_OK("ADC Init");
+
+  LOG_INFO("\r\nBoard Init Complete\r\n");
+
+  return 0;
+  //TODO return error aggregation
+
+}
+
+
 static struct board_descriptor brd = (struct board_descriptor) {
 
-  //--------------------------------------------------------------------+
+  //------------------------------------------------------+
   // GPIO
-  //--------------------------------------------------------------------+
+  //------------------------------------------------------+
 
   .io = (struct brd_gpio_s) 
   { 
@@ -350,6 +399,36 @@ static struct board_descriptor brd = (struct board_descriptor) {
     },
   },
 
+  .usart3 = (uart_t) {
+    .instance = USART3,
+    .tx_pin = (gpio_t) {
+      .port = GPIO_PORT_C,
+      .pin = GPIO_PIN_10,
+      .mode = GPIO_MODE_ALTERNATE,
+      .type = GPIO_TYPE_PUSH_PULL,
+      .pull = GPIO_PULL_NONE,
+      .speed = GPIO_SPEED_LOW,
+      .af = GPIO_AF7,
+    },
+    .rx_pin = (gpio_t) {
+      .port = GPIO_PORT_C,
+      .pin = GPIO_PIN_11,
+      .mode = GPIO_MODE_ALTERNATE,
+      .type = GPIO_TYPE_PUSH_PULL,
+      .pull = GPIO_PULL_NONE,
+      .speed = GPIO_SPEED_LOW,
+      .af = GPIO_AF7,
+    },
+    .config = {
+      .baudrate = 115200,
+      .mode = UART_MODE_RX_TX,
+      .word_length = UART_DATA_BITS_8,
+      .stop_bits = UART_STOP_BITS_1,
+      .parity = UART_PARITY_NONE,
+      .flow_control = UART_FLOW_CONTROL_NONE,
+    },
+  },
+
   //--------------------------------------------------------------------+
   // ADC Inputs
   //--------------------------------------------------------------------+
@@ -373,55 +452,7 @@ static struct board_descriptor brd = (struct board_descriptor) {
   }
 };
 
-static void board_clock_setup(void);
-static void board_gpio_setup(void);
-static void board_adc_setup(void);
-static void board_uart_setup(void);
-static void board_usb_setup(void);
-static void board_pwm_setup(void);
-static void board_spi_setup(void);
-static void board_gate_driver_setup(void);
 
-/**
- * @brief Get the board descriptor object 
- * 
- * @return struct board_descriptor* 
- */
-struct board_descriptor *board_get_descriptor(void) {
-  return &brd;
-}
-
-int board_init(void) {
-
-
-  board_clock_setup();
-  board_gpio_setup();
-  board_uart_setup();
-  LOG_CLEAR();
-  LOG_OK("Core Init");
-  // board_spi_setup();
-  // board_gate_driver_setup();
-  LOG_FAIL("SPI Init");
-  board_usb_setup();
-  LOG_OK("USB Init");
-  board_pwm_setup();
-  LOG_OK("PWM Init");
-  board_adc_setup();
-  LOG_OK("ADC Init");
-
-  LOG_INFO("\r\nBoard Init Complete\r\n");
-
-  // for (int i = 0; i < 10; i++) {
-  //   printf("%d,%d,%d,%d,%d\r\n", uart_get_tx_buffer_count(&brd.lpuart1),
-  //                                brd.lpuart1.tx_head,
-  //                                brd.lpuart1.tx_tail, 
-  //                                g_isr_count_uart_tx, 
-  //                                g_isr_count_uart_rx);
-  // }
-  return 0;
-  //TODO return error aggregation
-
-}
 
 //------------------------------------------------------
 // Clock Config
@@ -506,7 +537,11 @@ static void board_gpio_setup() {
 
 static void board_uart_setup(void) {
   
+    #ifdef SHELL_INTERFACE_USART3
+    uart_init(&brd.usart3);
+    #else
     uart_init(&brd.lpuart1);
+    #endif
 }
 
 
@@ -658,7 +693,14 @@ void board_adc_setup(void) {
 
 // printf redirect to UART
 void _putchar(char character) {
-  uart_write(&brd.lpuart1, (uint8_t *)&character, 1);
+
+  #ifdef SHELL_INTERFACE_USB
+    tud_cdc_write_char(character);
+  #elif defined(SHELL_INTERFACE_USART3)
+    uart_write(&brd.usart3, (uint8_t *)&character, 1);
+  #else 
+    uart_write(&brd.lpuart1, (uint8_t *)&character, 1);
+  #endif
 }
 
 void _close(int file) {
@@ -689,7 +731,13 @@ int _read(int file, char *ptr, int len) {
 
 int _write(int file, char *ptr, int len) {
   (void)file;
-  uart_write(&brd.lpuart1, (uint8_t *)ptr, len);
+  #ifdef SHELL_INTERFACE_USB
+    tud_cdc_write(ptr, len);
+  #elif defined(SHELL_INTERFACE_USART3)
+    uart_write(&brd.usart3, (uint8_t *)ptr, len);
+  #else
+    uart_write(&brd.lpuart1, (uint8_t *)ptr, len);
+  #endif
   return len;
 }
 
