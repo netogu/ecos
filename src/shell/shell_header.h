@@ -4,8 +4,8 @@
 #include <microshell.h>
 #include <string.h>
 
-#define MOC_VERSION_MAJOR 0
-#define MOC_VERSION_MINOR 1
+#define ECO_VERSION_MAJOR 0
+#define ECO_VERSION_MINOR 1
 
 // stringify helper - use xstr() to convert #define to a usable string
 #define str(s) # s
@@ -14,14 +14,19 @@
 const char *shell_head =
 "\r\n"
 USH_SHELL_FONT_COLOR_RED
-".---------------------.\r\n"
-"|                     |\r\n"
-"|     ╔╦╗╔═╗╔═╗       |\r\n"
-"|     ║║║║ ║║         |\r\n"
-"|     ╩ ╩╚═╝╚═╝       |\r\n"
-"|                     |\r\n"
-"'---------------------'\r\n"
-xstr(MOC_VERSION_MAJOR) "." xstr(MOC_VERSION_MINOR) // add version number to header
+".-----------------------------------.\r\n"
+"|                                   |\r\n"
+"|                                   |\r\n"
+"|      ██████   ██████   ██████     |\r\n"
+"|     ███░░███ ███░░███ ███░░███    |\r\n"
+"|    ░███████ ░███ ░░░ ░███ ░███    |\r\n"
+"|    ░███░░░  ░███  ███░███ ░███    |\r\n"
+"|    ░░██████ ░░██████ ░░██████     |\r\n"
+"|     ░░░░░░   ░░░░░░   ░░░░░░      |\r\n"
+"|                                   |\r\n"
+"|                                   |\r\n"
+"'-----------------------------------'\r\n"
+xstr(ECO_VERSION_MAJOR) "." xstr(ECO_VERSION_MINOR) // add version number to header
 "\r\n"
 "\r\n"
 USH_SHELL_FONT_STYLE_RESET;

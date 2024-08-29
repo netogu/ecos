@@ -3,6 +3,7 @@
 #include "shell.h"
 
 #define NOCHAR '\0'
+#define SHELL_HOSTNAME "board"
 
 
 #define CLI_UART
@@ -68,7 +69,7 @@ static const struct ush_descriptor ush_desc = {
     .output_buffer = ush_out_buf,               // working output buffer
     .output_buffer_size = sizeof(ush_out_buf),  // working output buffer size
     .path_max_length = PATH_MAX_SIZE,           // path maximum length (stack)
-    .hostname = "MOC",                          // hostname (in prompt)
+    .hostname = SHELL_HOSTNAME,                          // hostname (in prompt)
 };
 
 // drive enable callback

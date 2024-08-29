@@ -321,7 +321,7 @@ static struct board_descriptor brd = (struct board_descriptor) {
   //--------------------------------------------------------------------+
 
   .lpuart1 = (uart_t) {
-
+    .instance = LPUART1,
     .tx_pin = (gpio_t) {
       .port = GPIO_PORT_A,
       .pin = GPIO_PIN_2,
@@ -342,11 +342,11 @@ static struct board_descriptor brd = (struct board_descriptor) {
     },
     .config = {
       .baudrate = 115200,
-      .mode = LPUART_MODE_RX_TX,
-      .word_length = LPUART_DATA_BITS_8,
-      .stop_bits = LPUART_STOP_BITS_1,
-      .parity = LPUART_PARITY_NONE,
-      .flow_control = LPUART_FLOW_CONTROL_NONE,
+      .mode = UART_MODE_RX_TX,
+      .word_length = UART_DATA_BITS_8,
+      .stop_bits = UART_STOP_BITS_1,
+      .parity = UART_PARITY_NONE,
+      .flow_control = UART_FLOW_CONTROL_NONE,
     },
   },
 
@@ -376,7 +376,7 @@ static struct board_descriptor brd = (struct board_descriptor) {
 static void board_clock_setup(void);
 static void board_gpio_setup(void);
 static void board_adc_setup(void);
-static void board_serial_setup(void);
+static void board_uart_setup(void);
 static void board_usb_setup(void);
 static void board_pwm_setup(void);
 static void board_spi_setup(void);
@@ -396,7 +396,7 @@ int board_init(void) {
 
   board_clock_setup();
   board_gpio_setup();
-  board_serial_setup();
+  board_uart_setup();
   LOG_CLEAR();
   LOG_OK("Core Init");
   // board_spi_setup();
@@ -503,15 +503,12 @@ static void board_gpio_setup() {
 // UART Config
 //------------------------------------------------------
 
-// printf redirect to UART
-void _putchar(char character) {
-  uart_write(&brd.lpuart1, (uint8_t *)&character, 1);
-}
 
-static void board_serial_setup(void) {
+static void board_uart_setup(void) {
   
     uart_init(&brd.lpuart1);
 }
+
 
 //------------------------------------------------------
 // USB-CDC Config
@@ -655,7 +652,46 @@ void board_adc_setup(void) {
 
 }
 
+//------------------------------------------------------
+// Syscalls
+//------------------------------------------------------
 
+// printf redirect to UART
+void _putchar(char character) {
+  uart_write(&brd.lpuart1, (uint8_t *)&character, 1);
+}
+
+void _close(int file) {
+  (void)file;
+}
+
+void _fstat(int file, void *st) {
+  (void)file;
+  (void)st;
+}
+
+void _isatty(int file) {
+  (void)file;
+}
+
+void _lseek(int file, int ptr, int dir) {
+  (void)file;
+  (void)ptr;
+  (void)dir;
+}
+
+int _read(int file, char *ptr, int len) {
+  (void)file;
+  (void)ptr;
+  (void)len;
+  return 0;
+}
+
+int _write(int file, char *ptr, int len) {
+  (void)file;
+  uart_write(&brd.lpuart1, (uint8_t *)ptr, len);
+  return len;
+}
 
 
 

@@ -1,13 +1,19 @@
- /*
- .---------------------.
- |                     |
- |     ╔╦╗╔═╗╔═╗       |
- |     ║║║║ ║║         |
- |     ╩ ╩╚═╝╚═╝       |
- |                     |
- '---------------------'
-
- */
+/*
+.-----------------------------------.
+|                                   |
+|                                   |
+|      ██████   ██████   ██████     |
+|     ███░░███ ███░░███ ███░░███    |
+|    ░███████ ░███ ░░░ ░███ ░███    |
+|    ░███░░░  ░███  ███░███ ░███    |
+|    ░░██████ ░░██████ ░░██████     |
+|     ░░░░░░   ░░░░░░   ░░░░░░      |
+|                                   |
+|                                   |
+|                                   |
+'-----------------------------------'
+Energy Controller
+*/
 
 #include "rtos.h"
 #include "shell.h"
@@ -149,7 +155,7 @@ int main(void) {
   xTimerStart(led_blink_timer, 0);
   
 
-  printf("Starting FreeRTOS Scheduler\r\n");
+  printf("Starting RTOS...\r\n");
 
   /* Start the scheduler. */
   vTaskStartScheduler();
@@ -256,8 +262,6 @@ void cdc_task( void *parameters ) {
   struct board_descriptor *board = board_get_descriptor();
 
   cli_uart_init(&board->lpuart1);
-  
-
 
   // Print Shell Header
   for (int i = 0; i < strlen(shell_head); i++) {
@@ -276,7 +280,6 @@ void cdc_task( void *parameters ) {
 
 
 }
-
 
 
 // Invoked when cdc when line state changed e.g connected/disconnected

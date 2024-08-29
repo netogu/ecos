@@ -2,13 +2,14 @@
 
 #include <stdint.h>
 #include "stm32g4/gpio.h"
+#include "stm32g4xx.h"
 
 
 #define UART_RX_BUFFER_SIZE 128
 #define UART_TX_BUFFER_SIZE 256
 
 typedef struct uart_s {
-    volatile uint32_t *uart_instance;
+    USART_TypeDef *instance;
     gpio_t tx_pin;
     gpio_t rx_pin;
     uint8_t rx_buffer[UART_RX_BUFFER_SIZE];
@@ -20,29 +21,29 @@ typedef struct uart_s {
     struct uart_config_s {
         uint32_t baudrate;
         enum lpuart_word_len_e {
-            LPUART_DATA_BITS_8 = 0,
-            LPUART_DATA_BITS_9 = 1,
-            LPUART_DATA_BITS_7 = 2,
+            UART_DATA_BITS_8 = 0,
+            UART_DATA_BITS_9 = 1,
+            UART_DATA_BITS_7 = 2,
         } word_length;
         enum lpuart_stop_bits_e {
-            LPUART_STOP_BITS_1 = 0,
-            LPUART_STOP_BITS_2 = 2,
+            UART_STOP_BITS_1 = 0,
+            UART_STOP_BITS_2 = 2,
         } stop_bits;
         enum lpuart_parity_e {
-            LPUART_PARITY_EVEN = 0,
-            LPUART_PARITY_ODD = 1,
-            LPUART_PARITY_NONE = 2,
+            UART_PARITY_EVEN = 0,
+            UART_PARITY_ODD = 1,
+            UART_PARITY_NONE = 2,
         } parity;
         enum lpuart_mode_e {
-            LPUART_MODE_RX = 0,
-            LPUART_MODE_TX = 1,
-            LPUART_MODE_RX_TX = 2,
+            UART_MODE_RX = 0,
+            UART_MODE_TX = 1,
+            UART_MODE_RX_TX = 2,
         } mode;
         enum lpuart_flow_control_e {
-            LPUART_FLOW_CONTROL_NONE = 0,
-            LPUART_FLOW_CONTROL_RTS = 1,
-            LPUART_FLOW_CONTROL_CTS = 2,
-            LPUART_FLOW_CONTROL_RTS_CTS = 3,
+            UART_FLOW_CONTROL_NONE = 0,
+            UART_FLOW_CONTROL_RTS = 1,
+            UART_FLOW_CONTROL_CTS = 2,
+            UART_FLOW_CONTROL_RTS_CTS = 3,
         } flow_control;
     }config;
 } uart_t;

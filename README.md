@@ -1,15 +1,24 @@
-# [uMOC]
+# [ECO]
 ```
-.---------------------.
-|                     |
-|     ╔╦╗╔═╗╔═╗       |
-|     ║║║║ ║║         |
-|     ╩ ╩╚═╝╚═╝       |
-|                     |
-'---------------------'
+.-----------------------------------------.
+|                                         |
+|                                         |
+|                                         |
+|                                         |
+|     ______     ______     ______        |
+|    /\  ___\   /\  ___\   /\  __ \       |
+|    \ \  __\   \ \ \____  \ \ \/\ \      |
+|     \ \_____\  \ \_____\  \ \_____\     |
+|      \/_____/   \/_____/   \/_____/     |
+|                                         |
+|                                         |
+|                                         |
+|                                         |
+|                                         |
+'-----------------------------------------'
 ```
 
-MOC is an open-source firmware framework designed with the control of power electronics and electric machines in mind.
+ECO is an open-source firmware framework designed with the control of power electronics and electric machines in mind.
 **Features**
 - Collection of common PWM topologies
 - Collection of power electronics testing tools
