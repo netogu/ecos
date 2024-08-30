@@ -1,30 +1,34 @@
-# [ECO]
+# [ecOS]
 ```
-·····································
-:                                   :
-:                                   :
-:       .::       .:::   .::        :
-:     .:   .::  .::    .::  .::     :
-:    .::::: .::.::    .::    .::    :
-:    .:         .::    .::  .::     :
-:      .::::      .:::   .::        :
-:                                   :
-:                                   :
-·····································
+.-----------------------------.
+|                             |
+|                             |
+|                             |
+|             8"""88 8""""8   |
+|   eeee eeee 8    8 8        |
+|   8    8  8 8    8 8eeeee   |
+|   8eee 8e   8    8     88   |
+|   88   88   8    8 e   88   |
+|   88ee 88e8 8eeee8 8eee88   |
+|                             |
+|                             |
+|                             |
+'-----------------------------'
 ```
 
-ECO is an open-source firmware framework designed with the control of power electronics and electric machines in mind.
+ecOS is an open-source firmware framework designed with the control of power electronics and electric machines
+
 **Features**
-- Collection of common PWM topologies
+- HAL for STM32G4 based on CMSIS
+- FreeRTOS
+- microshell
+- tinyUSB
 - Collection of power electronics testing tools
 
 **Supported Devices** - STM32G474
 
 ## Acknowledgements
 MOC is built from the amazing open source contribution of others. Thank you!
-- FreeRTOS
-- microshell
-- TinyUSB
 
 ## License
 This project is released under the [MIT License](https://opensource.org/license/mit/).  
