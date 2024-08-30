@@ -433,12 +433,14 @@ static struct board_descriptor brd = (struct board_descriptor) {
   // ADC Inputs
   //--------------------------------------------------------------------+
   .analog_in = {
+
     .vbus = (adc_input_t) {
       .name = "vbus",
-      .channel = 0, 
+      .adc_instance = ADC_INSTANCE_1,
+      .channel = ADC_CHANNEL_OPAMP_1, 
       .pin = (gpio_t) {
         .port = GPIO_PORT_A,
-        .pin = GPIO_PIN_0,
+        .pin = GPIO_PIN_3,
         .mode = GPIO_MODE_ANALOG,
         .type = GPIO_TYPE_PUSH_PULL,
         .pull = GPIO_PULL_NONE,
@@ -448,8 +450,44 @@ static struct board_descriptor brd = (struct board_descriptor) {
       .scale = 1.0,
       .offset = 0.0,
       .units = "V",
-    }
-  }
+    },
+
+    .temp_a = (adc_input_t) {
+      .name = "temp_a",
+      .adc_instance = ADC_INSTANCE_2,
+      .channel = ADC_CHANNEL_6, 
+      .pin = (gpio_t) {
+        .port = GPIO_PORT_C,
+        .pin = GPIO_PIN_0,
+        .mode = GPIO_MODE_ANALOG,
+        .type = GPIO_TYPE_PUSH_PULL,
+        .pull = GPIO_PULL_NONE,
+        .speed = GPIO_SPEED_LOW,
+        .af = GPIO_AF0,
+      },
+      .scale = 1.0,
+      .offset = 0.0,
+      .units = "C",
+    },
+
+    .temp_b = (adc_input_t) {
+      .name = "temp_b",
+      .adc_instance = ADC_INSTANCE_2,
+      .channel = ADC_CHANNEL_7, 
+      .pin = (gpio_t) {
+        .port = GPIO_PORT_C,
+        .pin = GPIO_PIN_1,
+        .mode = GPIO_MODE_ANALOG,
+        .type = GPIO_TYPE_PUSH_PULL,
+        .pull = GPIO_PULL_NONE,
+        .speed = GPIO_SPEED_LOW,
+        .af = GPIO_AF0,
+      },
+      .scale = 1.0,
+      .offset = 0.0,
+      .units = "C",
+    },
+  },
 };
 
 
@@ -675,15 +713,12 @@ static void board_gate_driver_setup(void) {
 //------------------------------------------------------
 void board_adc_setup(void) {
 
-  static adc_t adc1 = {
-    .instance = ADC_INSTANCE_1,
-  };
+  static adc_t adc1,adc2;
 
-  // adc_intput_t *adc1_regular_inputs[] = {&brd.analog_in.vbus};
+  adc_init(&adc1, ADC1);
+  adc_init(&adc2, ADC1);
 
 
-  
-  adc_init(&adc1);
 
 }
 

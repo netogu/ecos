@@ -10,6 +10,16 @@
 // ADC Sample Hold Time
 // Tconv = Sample Time + 12.5 ADC clock cycles
 // ------------------------------------------------------+
+
+#define ADC_INSTANCE_1 1
+#define ADC_INSTANCE_2 2
+#define ADC_INSTANCE_3 3
+#define ADC_INSTANCE_4 4
+#define ADC_INSTANCE_5 5
+
+#define ADC_INPUT_TYPE_REGULAR 0
+#define ADC_INPUT_TYPE_INJECTED 1
+
 #define _FLAG(x) (1 << (x))
 #define ADC_CHANNEL_1 _FLAG(0)
 #define ADC_CHANNEL_2 _FLAG(1)
@@ -37,37 +47,29 @@
 #define ADC_CHANNEL_VBAT_DIV_3 _FLAG(23)
 #define ADC_CHANNEL_VREFINT _FLAG(24)
 
-
+#define ADC_MAX_CHANNELS 18
 
 typedef struct adc_input_s {
     char *name;
+    uint8_t adc_instance;
     uint8_t channel;
     gpio_t pin;
     float scale;
     float offset;
     char *units;
-    uint32_t *data;
+    uint16_t *data;
 } adc_input_t;
-
-typedef struct adc_input_s adc_input_t;
-
 typedef struct adc_s {
-    enum adc_instance_e {
-        ADC_INSTANCE_1,
-        ADC_INSTANCE_2,
-        ADC_INSTANCE_3,
-        ADC_INSTANCE_4,
-        ADC_INSTANCE_5,
-    } instance;
-    struct adc_options_s {
-        uint32_t config;
-    } options;
-    uint32_t channel_data[18];
+    ADC_TypeDef *regs;
+    uint32_t active_channels_flg;
+    uint32_t status;
+    uint16_t channel_data[ADC_MAX_CHANNELS];
+    uint16_t channel_count;
 } adc_t;
 
 
-
-int adc_init(adc_t *self);
+int adc_init(adc_t *self, ADC_TypeDef *instance);
+int adc_configure_channel(adc_t *self, adc_input_t *channel);
 // int adc_add_input(struct adc *adc, struct adc_input *channel);
 // int adc_remove_input(struct adc *adc, struct adc_input *channel);
 // int adc_set_trigger(struct adc *adc, struct adc_input *channel, uint32_t trigger);

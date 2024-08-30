@@ -53,8 +53,14 @@ const struct board_descriptor {
   pwm_t pwma;
   pwm_t pwmb;
   pwm_t pwmc;
+  
+
+
   struct brd_analog_in_s {
     adc_input_t vbus;
+    adc_input_t temp_a;
+    adc_input_t temp_b;
+    // adc_input_t temp_c;
   } analog_in;
   struct spi spi3;
   struct spi spi4;
