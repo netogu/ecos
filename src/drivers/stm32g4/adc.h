@@ -17,9 +17,6 @@
 #define ADC_INSTANCE_4 4
 #define ADC_INSTANCE_5 5
 
-#define ADC_INPUT_TYPE_REGULAR 0
-#define ADC_INPUT_TYPE_INJECTED 1
-
 #define _FLAG(x) (1 << (x))
 #define ADC_CHANNEL_1 _FLAG(0)
 #define ADC_CHANNEL_2 _FLAG(1)
@@ -47,11 +44,45 @@
 #define ADC_CHANNEL_VBAT_DIV_3 _FLAG(23)
 #define ADC_CHANNEL_VREFINT _FLAG(24)
 
+#define ADC_REG_SEQ_ORDER_1 1
+#define ADC_REG_SEQ_ORDER_2 2
+#define ADC_REG_SEQ_ORDER_3 3
+#define ADC_REG_SEQ_ORDER_4 4
+#define ADC_REG_SEQ_ORDER_5 5
+#define ADC_REG_SEQ_ORDER_6 6
+#define ADC_REG_SEQ_ORDER_7 7
+#define ADC_REG_SEQ_ORDER_8 8
+#define ADC_REG_SEQ_ORDER_9 9
+#define ADC_REG_SEQ_ORDER_10 10
+#define ADC_REG_SEQ_ORDER_11 11
+#define ADC_REG_SEQ_ORDER_12 12
+#define ADC_REG_SEQ_ORDER_13 13
+#define ADC_REG_SEQ_ORDER_14 14
+#define ADC_REG_SEQ_ORDER_15 15
+#define ADC_REG_SEQ_ORDER_16 16
+#define ADC_REG_SEQ_ORDER_MAX 16
+
+#define ADC_INJ_INPUT_1 1
+#define ADC_INJ_INPUT_2 2
+#define ADC_INJ_INPUT_3 3
+#define ADC_INJ_INPUT_4 4
+#define ADC_INJ_INPUT_MAX 4
+
+#define ADC_SAMPLE_TIME_2_5_CYCLES 0
+#define ADC_SAMPLE_TIME_6_5_CYCLES 1
+#define ADC_SAMPLE_TIME_12_5_CYCLES 2
+#define ADC_SAMPLE_TIME_24_5_CYCLES 3
+#define ADC_SAMPLE_TIME_47_5_CYCLES 4
+#define ADC_SAMPLE_TIME_92_5_CYCLES 5
+#define ADC_SAMPLE_TIME_247_5_CYCLES 6
+#define ADC_SAMPLE_TIME_640_5_CYCLES 7
+
+
+
 #define ADC_MAX_CHANNELS 18
 
 typedef struct adc_input_s {
     char *name;
-    uint8_t adc_instance;
     uint8_t channel;
     gpio_t pin;
     float scale;
@@ -59,17 +90,43 @@ typedef struct adc_input_s {
     char *units;
     uint16_t *data;
 } adc_input_t;
+
 typedef struct adc_s {
-    ADC_TypeDef *regs;
     uint32_t active_channels_flg;
     uint32_t status;
-    uint16_t channel_data[ADC_MAX_CHANNELS];
-    uint16_t channel_count;
+    uint16_t regular_result[16];
+    uint16_t injected_result[4];
+    uint16_t num_regular_inputs;
+    uint16_t num_injected_inputs;
+    struct adc_options_s {
+        ADC_TypeDef *instance;
+        enum adc_clk_domains_e {
+            ADC_CLK_DOMAIN_SYSCLK_PLL,
+            ADC_CLK_DOMAIN_HCLK,
+        } clk_domain;
+        enum adc_sample_mode_e {
+            ADC_SAMPLE_MODE_SINGLE,
+            ADC_SAMPLE_MODE_CONTINUOUS,
+        } sample_mode;
+        enum adc_resolution_e {
+            ADC_RESOLUTION_12_BIT,
+            ADC_RESOLUTION_10_BIT,
+            ADC_RESOLUTION_8_BIT,
+            ADC_RESOLUTION_6_BIT,
+        } resolution;
+    } options;
 } adc_t;
 
 
 int adc_init(adc_t *self, ADC_TypeDef *instance);
-int adc_configure_channel(adc_t *self, adc_input_t *channel);
+int adc_add_regular_input(adc_t *self, adc_input_t *input, uint16_t sequence_order, uint16_t sample_time);
+int adc_add_injected_input(adc_t *self, adc_input_t *input, uint16_t input_number, uint16_t sample_time);
+
+int adc_start_regular_sampling(adc_t *self);
+int adc_start_injected_sampling(adc_t *self);
+int adc_stop_regular_sampling(adc_t *self);
+int adc_stop_injected_sampling(adc_t *self);
+
 // int adc_add_input(struct adc *adc, struct adc_input *channel);
 // int adc_remove_input(struct adc *adc, struct adc_input *channel);
 // int adc_set_trigger(struct adc *adc, struct adc_input *channel, uint32_t trigger);

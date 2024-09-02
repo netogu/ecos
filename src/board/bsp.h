@@ -18,15 +18,15 @@ File   : bsp.h
 //------------------------------------------------------+
 // Board Variant
 //------------------------------------------------------+
-// #define STM32G4_NUKLEO
-#define STM32G4_F50
+#define STM32G4_NUKLEO
+// #define STM32G4_F50
 
 //------------------------------------------------------+
 // Shell Interface Selection
 //------------------------------------------------------+
 // #define SHELL_INTERFACE_USB
-#define SHELL_INTERFACE_USART3
-// #define SHELL_INTERFACE_LPUART1
+// #define SHELL_INTERFACE_USART3
+#define SHELL_INTERFACE_LPUART1
 
 //------------------------------------------------------
 // GPIOs
@@ -57,11 +57,13 @@ const struct board_descriptor {
 
 
   struct brd_analog_in_s {
+    adc_t adc1;
     adc_input_t vbus;
+    adc_t adc2;
     adc_input_t temp_a;
     adc_input_t temp_b;
     // adc_input_t temp_c;
-  } analog_in;
+  } ain;
   struct spi spi3;
   struct spi spi4;
   struct drv835x gate_driver;

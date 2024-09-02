@@ -182,13 +182,15 @@ void bg_task( void *parameters ) {
   // drv835x_clear_faults(&brd->gate_driver);
 
   // char *msg = "Hello World!\r\n";
+  char *msg[36] = {0};
   while (1) {
 
     // drv835x_read_faults(&brd->gate_driver);
     // uart_write(&board->lpuart1, msg, strlen(msg));
     // ush_printf("TX Buffer: %d\r\n", uart_get_tx_buffer_count(&brd->lpuart1));
+    // ush_printf("ADC1: %d\r\n", &brd->ain.adc1.options.instance->DR);
     
-    vTaskDelay(500);
+    vTaskDelay(100);
   }
 
 }
@@ -280,8 +282,9 @@ void cdc_task( void *parameters ) {
 
   while (1) {
 
+
     shell_update();
-    // vTaskDelay(1);
+    vTaskDelay(1);
   }
 
 

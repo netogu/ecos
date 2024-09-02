@@ -240,6 +240,24 @@ size_t info_get_data_callback(struct ush_object *self, struct ush_file_descripto
     return strlen(info);
 }
 
+// ADC_DR file get data callback
+size_t ADC_DR_get_data_callback(struct ush_object *self, struct ush_file_descriptor const *file, uint8_t **data)
+{
+    // get board descriptor
+    struct board_descriptor *brd = board_get_descriptor();
+
+    char dr[16];
+    // uint16_t value = *brd->ain.vbus.data;
+    uint16_t value = 2134;
+    ush_printf(self, "ADC1: %d \r\n", value);
+
+
+    // return pointer to data
+    *data = (uint8_t*)dr;
+    // return data size
+    return strlen(dr);
+}
+
 // root directory files descriptor
 static const struct ush_file_descriptor root_files[] = {
     {
@@ -248,6 +266,13 @@ static const struct ush_file_descriptor root_files[] = {
         .help = NULL,
         .exec = NULL,
         .get_data = info_get_data_callback,
+    },
+    {
+        .name = "ADC_DR",                     // info.txt file name
+        .description = NULL,
+        .help = NULL,
+        .exec = NULL,
+        .get_data = ADC_DR_get_data_callback,
     }
 };
 

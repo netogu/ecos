@@ -80,6 +80,9 @@ int board_init(void) {
   LOG_OK("ADC Init");
 
   LOG_INFO("\r\nBoard Init Complete\r\n");
+  
+  printf("SystemCoreClock: %d\r\n", SystemCoreClock);
+  printf("ADC1: %d\r\n", *brd.ain.vbus.data);
 
   return 0;
   //TODO return error aggregation
@@ -432,11 +435,10 @@ static struct board_descriptor brd = (struct board_descriptor) {
   //--------------------------------------------------------------------+
   // ADC Inputs
   //--------------------------------------------------------------------+
-  .analog_in = {
+  .ain = {
 
     .vbus = (adc_input_t) {
       .name = "vbus",
-      .adc_instance = ADC_INSTANCE_1,
       .channel = ADC_CHANNEL_OPAMP_1, 
       .pin = (gpio_t) {
         .port = GPIO_PORT_A,
@@ -454,7 +456,6 @@ static struct board_descriptor brd = (struct board_descriptor) {
 
     .temp_a = (adc_input_t) {
       .name = "temp_a",
-      .adc_instance = ADC_INSTANCE_2,
       .channel = ADC_CHANNEL_6, 
       .pin = (gpio_t) {
         .port = GPIO_PORT_C,
@@ -472,7 +473,6 @@ static struct board_descriptor brd = (struct board_descriptor) {
 
     .temp_b = (adc_input_t) {
       .name = "temp_b",
-      .adc_instance = ADC_INSTANCE_2,
       .channel = ADC_CHANNEL_7, 
       .pin = (gpio_t) {
         .port = GPIO_PORT_C,
@@ -713,11 +713,26 @@ static void board_gate_driver_setup(void) {
 //------------------------------------------------------
 void board_adc_setup(void) {
 
-  static adc_t adc1,adc2;
+  brd.ain.adc1.options = (struct adc_options_s) {
+    .instance = ADC1,
+    .clk_domain = ADC_CLK_DOMAIN_HCLK,
+  };
 
-  adc_init(&adc1, ADC1);
-  adc_init(&adc2, ADC1);
+  brd.ain.adc2.options = (struct adc_options_s) {
+    .instance = ADC2,
+    .clk_domain = ADC_CLK_DOMAIN_HCLK,
+  };
 
+  adc_init(&brd.ain.adc1, ADC1);
+  // adc_init(&adc2, ADC1);
+
+  adc_add_regular_input(&brd.ain.adc1, &brd.ain.vbus, ADC_REG_SEQ_ORDER_1, ADC_SAMPLE_TIME_6_5_CYCLES);
+  // adc_configure_regular_input(&adc2, &brd.analog_in.temp_a, 0);
+  // adc_configure_regular_input(&adc2, &brd.analog_in.temp_b, 1);
+
+  // adc_configure_sample_mode(&brd.ain.adc1, ADC_SAMPLE_MODE_SINGLE);
+  brd.ain.vbus.data = &brd.ain.adc1.options.instance->DR;
+  adc_start_regular_sampling(&brd.ain.adc1);
 
 
 }
