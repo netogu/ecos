@@ -5,19 +5,21 @@
 #include "stm32g4xx.h"
 
 
-#define UART_RX_BUFFER_SIZE 128
-#define UART_TX_BUFFER_SIZE 256
+#define UART_BUFFER_SIZE 256
+
+typedef struct uart_fifo_s {
+    uint8_t buffer[UART_BUFFER_SIZE];
+    uint8_t head;
+    uint8_t tail;
+    uint8_t size;
+} uart_fifo_t;
 
 typedef struct uart_s {
     USART_TypeDef *instance;
     gpio_t tx_pin;
     gpio_t rx_pin;
-    uint8_t rx_buffer[UART_RX_BUFFER_SIZE];
-    uint8_t tx_buffer[UART_TX_BUFFER_SIZE];
-    uint8_t rx_head;
-    uint8_t rx_tail;
-    uint8_t tx_head;
-    uint8_t tx_tail;
+    uart_fifo_t rx_fifo;
+    uart_fifo_t tx_fifo;
     struct uart_config_s {
         uint32_t baudrate;
         enum uart_word_len_e {
@@ -50,10 +52,8 @@ typedef struct uart_s {
 
 
 void uart_init(uart_t *self);
-void uart_write_byte(uart_t *self, uint8_t byte);
-int uart_write_byte_nb(uart_t *self, uint8_t byte);
-int uart_read_byte_nb(uart_t *self, uint8_t *byte);
-int uart_is_busy(uart_t *self);
+void uart_init_dma(uart_t *self);
 int uart_write(uart_t *self, uint8_t *data, uint16_t size);
 int uart_read(uart_t *self, uint8_t *data, uint16_t size);
-int uart_get_tx_buffer_count(uart_t *self);
+int uart_fifo_push(uart_fifo_t *self, uint8_t byte);
+int uart_fifo_pop(uart_fifo_t *self, uint8_t *byte);

@@ -103,33 +103,26 @@ void USBWakeUp_IRQHandler(void) {
 
 static inline void uart_receive_byte(uart_t *self) {
   uint8_t data;
-  uint16_t next_head;
 
   data = (uint8_t) self->instance->RDR & 0xFF;
-  next_head = (self->rx_head + 1) % UART_RX_BUFFER_SIZE;
-
-  if (next_head != self->rx_tail) {
-    // If not full, add data to buffer
-    self->rx_buffer[self->rx_head] = data;
-    self->rx_head = next_head;
-  }
+  uart_fifo_push(&self->rx_fifo, data);
   // Clear RXNE flag by reading data
 }
 
 static inline void uart_send_byte(uart_t *self) {
-    uint16_t next_tail;
+  uint16_t next_tail;
 
-    if (self->tx_head != self->tx_tail) {
-      // If not empty, send data
-      next_tail = (self->tx_tail + 1) % UART_TX_BUFFER_SIZE;
-      self->instance->TDR = self->tx_buffer[self->tx_tail];
-      self->tx_tail = next_tail;
-
-    } else {
-      // If empty, disable TXE interrupt
-      self->instance->CR1 &= ~USART_CR1_TXEIE;
-    }
+  if (self->tx_fifo.size == 0) {
+    // If empty, disable TXE interrupt
+    self->instance->CR1 &= ~USART_CR1_TXEIE;
+    return;
+  } else {
+    // If not empty, send data
+    uint8_t tx_byte;
+    uart_fifo_pop(&self->tx_fifo, &tx_byte);
+    self->instance->TDR = tx_byte;
     // ISR Cleared by writing data to TDR
+  }
 
 }
 

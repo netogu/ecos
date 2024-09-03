@@ -54,15 +54,17 @@ static void usart3_init(uart_t *self) {
     NVIC_EnableIRQ(USART3_IRQn);
 }
 
+void uart_clear_fifo(uart_fifo_t *self) {
+    self->head = 0;
+    self->tail = 0;
+    self->size = 0;
+}
+
 void uart_init(uart_t *self) {
 
-    // Clear Buffers
-    self->rx_head = 0;
-    self->rx_tail = 0;
-    self->tx_head = 0;
-    self->tx_tail = 0;
+    uart_clear_fifo(&self->rx_fifo);
+    uart_clear_fifo(&self->tx_fifo);
     
-    // Configure GPIOs
     gpio_pin_init(&self->tx_pin);
     gpio_pin_init(&self->rx_pin);
 
@@ -81,7 +83,7 @@ void uart_init(uart_t *self) {
     self->instance->CR1 = 0x00;
 
     if (self->instance == LPUART1) {
-        // Set baudrate
+        // Set baudrate LPUART Specific
         uint32_t usartdiv = SystemCoreClock / self->config.baudrate * 256;
         self->instance->BRR = usartdiv & 0x0FFFFF; // 20 bits
     } else {
@@ -89,7 +91,6 @@ void uart_init(uart_t *self) {
         uint32_t usartdiv = SystemCoreClock / self->config.baudrate;
         self->instance->BRR = usartdiv & 0x0FFFF; // 16 bits
     }
-
 
     // Set data bits
     // 8 bits by default
@@ -140,72 +141,59 @@ void uart_init(uart_t *self) {
     self->instance->CR1 |= (USART_CR1_TXEIE);
 }
 
+void uart_init_dma(uart_t *self) {
 
-
-int uart_get_tx_buffer_count(uart_t *self) {
-    return (self->tx_head - self->tx_tail) % UART_TX_BUFFER_SIZE;
+    uart_init(self);
+    // Enable UART DMA
+    self->instance->CR3 |= (USART_CR3_DMAT | USART_CR3_DMAR);
 }
 
-
-void uart_write_byte(uart_t *self, uint8_t byte) {
-
-    while (!(self->instance->ISR & USART_ISR_TXE));
-    self->instance->TDR = byte;
-    while (!(self->instance->ISR & USART_ISR_TC)){
-        // wait for transmission complete
+int uart_fifo_push(uart_fifo_t *self, uint8_t byte) {
+    uint16_t next_head = (self->head + 1) % UART_BUFFER_SIZE;
+    if (next_head != self->tail) {
+        // FIFO is not full
+        self->buffer[self->head] = byte;
+        self->head = next_head;
+        self->size++;
+        return 0;
     }
-    
-}
-// non-blocking write byte
-int uart_write_byte_nb(uart_t *self, uint8_t byte) {
 
-    if (self->instance->ISR & USART_ISR_TXE) {
-        self->instance->TDR = byte;
-        return 1;
-    }
-    return 0;
-}
-// non-blocking read byte
-int uart_read_byte_nb(uart_t *self, uint8_t *byte) {
-    if (self->instance->ISR & USART_ISR_RXNE) {
-        *byte = self->instance->RDR;
-        return 1;
-    }
-    return 0;
+    return 1;
 }
 
-// check if uart is busy
-int uart_is_busy(uart_t *self) {
-    if (self->instance->ISR & USART_ISR_BUSY) {
-        return 1;
+int uart_fifo_pop(uart_fifo_t *self, uint8_t *byte) {
+    if (self->size > 0) {
+        // FIFO is not empty
+        *byte = self->buffer[self->tail];
+        self->tail = (self->tail + 1) % UART_BUFFER_SIZE;
+        self->size--;
+        return 0;
     }
-    return 0;
+
+    return 1;
 }
 
 int uart_write(uart_t *self, uint8_t *data, uint16_t len) {
     uint16_t next_head;
+    uint16_t bytes_written = 0;
 
     for (uint16_t i = 0; i < len; i++) {
-        next_head = (self->tx_head + 1) % UART_TX_BUFFER_SIZE;
-        if (next_head == self->tx_tail) {
-            // buffer is full 
-            return i;
-        }
-        self->tx_buffer[self->tx_head] = data[i];
-        self->tx_head = next_head;
+        uart_fifo_push(&self->tx_fifo, data[i]);
+        bytes_written++;
     }
     // Enable TXE interrupt
     self->instance->CR1 |= USART_CR1_TXEIE;
-    return len;
+
+    return bytes_written;
 }
 
 int uart_read(uart_t *self, uint8_t *data, uint16_t size) {
     uint16_t bytes_read = 0;
 
-    while (bytes_read < size && self->rx_head != self->rx_tail) {
-        data[bytes_read] = self->rx_buffer[self->rx_tail];
-        self->rx_tail = (self->rx_tail + 1) % UART_RX_BUFFER_SIZE;
-        bytes_read++;
+    while (bytes_read < size && self->rx_fifo.size > 0) {
+        uint8_t byte;
+        uart_fifo_pop(&self->rx_fifo, &byte);
+        data[bytes_read++] = byte;
     }
 
     // Return the number of bytes successfully read from the buffer
