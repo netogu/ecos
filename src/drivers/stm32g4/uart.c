@@ -25,6 +25,15 @@
 #define UART_INPUT_CLOCK_PRESCALER_DIV_128 10
 #define UART_INPUT_CLOCK_PRESCALER_DIV_256 11
 
+#define USART3_DMA_RX_REQ_NUM 28
+#define USART3_DMA_TX_REQ_NUM 29
+#define LPUART1_DMA_RX_REQ_NUM 34
+#define LPUART1_DMA_TX_REQ_NUM 35
+
+#define UART_DMA_RX_BUFFER_SIZE 64
+static uint8_t uart_dma_rx_buffer[UART_DMA_RX_BUFFER_SIZE];
+
+
 static void lpuart_init(uart_t *self) {
 
     // Set LPUART clock source to PCLK
@@ -54,10 +63,91 @@ static void usart3_init(uart_t *self) {
     NVIC_EnableIRQ(USART3_IRQn);
 }
 
+static void usart_enable_dma(uart_t *self) {
+    // Turn on DMA1 and DMAMUX1 clocks
+    RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN | RCC_AHB1ENR_DMAMUX1EN;
+    uint32_t tmpreg = RCC->AHB1ENR;
+    (void)tmpreg;
+
+    // Enable USART DMA
+    self->instance->CR3 |= (USART_CR3_DMAT | USART_CR3_DMAR);
+
+    // Configure DMA1 Channel 2 for USART3 RX
+    DMA1_Channel2->CPAR = (uint32_t)&(self->instance->RDR);
+    DMA1_Channel2->CMAR = (uint32_t)uart_dma_rx_buffer;
+    DMA1_Channel2->CNDTR = UART_DMA_RX_BUFFER_SIZE;
+    DMA1_Channel2->CCR = 0;
+    // Circular mode, enable transfer complete and half transfer interrupts
+    DMA1_Channel2->CCR |= DMA_CCR_MINC | DMA_CCR_CIRC | DMA_CCR_TCIE | DMA_CCR_HTIE;
+    // Route USART3 RX DMA REQ to DMA1 Channel 2
+    // DMAMUX1_Channel1->CCR = USART3_DMA_RX_REQ_NUM;
+    DMAMUX1_Channel1->CCR = LPUART1_DMA_RX_REQ_NUM;
+    // Enable DMA1 Channel 2
+    DMA1_Channel2->CCR |= DMA_CCR_EN;
+
+    // Configure DMA1 Channel 3 for USART3 TX
+    DMA1_Channel3->CPAR = (uint32_t)&(self->instance->TDR);
+    DMA1_Channel3->CMAR = 0;
+    DMA1_Channel3->CNDTR = 0;
+    DMA1_Channel3->CCR = 0;
+    // Enable memory increment and set direction to memory-to-peripheral
+    DMA1_Channel3->CCR |= DMA_CCR_MINC | DMA_CCR_DIR;
+    // Route USART3 TX DMA REQ to DMA1 Channel 3
+    // DMAMUX1_Channel2->CCR = USART3_DMA_TX_REQ_NUM;
+    DMAMUX1_Channel2->CCR = LPUART1_DMA_TX_REQ_NUM;
+    // Enable DMA1 Channel 3
+    DMA1_Channel3->CCR |= DMA_CCR_EN;
+    // Enable interrupts
+    NVIC_EnableIRQ(DMA1_Channel2_IRQn);
+
+}
+
+void uart_service_rx_dma(uart_t *self) {
+    static uint32_t prev_buffer_index = 0;
+    uint32_t buffer_index = UART_DMA_RX_BUFFER_SIZE - DMA1_Channel2->CNDTR;
+
+    if (buffer_index != prev_buffer_index) {
+        // Data has been received
+
+        if (buffer_index > prev_buffer_index) {
+            // Data is contiguous
+            uint32_t bytes_read = buffer_index - prev_buffer_index;
+            for (uint16_t i = 0; i < bytes_read; i++) {
+                uart_fifo_push(&self->rx_fifo, uart_dma_rx_buffer[prev_buffer_index + i]);
+            }
+        } else {
+            // Data is split
+            uint32_t bytes_read = UART_DMA_RX_BUFFER_SIZE - prev_buffer_index;
+            for (uint16_t i = 0; i < bytes_read; i++) {
+                uart_fifo_push(&self->rx_fifo, uart_dma_rx_buffer[prev_buffer_index + i]);
+            }
+            for (uint16_t i = 0; i < buffer_index; i++) {
+                uart_fifo_push(&self->rx_fifo, uart_dma_rx_buffer[i]);
+            }
+        }
+    }
+
+    
+    prev_buffer_index = buffer_index;
+
+    if (prev_buffer_index == UART_DMA_RX_BUFFER_SIZE) {
+        prev_buffer_index = 0;
+    }
+
+}
+
 void uart_clear_fifo(uart_fifo_t *self) {
     self->head = 0;
     self->tail = 0;
     self->size = 0;
+}
+
+void uart_init_dma(uart_t *self) {
+    uart_init(self);
+    usart_enable_dma(self);
+
+    // Enable UART
+    self->instance->CR1 |= (USART_CR1_UE);
 }
 
 void uart_init(uart_t *self) {
@@ -132,20 +222,15 @@ void uart_init(uart_t *self) {
         self->instance->CR1 |= (USART_CR1_RE | USART_CR1_TE);
     } // else LPUART_MODE_NONE
 
-    // Enable UART
-    self->instance->CR1 |= (USART_CR1_UE);
-
     // Enable UART RXNE interrupt
-    self->instance->CR1 |= (USART_CR1_RXNEIE);
+    // self->instance->CR1 |= (USART_CR1_RXNEIE);
     // Enable UART TXE interrupt
     self->instance->CR1 |= (USART_CR1_TXEIE);
-}
+    // Enable UART IDLE interrupt
+    self->instance->CR1 |= (USART_CR1_IDLEIE);
 
-void uart_init_dma(uart_t *self) {
-
-    uart_init(self);
-    // Enable UART DMA
-    self->instance->CR3 |= (USART_CR3_DMAT | USART_CR3_DMAR);
+    // // Enable UART
+    // self->instance->CR1 |= (USART_CR1_UE);
 }
 
 int uart_fifo_push(uart_fifo_t *self, uint8_t byte) {

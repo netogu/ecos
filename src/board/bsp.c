@@ -578,7 +578,8 @@ static void board_uart_setup(void) {
     #ifdef SHELL_INTERFACE_USART3
     uart_init(&brd.usart3);
     #else
-    uart_init(&brd.lpuart1);
+    // uart_init(&brd.lpuart1);
+    uart_init_dma(&brd.lpuart1);
     #endif
 }
 

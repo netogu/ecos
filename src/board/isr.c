@@ -1,12 +1,19 @@
-#include "board/bsp.h"
+#include "bsp.h"
 #include "tusb.h"
 
 //------------------------------------------------------+
 // HRTIM Interrupt Handler
 //------------------------------------------------------+
 
-volatile uint32_t g_isr_count_uart_tx = 0;
-volatile uint32_t g_isr_count_uart_rx = 0;
+struct global_isr_counter {
+  uint32_t usart3_tx;
+  uint32_t usart3_rx;
+  uint32_t usart3_idle;
+  uint32_t lpuart1_tx;
+  uint32_t lpuart1_rx;
+  uint32_t lpuart1_idle;
+} g_isr_counter;
+
 
 void HRTIM1_TIMA_IRQHandler(void) {
 
@@ -132,15 +139,23 @@ void LPUART1_IRQHandler(void) {
 
   // Received a byte on LPUART1
   if (LPUART1->ISR & USART_ISR_RXNE) {
-    uart_receive_byte(&brd->lpuart1);
-    g_isr_count_uart_rx++;
+    // uart_receive_byte(&brd->lpuart1);
+    g_isr_counter.lpuart1_rx++;
   }
 
 
   // Ready to send byte on LPUART1
   if (LPUART1->ISR & USART_ISR_TXE) {
     uart_send_byte(&brd->lpuart1);
-    g_isr_count_uart_tx++;
+    g_isr_counter.lpuart1_tx++;
+  }
+
+  // Idle line detected
+  if (LPUART1->ISR & USART_ISR_IDLE) {
+    // Clear the IDLE flag
+    LPUART1->ICR |= USART_ICR_IDLECF;
+    uart_service_rx_dma(&brd->lpuart1);
+    g_isr_counter.lpuart1_idle++;
   }
 
 
@@ -153,13 +168,39 @@ void USART3_IRQHandler(void) {
   // Received a byte on USART3
   if (USART3->ISR & USART_ISR_RXNE) {
     uart_receive_byte(&brd->usart3);
-    g_isr_count_uart_rx++;
+    g_isr_counter.usart3_rx++;
   }
 
   // Ready to send byte on USART3
   if (USART3->ISR & USART_ISR_TXE) {
     uart_send_byte(&brd->usart3);
-    g_isr_count_uart_tx++;
+    g_isr_counter.usart3_tx++;
+  }
+
+  // Idle line detected
+  if (USART3->ISR & USART_ISR_IDLE) {
+    // Clear the IDLE flag
+    USART3->ICR |= USART_ICR_IDLECF;
+    uart_service_rx_dma(&brd->usart3);
+    g_isr_counter.usart3_idle++;
+  }
+
+}
+
+void DMA1_Channel2_IRQHandler(void) {
+
+  struct board_descriptor *brd = board_get_descriptor();
+
+  if (DMA1->ISR & DMA_ISR_TCIF2) {
+    // Service the RX DMA buffer
+    DMA1->IFCR |= DMA_IFCR_CTCIF2;
+    uart_service_rx_dma(&brd->lpuart1);
+  }
+
+  if (DMA1->ISR & DMA_ISR_HTIF2) {
+    // Service the RX DMA buffer
+    DMA1->IFCR |= DMA_IFCR_CHTIF2;
+    uart_service_rx_dma(&brd->lpuart1);
   }
 
 }
