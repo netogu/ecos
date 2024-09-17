@@ -5,7 +5,7 @@
 #include "stm32g4xx.h"
 
 
-#define UART_BUFFER_SIZE 256
+#define UART_BUFFER_SIZE 512
 
 typedef struct uart_fifo_s {
     uint8_t buffer[UART_BUFFER_SIZE];
@@ -20,6 +20,7 @@ typedef struct uart_s {
     gpio_t rx_pin;
     uart_fifo_t rx_fifo;
     uart_fifo_t tx_fifo;
+    uint16_t tx_dma_current_transfer_size;
     struct uart_config_s {
         uint32_t baudrate;
         enum uart_word_len_e {
@@ -55,5 +56,7 @@ void uart_init(uart_t *self);
 void uart_init_dma(uart_t *self);
 int uart_write(uart_t *self, uint8_t *data, uint16_t size);
 int uart_read(uart_t *self, uint8_t *data, uint16_t size);
+int uart_start_dma_tx_transfer(uart_t *self, DMA_Channel_TypeDef *dma_channel);
 int uart_fifo_push(uart_fifo_t *self, uint8_t byte);
 int uart_fifo_pop(uart_fifo_t *self, uint8_t *byte);
+uint16_t uart_fifo_get_linear_size(uart_fifo_t *self);

@@ -146,7 +146,8 @@ void LPUART1_IRQHandler(void) {
 
   // Ready to send byte on LPUART1
   if (LPUART1->ISR & USART_ISR_TXE) {
-    uart_send_byte(&brd->lpuart1);
+    // uart_send_byte(&brd->lpuart1);
+    // uart_set_tx_dma_transfer(&brd->lpuart1, DMA1_Channel3);
     g_isr_counter.lpuart1_tx++;
   }
 
@@ -203,4 +204,31 @@ void DMA1_Channel2_IRQHandler(void) {
     uart_service_rx_dma(&brd->lpuart1);
   }
 
+}
+
+void DMA1_Channel3_IRQHandler(void) {
+  
+    struct board_descriptor *brd = board_get_descriptor();
+  
+    if (DMA1->ISR & DMA_ISR_TCIF3) {
+      // Service the TX DMA buffer
+      DMA1->IFCR |= DMA_IFCR_CTCIF3;
+      // Advance the tail pointer to account for the data sent
+      brd->lpuart1.tx_fifo.tail = (brd->lpuart1.tx_fifo.tail + brd->lpuart1.tx_dma_current_transfer_size) % UART_BUFFER_SIZE;
+      // Update the current transfer size
+      brd->lpuart1.tx_dma_current_transfer_size = 0;
+      // Transfer what may be left in the buffer
+      uart_start_dma_tx_transfer(&brd->lpuart1, DMA1_Channel3);
+    }
+
+    if (DMA1->ISR & DMA_ISR_HTIF3) {
+      // Service the TX DMA buffer
+      DMA1->IFCR |= DMA_IFCR_CHTIF3;
+    }
+
+    if (DMA1->ISR & DMA_ISR_TEIF3) {
+      // Service the TX DMA buffer
+      DMA1->IFCR |= DMA_IFCR_CTEIF3;
+    }
+  
 }
