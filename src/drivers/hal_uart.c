@@ -1,4 +1,7 @@
 #include <stdint.h>
+#include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include "hal.h"
 #include <FreeRTOS.h>
 #include <semphr.h>
@@ -35,6 +38,30 @@ int cli_uart_putc(char tx_char) {
     return status;
 }
 
+int cli_uart_puts(const char *str) {
+    int status = 0;
+    if (xSemaphoreTake(uart_mutex, 10) == pdTRUE) {
+        status = uart_write(serial_port, (uint8_t *) str, strlen(str));
+        xSemaphoreGive(uart_mutex);
+    }
+    return status;
+}
+
+int cli_printf(const char *format, ...) {
+
+    int status = 0;
+    char buffer[128];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+
+    if (xSemaphoreTake(uart_mutex, 10) == pdTRUE) {
+        status = uart_write(serial_port, (uint8_t *) buffer, strlen(buffer));
+        xSemaphoreGive(uart_mutex);
+    }
+    return status;
+}
 
 
 char cli_uart_getc(void) {

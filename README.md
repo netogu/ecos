@@ -28,7 +28,7 @@ ecOS is an open-source firmware framework designed with the control of power ele
 **Supported Devices** - STM32G474
 
 ## Acknowledgements
-MOC is built from the amazing open source contribution of others. Thank you!
+ecOS is built from the amazing open source contribution of others. Thank you!
 
 ## License
 This project is released under the [MIT License](https://opensource.org/license/mit/).  

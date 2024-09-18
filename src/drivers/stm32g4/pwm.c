@@ -320,7 +320,7 @@ int pwm_3ph_init(pwm_3ph_t *self, uint32_t freq_hz, uint32_t dt_ns) {
         pwm_init(self->pwm_h[i], freq_hz, dt_ns);
       }
     } else if (self->mode == PWM_3PHASE_MODE_3PWM) {
-      // TODO implement 3 phase mode
+      // TODO implement 3 PWM mode
     } else {
       // Invalid 3-phase mode
       return -1;

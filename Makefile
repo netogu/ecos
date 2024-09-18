@@ -39,7 +39,7 @@ C_SOURCES = $(wildcard src/main.c)
 C_SOURCES += $(wildcard src/board/*.c) 
 C_SOURCES += $(wildcard src/shell/*.c) 
 C_SOURCES += $(wildcard src/rtos/*.c) 
-C_SOURCES += $(wildcard src/external/*.c)
+C_SOURCES += $(wildcard src/tasks/*.c) 
 C_SOURCES += $(wildcard src/drivers/*.c) 
 C_SOURCES += $(wildcard src/drivers/stm32g4/*.c) 
 C_SOURCES += $(wildcard src/drivers/power/*.c) 
@@ -75,11 +75,10 @@ C_INCLUDES =  \
 -Isrc/shell \
 -Isrc/board \
 -Isrc/rtos \
+-Isrc/tasks \
 -Isrc/external/CMSIS/Device/ST/STM32G4xx/Include \
 -Isrc/external/CMSIS/Include \
--Isrc/external/tinyusb/src \
--Isrc/external/tinyusb/src \
--I$(TINYUSB)/src \
+-I$(TINYUSB)  \
 -I$(TINYPRINTF) \
 -I$(MICROSHELL) \
 -I$(MICROSHELL)/inc \

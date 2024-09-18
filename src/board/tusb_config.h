@@ -33,6 +33,7 @@
 //--------------------------------------------------------------------+
 // Board Specific Configuration
 //--------------------------------------------------------------------+
+#define CFG_TUSB_OS_INC_PATH        external/freertos/include/
 
 #define BOARD_DEVICE_RHPORT_NUM     0
 #define BOARD_DEVICE_RHPORT_SPEED   OPT_MODE_FULL_SPEED

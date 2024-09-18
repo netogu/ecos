@@ -24,5 +24,7 @@ extern SemaphoreHandle_t uart_mutex;
 int cli_uart_init(uart_t *port);
 int cli_uart_putc(char tx_char);
 char cli_uart_getc(void);
+int cli_uart_puts(const char *str);
+int cli_printf(const char *format, ...);
 
 #endif // DRIVER_STM32G4_HAL_H

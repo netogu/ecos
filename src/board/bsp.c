@@ -81,8 +81,7 @@ int board_init(void) {
 
   LOG_INFO("\r\nBoard Init Complete\r\n");
   
-  printf("SystemCoreClock: %d\r\n", SystemCoreClock);
-  printf("ADC1: %d\r\n", *brd.ain.vbus.data);
+  printf("SystemCoreClock: %dHz\r\n", SystemCoreClock);
 
   return 0;
   //TODO return error aggregation
@@ -752,6 +751,10 @@ void _putchar(char character) {
   #else 
     uart_write(&brd.lpuart1, (uint8_t *)&character, 1);
   #endif
+}
+
+void _init() {
+// printf("Hello World!\n");
 }
 
 void _close(int file) {

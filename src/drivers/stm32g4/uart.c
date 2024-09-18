@@ -1,3 +1,11 @@
+/******************************************************************************
+ * File: uart.c
+ * Description: Implementation of UART driver for STM32G4 series of microcontrollers.
+ *
+ * Author: Ernesto Gonzalez Urdaneta
+ * SPDX-License-Identifier: MIT
+ ******************************************************************************/
+
 #include <stdint.h>
 #include "stm32g4xx.h"
 #include "stm32g4/uart.h"
@@ -313,7 +321,6 @@ uint16_t uart_fifo_get_linear_size(uart_fifo_t *self) {
 
 
 int uart_write(uart_t *self, uint8_t *data, uint16_t len) {
-    uint16_t next_head;
     uint16_t bytes_written = 0;
 
     for (uint16_t i = 0; i < len; i++) {

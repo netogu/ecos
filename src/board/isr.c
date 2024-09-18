@@ -214,7 +214,7 @@ void DMA1_Channel3_IRQHandler(void) {
       // Service the TX DMA buffer
       DMA1->IFCR |= DMA_IFCR_CTCIF3;
       // Advance the tail pointer to account for the data sent
-      brd->lpuart1.tx_fifo.tail = (brd->lpuart1.tx_fifo.tail + brd->lpuart1.tx_dma_current_transfer_size) % UART_BUFFER_SIZE;
+      brd->lpuart1.tx_fifo.tail = (brd->lpuart1.tx_fifo.tail + brd->lpuart1.tx_dma_current_transfer_size) % (UART_BUFFER_SIZE);
       // Update the current transfer size
       brd->lpuart1.tx_dma_current_transfer_size = 0;
       // Transfer what may be left in the buffer
