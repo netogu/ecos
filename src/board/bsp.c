@@ -81,7 +81,7 @@ int board_init(void) {
 
   LOG_INFO("\r\nBoard Init Complete\r\n");
   
-  printf("SystemCoreClock: %dHz\r\n", SystemCoreClock);
+  printf("SystemCoreClock: %dMHz\r\n", SystemCoreClock/1000000);
 
   return 0;
   //TODO return error aggregation

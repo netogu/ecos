@@ -2,7 +2,6 @@
 #include "shell.h"
 #include "rtos.h"
 #include "shell_header.h"
-#include "tiny_printf.h"
 #include "task_list.h"
 
 

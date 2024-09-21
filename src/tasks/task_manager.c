@@ -2,6 +2,7 @@
 #include "bsp.h"
 #include "shell.h"
 #include "rtos.h"
+#include "hal.h"
 #include "tiny_printf.h"
 #include "task_list.h"
 
@@ -35,14 +36,22 @@ TaskHandle_t task_manager_init(void) {
 static void task_manager(void * parameters) {
     (void) parameters;
 
+    vTaskDelay(10);
+
     // Start all tasks
     for (int i = 0; i < task_list_size; i++) {
         if (task_list[i].startup) {
             TaskHandle_t task_handle = task_list[i].init();
             if ( task_handle != NULL) {
-                cli_printf("Started Task : %s\r\n", task_list[i].name);
+                // cli_printf("Started Task : %s\r\n", task_list[i].name);
+                cli_uart_puts("Started Task : ");
+                cli_uart_puts(task_list[i].name);
+                cli_uart_puts("\r\n");
             } else {
-                cli_printf("Task '%s' Failed to Start\r\n", task_list[i].name);
+                cli_uart_puts("Failed to Start Task : ");
+                cli_uart_puts(task_list[i].name);
+                cli_uart_puts("\r\n");
+                // cli_printf("Task '%s' Failed to Start\r\n", task_list[i].name);
             }
         }
     }

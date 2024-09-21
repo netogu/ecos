@@ -24,9 +24,7 @@
 int main(void) {
 
   board_init();
-
-  // Initialize the Task Manager
-  task_manager_init();
+  bootup_system();
 
   /* Start the scheduler. */
   vTaskStartScheduler();

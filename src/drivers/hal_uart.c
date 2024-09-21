@@ -41,7 +41,8 @@ int cli_uart_putc(char tx_char) {
 int cli_uart_puts(const char *str) {
     int status = 0;
     if (xSemaphoreTake(uart_mutex, 10) == pdTRUE) {
-        status = uart_write(serial_port, (uint8_t *) str, strlen(str));
+        size_t len = strlen(str);
+        status = uart_write(serial_port, (uint8_t *) str, len);
         xSemaphoreGive(uart_mutex);
     }
     return status;

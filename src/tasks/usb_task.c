@@ -22,10 +22,6 @@ enum {
  BLINK_SUSPENDED = 2500,
 };
 
-static TimerHandle_t led_blink_timer;
-static StaticTimer_t led_blink_timer_s;
-static void led_blink_cb(TimerHandle_t xTimer);
-
 static TaskHandle_t usb_task_handle;
 static StaticTask_t usb_task_tcb;
 static StackType_t usb_task_stack[ TASK_STACK_SIZE_USB ];
@@ -43,12 +39,6 @@ TaskHandle_t usb_task_init(void) {
                         usb_task_stack,
                         &usb_task_tcb);
 
-    led_blink_timer = xTimerCreateStatic(NULL,
-                        pdMS_TO_TICKS(BLINK_NOT_MOUNTED),
-                        true,
-                        NULL,
-                        led_blink_cb,
-                        &led_blink_timer_s);
 
     if (usb_task_handle != NULL) {
         // usb_device_init();
@@ -65,7 +55,6 @@ void usb_task( void *parameters ) {
   /* Unused parameters. */
     ( void ) parameters;
 
-    xTimerStart(led_blink_timer, 0);
 
 
     while (1) {
@@ -83,14 +72,14 @@ void usb_task( void *parameters ) {
 void tud_mount_cb(void) {
 // Invoked when device is mounted
 
-  xTimerChangePeriod(led_blink_timer, pdMS_TO_TICKS(BLINK_MOUNTED), 0);
+//   xTimerChangePeriod(led_blink_timer, pdMS_TO_TICKS(BLINK_MOUNTED), 0);
   
 }
 
 // Invoked when device is un-mounted
 void tud_umount_cb(void) {
 
-  xTimerChangePeriod(led_blink_timer, pdMS_TO_TICKS(BLINK_NOT_MOUNTED), 0);
+//   xTimerChangePeriod(led_blink_timer, pdMS_TO_TICKS(BLINK_NOT_MOUNTED), 0);
   
 }
 //
@@ -99,15 +88,15 @@ void tud_umount_cb(void) {
 // Within 7ms, device must draw an average of current less than 2.5 mA from bus
 void tud_suspend_cb(bool remote_wakeup_en) {
   (void) remote_wakeup_en;
-  xTimerChangePeriod(led_blink_timer, pdMS_TO_TICKS(BLINK_SUSPENDED), 0);
+//   xTimerChangePeriod(led_blink_timer, pdMS_TO_TICKS(BLINK_SUSPENDED), 0);
 }
 
 // Invoked when usb bus is resumed
 void tud_resume_cb(void) {
   if (tud_mounted()) {
-    xTimerChangePeriod(led_blink_timer, pdMS_TO_TICKS(BLINK_MOUNTED), 0);
+    // xTimerChangePeriod(led_blink_timer, pdMS_TO_TICKS(BLINK_MOUNTED), 0);
   } else {
-    xTimerChangePeriod(led_blink_timer, pdMS_TO_TICKS(BLINK_NOT_MOUNTED), 0);
+    // xTimerChangePeriod(led_blink_timer, pdMS_TO_TICKS(BLINK_NOT_MOUNTED), 0);
   }
 }
 
@@ -127,20 +116,4 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts) {
 // Invoked when CDC interface received data from host
 void tud_cdc_rx_cb(uint8_t itf) {
   (void) itf;
-}
-
-//--------------------------------------------------------------------+
-// BLINKING TASK
-//--------------------------------------------------------------------+
-
-static void led_blink_cb(TimerHandle_t xTimer) {   
-  struct board_descriptor *brd = board_get_descriptor();
-  /* Unused parameters. */
-  ( void ) xTimer;
-  gpio_pin_toggle(&brd->io.led_green);
-  // gpio_pin_toggle(&brd->io.led_red);
-  // gpio_pin_toggle(&brd->io.led_blue);
-  gpio_pin_set(&brd->io.led_blue);  
-  gpio_pin_set(&brd->io.led_red);
-
 }
