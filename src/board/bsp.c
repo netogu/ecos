@@ -68,23 +68,21 @@ int board_init(void) {
   board_gpio_setup();
   board_uart_setup();
   LOG_CLEAR();
-  LOG_OK("Core Init");
-  // board_spi_setup();
-  // board_gate_driver_setup();
-  LOG_FAIL("SPI Init");
+  LOG_OK("Core");
   board_usb_setup();
-  LOG_OK("USB Init");
   board_pwm_setup();
-  LOG_OK("PWM Init");
   board_adc_setup();
-  LOG_OK("ADC Init");
 
-  LOG_INFO("\r\nBoard Init Complete\r\n");
   
   printf("SystemCoreClock: %dMHz\r\n", SystemCoreClock/1000000);
+  printf("\r\n");
 
   return 0;
   //TODO return error aggregation
+
+}
+
+board_init_drivers(void){
 
 }
 

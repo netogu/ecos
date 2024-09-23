@@ -1,4 +1,5 @@
 #include "task_list.h"
+#include "hal.h"
 
 //--------------------------------------------------------------------+
 // Task List
@@ -27,6 +28,9 @@ const task_descriptor_t task_list[] = {
 //--------------------------------------------------------------------+
 
 void bootup_system(void) {
+    timer_us_init();
+    printf(timestamp());
+    printf("Booting System\r\n");
     task_manager_init();
 }
 

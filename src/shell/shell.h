@@ -6,5 +6,6 @@
 
 void shell_init(void);
 void shell_update(void);
+char *timestamp(void);
 
 #endif // SHELL_H

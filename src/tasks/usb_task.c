@@ -56,7 +56,6 @@ void usb_task( void *parameters ) {
     ( void ) parameters;
 
 
-
     while (1) {
         tud_task();
         tud_cdc_write_flush();

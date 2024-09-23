@@ -35,6 +35,7 @@ static void led_task(void * parameters) {
   /* Unused parameters. */
   ( void ) parameters;
 
+
   while(1) {
     gpio_pin_toggle(&brd->io.led_green);
     // gpio_pin_toggle(&brd->io.led_red);

@@ -1,6 +1,7 @@
 #include "rtos.h"
 #include "bsp.h"
 #include "shell.h"
+#include <inttypes.h> // for PRIu64
 
 #define NOCHAR '\0'
 #define SHELL_HOSTNAME "board"
@@ -8,6 +9,11 @@
 
 #define CLI_UART
 // #define CLI_USB
+
+
+
+extern void shell_cmd_top_exec_cb(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[]);
+
 
 // non-blocking read interface
 static int ush_read(struct ush_object *self, char *ch)
@@ -291,6 +297,12 @@ static const struct ush_file_descriptor cmd_files[] = {
         .exec = clear_exec_callback,
     },
     {
+        .name = "top",
+        .description = "Task Monitor",
+        .help = NULL,
+        .exec = shell_cmd_top_exec_cb,
+    },
+    {
         .name = "dpt",                       
         .description = "run double-pulse test",            // optional file description
         .help = "usage: dpt channel(a,b,c) ton(ns) toff(ns) n(pulses)\r\n",            // optional help manual
@@ -346,4 +358,12 @@ void inline shell_update(void)
     ush_service(&ush);
 }
 
+
+char * timestamp(void)
+{
+    static char timestamp_msg[16];
+    uint64_t usec =  timer_us_get();
+    snprintf(timestamp_msg, sizeof(timestamp_msg), "[%11u\t] ", (uint32_t)usec);
+    return timestamp_msg;
+}
 

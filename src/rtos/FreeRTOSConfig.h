@@ -75,7 +75,7 @@ extern uint32_t SystemCoreClock;
 #define configSTACK_ALLOCATION_FROM_SEPARATE_HEAP   0
 
 #define configSUPPORT_STATIC_ALLOCATION         1
-#define configSUPPORT_DYNAMIC_ALLOCATION        0
+#define configSUPPORT_DYNAMIC_ALLOCATION        1
 
 /* Hook function related definitions. */
 #define configUSE_IDLE_HOOK                    0
@@ -85,9 +85,18 @@ extern uint32_t SystemCoreClock;
 #define configCHECK_HANDLER_INSTALLATION       0
 
 /* Run time and task stats gathering related definitions. */
-#define configGENERATE_RUN_TIME_STATS          0
+#define configGENERATE_RUN_TIME_STATS          1
 #define configUSE_TRACE_FACILITY               1 // legacy trace
-#define configUSE_STATS_FORMATTING_FUNCTIONS   0
+#define configUSE_STATS_FORMATTING_FUNCTIONS   1
+
+// Defined in hal.h
+extern void timer_us_init(void);
+extern uint64_t timer_us_get(void);
+
+/* Define the macros to configure the timer and get the runtime counter value */
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() 
+#define portGET_RUN_TIME_COUNTER_VALUE() timer_us_get()
+#define configRUN_TIME_COUNTER_TYPE uint64_t
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES                  0

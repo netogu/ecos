@@ -27,4 +27,13 @@ char cli_uart_getc(void);
 int cli_uart_puts(const char *str);
 int cli_printf(const char *format, ...);
 
+
+// ----------------------------- TIMERS -----------------------------
+// FreeRTOS Stats Timer
+void timer_us_init(void);
+uint64_t timer_us_get(void);
+
+
+
+
 #endif // DRIVER_STM32G4_HAL_H

@@ -56,6 +56,7 @@ C_SOURCES += $(wildcard $(MICROSHELL)/src/*.c)
 C_SOURCES += $(wildcard $(MICROSHELL)/src/commands/*.c)
 C_SOURCES += $(wildcard $(FREERTOS)/*.c)
 C_SOURCES += $(FREERTOS)/portable/GCC/ARM_CM4F/port.c
+C_SOURCES += $(FREERTOS)/portable/MemMang/heap_3.c
 
 # ASM sources
 ASM_SOURCES =  \

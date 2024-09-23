@@ -23,10 +23,12 @@ TaskHandle_t task_manager_init(void) {
                         &task_manager_tcb);
 
     if (task_manager_handle != NULL) {
+        printf(timestamp());
         printf("Task Manager Started\r\n");
         return task_manager_handle;
     } 
     else {
+        printf(timestamp());
         printf("Task Manager Failed to Start\r\n");
         return NULL;
     }
@@ -43,15 +45,11 @@ static void task_manager(void * parameters) {
         if (task_list[i].startup) {
             TaskHandle_t task_handle = task_list[i].init();
             if ( task_handle != NULL) {
-                // cli_printf("Started Task : %s\r\n", task_list[i].name);
-                cli_uart_puts("Started Task : ");
-                cli_uart_puts(task_list[i].name);
-                cli_uart_puts("\r\n");
+                cli_printf(timestamp());
+                cli_printf("Started Task : %s\r\n", task_list[i].name);
             } else {
-                cli_uart_puts("Failed to Start Task : ");
-                cli_uart_puts(task_list[i].name);
-                cli_uart_puts("\r\n");
-                // cli_printf("Task '%s' Failed to Start\r\n", task_list[i].name);
+                cli_printf(timestamp());
+                cli_printf("Task '%s' Failed to Start\r\n", task_list[i].name);
             }
         }
     }
