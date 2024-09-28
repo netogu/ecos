@@ -11,7 +11,7 @@ void shell_cmd_top_exec_cb(struct ush_object *self, struct ush_file_descriptor c
                             USH_SHELL_FONT_STYLE_RESET;
     
     int header_len = strlen(header);
-    int buffer_len = 40 * uxTaskGetNumberOfTasks() + header_len;
+    int buffer_len = 64 * uxTaskGetNumberOfTasks() + header_len;
     char *buffer = pvPortMalloc(buffer_len);
     strcpy(buffer, header);
     vTaskGetRunTimeStatistics(buffer + header_len, buffer_len);

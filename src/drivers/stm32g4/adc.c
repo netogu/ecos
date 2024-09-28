@@ -24,6 +24,8 @@
  ******************************************************************************/
 
 #include "drivers/stm32g4/adc.h"
+#include <string.h> // for memset
+#include "log.h"
 
 #define NULL 0
 
@@ -126,12 +128,10 @@ int adc_calibrate_blocking(adc_t *self) {
 
     return 0;
 }
-int adc_init(adc_t *self, ADC_TypeDef *adc_base) {
+int adc_init(adc_t *self) {
 
     ADC_TypeDef *adc_regs = self->options.instance;
-
-    adc_regs = adc_base;
-
+    memset(self->regular_result, 0, sizeof(self->regular_result));
 
     // ADC Clk domain: SYSCLK or PLL
     // Enable the ADC Peripheral Clock
@@ -147,7 +147,8 @@ int adc_init(adc_t *self, ADC_TypeDef *adc_base) {
             ADC12_COMMON->CCR |= ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1; // Set ADC CLK Domain to HCLK/4
         }
 
-    } else { 
+    } else
+    if (adc_regs == ADC3 || ADC4 || ADC5) { 
 
         // ADC_INSTANCE_3, ADC_INSTANCE_4, ADC_INSTANCE_5
         RCC->AHB2ENR |= RCC_AHB2ENR_ADC345EN;
@@ -158,7 +159,9 @@ int adc_init(adc_t *self, ADC_TypeDef *adc_base) {
             ADC345_COMMON->CCR &= ~ADC_CCR_CKMODE;
             ADC345_COMMON->CCR |= ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1; // Set ADC CLK Domain to HCLK/4
         }
-    } 
+    }  else {
+        return -1;
+    }
 
     // Exit deep-power mode
     adc_regs->CR &= ~ADC_CR_DEEPPWD;

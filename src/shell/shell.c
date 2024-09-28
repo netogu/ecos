@@ -252,14 +252,14 @@ size_t ADC_DR_get_data_callback(struct ush_object *self, struct ush_file_descrip
     // get board descriptor
     struct board_descriptor *brd = board_get_descriptor();
 
-    char dr[16];
-    // uint16_t value = *brd->ain.vbus.data;
-    uint16_t value = 2134;
-    ush_printf(self, "ADC1: %d \r\n", value);
+    uint16_t value = *brd->ain.vbus.data;
+    static char dr[32] = "hello world\r\n";
+    snprintf(dr, sizeof(dr), "ADC1: %d \r\n", value);
+
+    *data = (uint8_t*)dr;
 
 
     // return pointer to data
-    *data = (uint8_t*)dr;
     // return data size
     return strlen(dr);
 }
@@ -361,9 +361,9 @@ void inline shell_update(void)
 
 char * timestamp(void)
 {
-    static char timestamp_msg[16];
+    static char timestamp_msg[32];
     uint64_t usec =  timer_us_get();
-    snprintf(timestamp_msg, sizeof(timestamp_msg), "[%11u\t] ", (uint32_t)usec);
+    snprintf(timestamp_msg, sizeof(timestamp_msg), "[%15u\t] ", (uint32_t)usec);
     return timestamp_msg;
 }
 

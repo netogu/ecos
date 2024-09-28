@@ -118,7 +118,7 @@ typedef struct adc_s {
 } adc_t;
 
 
-int adc_init(adc_t *self, ADC_TypeDef *instance);
+int adc_init(adc_t *self);
 int adc_add_regular_input(adc_t *self, adc_input_t *input, uint16_t sequence_order, uint16_t sample_time);
 int adc_add_injected_input(adc_t *self, adc_input_t *input, uint16_t input_number, uint16_t sample_time);
 

@@ -436,10 +436,10 @@ static struct board_descriptor brd = (struct board_descriptor) {
 
     .vbus = (adc_input_t) {
       .name = "vbus",
-      .channel = ADC_CHANNEL_OPAMP_1, 
+      .channel = 1,
       .pin = (gpio_t) {
         .port = GPIO_PORT_A,
-        .pin = GPIO_PIN_3,
+        .pin = GPIO_PIN_0,
         .mode = GPIO_MODE_ANALOG,
         .type = GPIO_TYPE_PUSH_PULL,
         .pull = GPIO_PULL_NONE,
@@ -721,7 +721,12 @@ void board_adc_setup(void) {
     .clk_domain = ADC_CLK_DOMAIN_HCLK,
   };
 
-  adc_init(&brd.ain.adc1, ADC1);
+  if (adc_init(&brd.ain.adc1) == 0) {
+    LOG_OK("ADC1");
+  } else {
+    LOG_FAIL("ADC1");
+  }
+
   // adc_init(&adc2, ADC1);
 
   adc_add_regular_input(&brd.ain.adc1, &brd.ain.vbus, ADC_REG_SEQ_ORDER_1, ADC_SAMPLE_TIME_6_5_CYCLES);
