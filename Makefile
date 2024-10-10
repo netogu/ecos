@@ -135,7 +135,7 @@ AS_DEFS =
 
 # # C defines
 C_DEFS =  \
--DSTM32G474xx
+-DSTM32G474xx -std=c11
 
 
 # compile gcc flags

@@ -26,6 +26,7 @@ int cli_uart_putc(char tx_char);
 char cli_uart_getc(void);
 int cli_uart_puts(const char *str);
 int cli_printf(const char *format, ...);
+size_t cli_uart_tx_pending(void);
 
 
 // ----------------------------- TIMERS -----------------------------

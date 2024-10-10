@@ -20,6 +20,11 @@ const task_descriptor_t task_list[] = {
         .name = xstr(TASK_NAME_LED),
         .init = led_task_init,
         .startup = true
+    },
+    {
+        .name = xstr(TASK_NAME_PWM_CONTROL),
+        .init = task_pwm_control_init,
+        .startup = true
     }
 };
 

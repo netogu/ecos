@@ -320,6 +320,7 @@ uint16_t uart_fifo_get_linear_size(uart_fifo_t *self) {
 }
 
 
+
 int uart_write(uart_t *self, uint8_t *data, uint16_t len) {
     uint16_t bytes_written = 0;
 

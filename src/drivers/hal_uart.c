@@ -74,3 +74,7 @@ char cli_uart_getc(void) {
     }
     return readchar;
 }
+
+size_t cli_uart_tx_pending(void) {
+    return serial_port->tx_fifo.size;
+}
