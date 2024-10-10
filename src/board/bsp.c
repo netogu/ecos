@@ -45,6 +45,8 @@ static void board_usb_setup(void);
 static void board_pwm_setup(void);
 static void board_spi_setup(void);
 static void board_gate_driver_setup(void);
+static void board_encoder_setup(void);
+
 static struct board_descriptor brd;
 
 /**
@@ -473,6 +475,7 @@ int board_init(void) {
   board_usb_setup();
   board_pwm_setup();
   board_adc_setup();
+  board_encoder_setup();
 
   
   printf("SystemCoreClock: %dMHz\r\n", SystemCoreClock/1000000);
@@ -739,8 +742,38 @@ void board_adc_setup(void) {
   brd.ain.vbus.data = &brd.ain.adc1.options.instance->DR;
   adc_start_regular_sampling(&brd.ain.adc1);
 
-
 }
+
+//------------------------------------------------------
+// Encoder
+//------------------------------------------------------
+
+void board_encoder_setup(void) {
+
+  gpio_t encoder_pin_a = (gpio_t) {
+    .port = GPIO_PORT_A,
+    .pin = GPIO_PIN_0,
+    .mode = GPIO_MODE_ALTERNATE,
+    .af = GPIO_AF2,
+    .type = GPIO_TYPE_PUSH_PULL,
+    .speed = GPIO_SPEED_HIGH,
+  };
+
+  gpio_t encoder_pin_b = (gpio_t) {
+    .port = GPIO_PORT_A,
+    .pin = GPIO_PIN_1,
+    .mode = GPIO_MODE_ALTERNATE,
+    .af = GPIO_AF2,
+    .type = GPIO_TYPE_PUSH_PULL,
+    .speed = GPIO_SPEED_HIGH,
+  };
+
+  gpio_pin_init(&encoder_pin_a);
+  gpio_pin_init(&encoder_pin_b);
+
+  encoder_init(&brd.encoder);
+}
+
 
 //------------------------------------------------------
 // Syscalls

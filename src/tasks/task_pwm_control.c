@@ -5,6 +5,7 @@
 //--------------------------------------------------------------------+
 
 #include "bsp.h"
+#include "hal.h"
 #include "task_list.h"
 
 static TaskHandle_t task_pwm_control_handle;
@@ -38,6 +39,11 @@ static void task_pwm_control(void * parameters) {
 
 
   while(1) {
+
+    uint32_t count = brd->encoder.read();
+    pwm_set_duty(&brd->pwma, count/1024.0);
+
+    // cli_printf("\r\nEncoder Count : %u", count);
 
     vTaskDelay(TASK_DELAY_PWM_CONTROL);
   }

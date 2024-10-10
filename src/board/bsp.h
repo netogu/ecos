@@ -14,6 +14,7 @@ File   : bsp.h
 #include "drivers/stm32g4/spi.h"
 #include "drivers/power/drv835x.h"
 #include "drivers/stm32g4/uart.h"
+#include "drivers/encoder.h"
 
 //------------------------------------------------------+
 // Board Variant
@@ -66,6 +67,7 @@ const struct board_descriptor {
   struct drv835x gate_driver;
   uart_t lpuart1;
   uart_t usart3;
+  encoder_t encoder;
 };
 
 // extern struct gpio io;

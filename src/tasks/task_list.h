@@ -34,7 +34,7 @@
 #define TASK_DELAY_USB                  4
 #define TASK_DELAY_CLI                  1
 #define TASK_DELAY_LED                  1000
-#define TASK_DELAY_PWM_CONTROL          100
+#define TASK_DELAY_PWM_CONTROL          250
 
 #define TASK_STACK_SIZE_TASK_MANAGER    1024
 #define TASK_STACK_SIZE_USB             1024
