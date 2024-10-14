@@ -4,6 +4,7 @@
 #include "rtos.h"
 #include "tiny_printf.h"
 #include "tasklist.h"
+#include "tusb.h"
 
 #define PRIORITY_USB_TASK configMAX_PRIORITIES - 3
 

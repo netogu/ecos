@@ -13,14 +13,14 @@ static void cli_task(void * parameters);
 TaskHandle_t cli_task_init(void) {
     // Create the task
 
-    struct board_descriptor *board = board_get_descriptor();
+    board_t *brd = board_get_handle();
 
     #ifdef SHELL_INTERFACE_USB
         cli_usb_init();
     #elif defined(SHELL_INTERFACE_USART3)
         cli_uart_init(&board->usart3);
     #else
-    cli_uart_init(&board->lpuart1);
+    cli_uart_init(&brd->lpuart1);
     #endif
 
     shell_init();

@@ -5,7 +5,6 @@ File   : bsp.h
 
 #pragma once
 
-#include "tusb.h"
 #include "hal.h"
 
 
@@ -25,8 +24,9 @@ File   : bsp.h
 //------------------------------------------------------
 // GPIOs
 //------------------------------------------------------
-const struct board_descriptor {
-  struct brd_gpio_s {
+ typedef struct board_s {
+
+  struct board_io_s {
     gpio_t led_red;
     gpio_t led_green;
     gpio_t led_blue;
@@ -56,12 +56,13 @@ const struct board_descriptor {
     gpio_t lpuart_rx;
     gpio_t usart3_tx;
     gpio_t usart3_rx;
-
+    gpio_t enc_a_pin;
+    gpio_t enc_b_pin;
   } io;
 
   pwm_3ph_t mcpwm;
 
-  struct brd_analog_in_s {
+  struct board_ain_s {
     adc_t adc1;
     adc_input_t vbus;
     adc_t adc2;
@@ -77,7 +78,7 @@ const struct board_descriptor {
   uart_t usart3;
 
   encoder_t encoder;
-};
+} board_t;
 
 // extern struct gpio io;
 // extern struct hrtim_pwm pwma, pwmb, pwmc;
@@ -85,7 +86,7 @@ const struct board_descriptor {
 // extern struct drv835x gate_driver; 
 
 
-struct board_descriptor *board_get_descriptor(void);
+board_t *board_get_handle(void);
 int board_init(void);
 void board_hw_setup(void);
 uint32_t millis(void);

@@ -31,7 +31,9 @@ TaskHandle_t led_task_init(void) {
 }
 
 static void led_task(void * parameters) {   
-  struct board_descriptor *brd = board_get_descriptor();
+
+  board_t *brd = board_get_handle();
+
   /* Unused parameters. */
   ( void ) parameters;
 

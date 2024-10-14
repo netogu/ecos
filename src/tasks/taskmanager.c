@@ -38,11 +38,9 @@ TaskHandle_t task_manager_init(void) {
 static void task_manager(void * parameters) {
     (void) parameters;
     
-
     board_hw_setup();
 
     vTaskDelay(50);
-
 
     // Start all tasks
     for (int i = 0; i < task_list_size; i++) {

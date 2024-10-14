@@ -33,7 +33,9 @@ TaskHandle_t task_pwm_control_init(void) {
 }
 
 static void task_pwm_control(void * parameters) {   
-  struct board_descriptor *brd = board_get_descriptor();
+
+  board_t *brd = board_get_handle();
+
   /* Unused parameters. */
   ( void ) parameters;
 

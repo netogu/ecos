@@ -135,7 +135,7 @@ static inline void uart_send_byte(uart_t *self) {
 
 void LPUART1_IRQHandler(void) {
 
-  struct board_descriptor *brd = board_get_descriptor();
+  board_t *brd = board_get_handle();
 
   // Received a byte on LPUART1
   if (LPUART1->ISR & USART_ISR_RXNE) {
@@ -164,7 +164,7 @@ void LPUART1_IRQHandler(void) {
 
 void USART3_IRQHandler(void) {
 
-  struct board_descriptor *brd = board_get_descriptor();
+  board_t *brd = board_get_handle();
 
   // Received a byte on USART3
   if (USART3->ISR & USART_ISR_RXNE) {
@@ -190,7 +190,7 @@ void USART3_IRQHandler(void) {
 
 void DMA1_Channel2_IRQHandler(void) {
 
-  struct board_descriptor *brd = board_get_descriptor();
+  board_t *brd = board_get_handle();
 
   if (DMA1->ISR & DMA_ISR_TCIF2) {
     // Service the RX DMA buffer
@@ -208,7 +208,7 @@ void DMA1_Channel2_IRQHandler(void) {
 
 void DMA1_Channel3_IRQHandler(void) {
   
-    struct board_descriptor *brd = board_get_descriptor();
+    board_t *brd = board_get_handle();
   
     if (DMA1->ISR & DMA_ISR_TCIF3) {
       // Service the TX DMA buffer

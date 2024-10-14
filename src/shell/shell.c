@@ -81,7 +81,7 @@ static const struct ush_descriptor ush_desc = {
 // drive enable callback
 static void drv_en_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
-    struct board_descriptor *brd = board_get_descriptor();
+    board_t *brd = board_get_handle();
 
     // arguments count validation
     if (argc != 2) {
@@ -107,7 +107,7 @@ static void drv_en_callback(struct ush_object *self, struct ush_file_descriptor 
 // drive enable callback
 static void mpwr_en_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
-    struct board_descriptor *brd = board_get_descriptor();
+    board_t *brd = board_get_handle();
 
     // arguments count validation
     if (argc != 2) {
@@ -159,7 +159,7 @@ static void ocp_exec_callback(struct ush_object *self, struct ush_file_descripto
 // dpt test callback
 static void dpt_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
-    struct board_descriptor *brd = board_get_descriptor();
+    board_t *brd = board_get_handle();
 
     // arguments count validation
     if (argc < 3) {
@@ -204,7 +204,7 @@ static void dpt_exec_callback(struct ush_object *self, struct ush_file_descripto
 // PWMA Set Duty Callback
 static void pwma_set_duty_cb(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
-    struct board_descriptor *brd = board_get_descriptor();
+    board_t *brd = board_get_handle();
 
     // arguments count validation
     if (argc < 2) {
@@ -249,8 +249,7 @@ size_t info_get_data_callback(struct ush_object *self, struct ush_file_descripto
 // ADC_DR file get data callback
 size_t ADC_DR_get_data_callback(struct ush_object *self, struct ush_file_descriptor const *file, uint8_t **data)
 {
-    // get board descriptor
-    struct board_descriptor *brd = board_get_descriptor();
+    board_t *brd = board_get_handle();
 
     uint16_t value = *brd->ain.vbus.data;
     static char dr[32] = "hello world\r\n";
