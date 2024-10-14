@@ -168,7 +168,7 @@ static void dpt_exec_callback(struct ush_object *self, struct ush_file_descripto
         return;
     }
 
-    pwm_t *pwm = &brd->pwma;
+    pwm_t *pwm = &brd->mcpwm.pwma;
 
     int ton = atoi(argv[1]);
     ush_printf(self, "ton: %d ns\r\n", ton);
@@ -213,7 +213,7 @@ static void pwma_set_duty_cb(struct ush_object *self, struct ush_file_descriptor
         return;
     }
 
-     pwm_t *pwm = &brd->pwma;
+     pwm_t *pwm = &brd->mcpwm.pwma;
 
     int duty = atoi(argv[1]);
     ush_printf(self, "duty: %d %%\r\n", duty);

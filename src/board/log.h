@@ -1,11 +1,16 @@
 #ifndef BOARD_LOG_H
 #define BOARD_LOG_H
 
-#include <microshell.h>
-#include "stm32g4/uart.h"
+#include <stdio.h>
+#include "shell.h"
 #include "tiny_printf.h"
 
 // prinf macro logging in green
+#define Log_cli(...) do { \
+  cli_printf(timestamp()); \
+  cli_printf(__VA_ARGS__); \
+} while(0)
+
 #define LOG_INFO(...) do { \
   printf(USH_SHELL_FONT_COLOR_GREEN); \
   printf(__VA_ARGS__); \

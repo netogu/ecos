@@ -11,13 +11,11 @@ typedef struct uart_fifo_s {
     uint8_t buffer[UART_BUFFER_SIZE];
     uint8_t head;
     uint8_t tail;
-    uint8_t size;
+    uint32_t size;
 } uart_fifo_t;
 
 typedef struct uart_s {
     USART_TypeDef *instance;
-    gpio_t tx_pin;
-    gpio_t rx_pin;
     uart_fifo_t rx_fifo;
     uart_fifo_t tx_fifo;
     uint16_t tx_dma_current_transfer_size;

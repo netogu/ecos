@@ -4,7 +4,7 @@
 #include "rtos.h"
 #include "hal.h"
 #include "tiny_printf.h"
-#include "task_list.h"
+#include "tasklist.h"
 
 static TaskHandle_t task_manager_handle;
 static StaticTask_t task_manager_tcb;
@@ -37,11 +37,12 @@ TaskHandle_t task_manager_init(void) {
 
 static void task_manager(void * parameters) {
     (void) parameters;
+    
 
-    vTaskDelay(25);
-    // while (cli_uart_tx_pending()){
-    //     vTaskDelay(1);
-    // }
+    board_hw_setup();
+
+    vTaskDelay(50);
+
 
     // Start all tasks
     for (int i = 0; i < task_list_size; i++) {

@@ -2,21 +2,12 @@
 #include <stdint.h>
 
 #include "bsp.h"
-
-#include "drivers/stm32g4/adc.h"
-#include "drivers/stm32g4/spi.h"
-#include "drivers/stm32g4/rcc.h"
-#include "drivers/stm32g4/adc.h"
-#include "drivers/stm32g4/gpio.h"
-#include "drivers/stm32g4/adc.h"
-#include "drivers/stm32g4/uart.h"
-#include "drivers/stm32g4/usbpcd.h"
+#include "rtos.h"
+#include "shell.h"
+#include "log.h"
 
 #include "tiny_printf.h"
-
 #include "tusb.h"
-
-#include "log.h"
 
 extern uint32_t g_isr_count_uart_tx;
 extern uint32_t g_isr_count_uart_rx;
@@ -49,20 +40,9 @@ static void board_encoder_setup(void);
 
 static struct board_descriptor brd;
 
-/**
- * @brief Get the board descriptor object 
- * 
- * @return struct board_descriptor* 
- */
 struct board_descriptor *board_get_descriptor(void) {
   return &brd;
 }
-
-/**
- * @brief Initialize the board
- * 
- * @return Error code 
- */
 
 int board_init(void) {
 
@@ -228,15 +208,8 @@ int board_init(void) {
         .pull = GPIO_PULL_NONE,
         .speed = GPIO_SPEED_HIGH,
         .af = GPIO_AF0},
-    },
 
-    //--------------------------------------------------------------------+
-    // PWM
-    //--------------------------------------------------------------------+
-
-    .pwma = (pwm_t) {
-
-      .pwmh_pin = (gpio_t) {
+      .pwm_ah = (gpio_t) {
         .port = GPIO_PORT_A,
         .pin = GPIO_PIN_8,
         .mode = GPIO_MODE_ALTERNATE,
@@ -245,8 +218,8 @@ int board_init(void) {
         .speed = GPIO_SPEED_HIGH,
         .af = GPIO_AF13,
       },
-      
-      .pwml_pin = (gpio_t) {
+
+      .pwm_al = (gpio_t) {
         .port = GPIO_PORT_A,
         .pin = GPIO_PIN_9,
         .mode = GPIO_MODE_ALTERNATE,
@@ -256,17 +229,7 @@ int board_init(void) {
         .af = GPIO_AF13,
       },
 
-      .options = {
-        .pwm_timer = PWM_TIMER_HRTIM1,
-        .pwm_channel = PWM_HRTIM_TIM_A,
-        .output_mode = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
-        .polarity = HRTIM_PWM_POLARITY_NORMAL,
-      },
-    },
-
-    .pwmb = (pwm_t) {
-
-      .pwmh_pin = (gpio_t) {
+      .pwm_bh = (gpio_t) {
         .port = GPIO_PORT_C,
         .pin = GPIO_PIN_6,
         .mode = GPIO_MODE_ALTERNATE,
@@ -275,8 +238,7 @@ int board_init(void) {
         .speed = GPIO_SPEED_HIGH,
         .af = GPIO_AF13,
       },
-
-      .pwml_pin = (gpio_t) {
+      .pwm_bl = (gpio_t) {
         .port = GPIO_PORT_C,
         .pin = GPIO_PIN_7,
         .mode = GPIO_MODE_ALTERNATE,
@@ -285,18 +247,8 @@ int board_init(void) {
         .speed = GPIO_SPEED_HIGH,
         .af = GPIO_AF13,
       },
-      
-      .options = {
-        .pwm_timer = PWM_TIMER_HRTIM1,
-        .pwm_channel = PWM_HRTIM_TIM_F,
-        .output_mode = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
-        .polarity = HRTIM_PWM_POLARITY_NORMAL,
-      },
-    },
-
-    .pwmc = (pwm_t) {
-
-      .pwmh_pin = (gpio_t) {
+        
+      .pwm_ch = (gpio_t) {
         .port = GPIO_PORT_C,
         .pin = GPIO_PIN_8,
         .mode = GPIO_MODE_ALTERNATE,
@@ -306,7 +258,7 @@ int board_init(void) {
         .af = GPIO_AF3,
       },
 
-      .pwml_pin = (gpio_t) {
+      .pwm_cl = (gpio_t) {
         .port = GPIO_PORT_C,
         .pin = GPIO_PIN_9,
         .mode = GPIO_MODE_ALTERNATE,
@@ -316,12 +268,112 @@ int board_init(void) {
         .af = GPIO_AF3,
       },
 
-      .options = {
-        .pwm_timer = PWM_TIMER_HRTIM1,
-        .pwm_channel = PWM_HRTIM_TIM_E,
-        .output_mode = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
-        .polarity = HRTIM_PWM_POLARITY_NORMAL,
+      .lpuart_tx = (gpio_t) {
+        .port = GPIO_PORT_A,
+        .pin = GPIO_PIN_2,
+        .mode = GPIO_MODE_ALTERNATE,
+        .type = GPIO_TYPE_PUSH_PULL,
+        .pull = GPIO_PULL_NONE,
+        .speed = GPIO_SPEED_LOW,
+        .af = GPIO_AF12,
       },
+
+      .lpuart_rx = (gpio_t) {
+        .port = GPIO_PORT_A,
+        .pin = GPIO_PIN_3,
+        .mode = GPIO_MODE_ALTERNATE,
+        .type = GPIO_TYPE_PUSH_PULL,
+        .pull = GPIO_PULL_NONE,
+        .speed = GPIO_SPEED_LOW,
+        .af = GPIO_AF12,
+      },
+
+      .usart3_tx = (gpio_t) {
+        .port = GPIO_PORT_C,
+        .pin = GPIO_PIN_10,
+        .mode = GPIO_MODE_ALTERNATE,
+        .type = GPIO_TYPE_PUSH_PULL,
+        .pull = GPIO_PULL_NONE,
+        .speed = GPIO_SPEED_LOW,
+        .af = GPIO_AF7,
+      },
+
+      .usart3_rx = (gpio_t) {
+        .port = GPIO_PORT_C,
+        .pin = GPIO_PIN_11,
+        .mode = GPIO_MODE_ALTERNATE,
+        .type = GPIO_TYPE_PUSH_PULL,
+        .pull = GPIO_PULL_NONE,
+        .speed = GPIO_SPEED_LOW,
+        .af = GPIO_AF7,
+      },
+
+      .adc_pa0 = (gpio_t) {
+        .port = GPIO_PORT_A,
+        .pin = GPIO_PIN_0,
+        .mode = GPIO_MODE_ANALOG,
+        .type = GPIO_TYPE_PUSH_PULL,
+        .pull = GPIO_PULL_NONE,
+        .speed = GPIO_SPEED_LOW,
+        .af = GPIO_AF0,
+      },
+
+      .adc_pc0 = (gpio_t) {
+        .port = GPIO_PORT_C,
+        .pin = GPIO_PIN_0,
+        .mode = GPIO_MODE_ANALOG,
+        .type = GPIO_TYPE_PUSH_PULL,
+        .pull = GPIO_PULL_NONE,
+        .speed = GPIO_SPEED_LOW,
+        .af = GPIO_AF0,
+      },
+
+      .adc_pc1 = (gpio_t) {
+        .port = GPIO_PORT_C,
+        .pin = GPIO_PIN_1,
+        .mode = GPIO_MODE_ANALOG,
+        .type = GPIO_TYPE_PUSH_PULL,
+        .pull = GPIO_PULL_NONE,
+        .speed = GPIO_SPEED_LOW,
+        .af = GPIO_AF0,
+      },
+
+    },
+
+    //--------------------------------------------------------------------+
+    // PWM
+    //--------------------------------------------------------------------+
+
+    .mcpwm = (pwm_3ph_t) {
+
+      .pwma = (pwm_t) {
+        .options = {
+          .pwm_timer = PWM_TIMER_HRTIM1,
+          .pwm_channel = PWM_HRTIM_TIM_A,
+          .output_mode = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
+          .polarity = HRTIM_PWM_POLARITY_NORMAL,
+        },
+      },
+
+      .pwmb = (pwm_t) {
+        .options = {
+          .pwm_timer = PWM_TIMER_HRTIM1,
+          .pwm_channel = PWM_HRTIM_TIM_F,
+          .output_mode = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
+          .polarity = HRTIM_PWM_POLARITY_NORMAL,
+        },
+      },
+
+      .pwmc = (pwm_t) {
+        .options = {
+          .pwm_timer = PWM_TIMER_HRTIM1,
+          .pwm_channel = PWM_HRTIM_TIM_E,
+          .output_mode = HRTIM_PWM_OUTPUT_COMPLEMENTARY,
+          .polarity = HRTIM_PWM_POLARITY_NORMAL,
+        },
+      },
+
+      .mode = PWM_3PHASE_MODE_6PWM,
     },
 
     //--------------------------------------------------------------------+
@@ -350,24 +402,6 @@ int board_init(void) {
 
     .lpuart1 = (uart_t) {
       .instance = LPUART1,
-      .tx_pin = (gpio_t) {
-        .port = GPIO_PORT_A,
-        .pin = GPIO_PIN_2,
-        .mode = GPIO_MODE_ALTERNATE,
-        .type = GPIO_TYPE_PUSH_PULL,
-        .pull = GPIO_PULL_NONE,
-        .speed = GPIO_SPEED_LOW,
-        .af = GPIO_AF12,
-      },
-      .rx_pin = (gpio_t) {
-        .port = GPIO_PORT_A,
-        .pin = GPIO_PIN_3,
-        .mode = GPIO_MODE_ALTERNATE,
-        .type = GPIO_TYPE_PUSH_PULL,
-        .pull = GPIO_PULL_NONE,
-        .speed = GPIO_SPEED_LOW,
-        .af = GPIO_AF12,
-      },
       .config = {
         .baudrate = 115200,
         .mode = UART_MODE_RX_TX,
@@ -380,24 +414,6 @@ int board_init(void) {
 
     .usart3 = (uart_t) {
       .instance = USART3,
-      .tx_pin = (gpio_t) {
-        .port = GPIO_PORT_C,
-        .pin = GPIO_PIN_10,
-        .mode = GPIO_MODE_ALTERNATE,
-        .type = GPIO_TYPE_PUSH_PULL,
-        .pull = GPIO_PULL_NONE,
-        .speed = GPIO_SPEED_LOW,
-        .af = GPIO_AF7,
-      },
-      .rx_pin = (gpio_t) {
-        .port = GPIO_PORT_C,
-        .pin = GPIO_PIN_11,
-        .mode = GPIO_MODE_ALTERNATE,
-        .type = GPIO_TYPE_PUSH_PULL,
-        .pull = GPIO_PULL_NONE,
-        .speed = GPIO_SPEED_LOW,
-        .af = GPIO_AF7,
-      },
       .config = {
         .baudrate = 115200,
         .mode = UART_MODE_RX_TX,
@@ -412,36 +428,19 @@ int board_init(void) {
     // ADC Inputs
     //--------------------------------------------------------------------+
     .ain = {
-
+      //Adc1
       .vbus = (adc_input_t) {
         .name = "vbus",
         .channel = 1,
-        .pin = (gpio_t) {
-          .port = GPIO_PORT_A,
-          .pin = GPIO_PIN_0,
-          .mode = GPIO_MODE_ANALOG,
-          .type = GPIO_TYPE_PUSH_PULL,
-          .pull = GPIO_PULL_NONE,
-          .speed = GPIO_SPEED_LOW,
-          .af = GPIO_AF0,
-        },
         .scale = 1.0,
         .offset = 0.0,
         .units = "V",
       },
 
+      //Adc2
       .temp_a = (adc_input_t) {
         .name = "temp_a",
-        .channel = ADC_CHANNEL_6, 
-        .pin = (gpio_t) {
-          .port = GPIO_PORT_C,
-          .pin = GPIO_PIN_0,
-          .mode = GPIO_MODE_ANALOG,
-          .type = GPIO_TYPE_PUSH_PULL,
-          .pull = GPIO_PULL_NONE,
-          .speed = GPIO_SPEED_LOW,
-          .af = GPIO_AF0,
-        },
+        .channel = 6, 
         .scale = 1.0,
         .offset = 0.0,
         .units = "C",
@@ -450,15 +449,6 @@ int board_init(void) {
       .temp_b = (adc_input_t) {
         .name = "temp_b",
         .channel = ADC_CHANNEL_7, 
-        .pin = (gpio_t) {
-          .port = GPIO_PORT_C,
-          .pin = GPIO_PIN_1,
-          .mode = GPIO_MODE_ANALOG,
-          .type = GPIO_TYPE_PUSH_PULL,
-          .pull = GPIO_PULL_NONE,
-          .speed = GPIO_SPEED_LOW,
-          .af = GPIO_AF0,
-        },
         .scale = 1.0,
         .offset = 0.0,
         .units = "C",
@@ -472,10 +462,6 @@ int board_init(void) {
   board_uart_setup();
   LOG_CLEAR();
   LOG_OK("Core");
-  board_usb_setup();
-  board_pwm_setup();
-  board_adc_setup();
-  board_encoder_setup();
 
   
   printf("SystemCoreClock: %dMHz\r\n", SystemCoreClock/1000000);
@@ -483,6 +469,15 @@ int board_init(void) {
 
   return 0;
   //TODO return error aggregation
+
+}
+
+void board_hw_setup(void) {
+
+  board_usb_setup();
+  board_pwm_setup();
+  board_adc_setup();
+  board_encoder_setup();
 
 }
 
@@ -589,7 +584,13 @@ static void board_usb_setup(void) {
 
   // USB_DM = PA11, USB_DP = PA12
 
-  usbpcd_init();
+  printf(timestamp());
+  if (usbpcd_init() == 0) {
+    LOG_OK("USB");
+  } else {
+    LOG_FAIL("USB");
+  };
+
 }
 
 
@@ -625,19 +626,16 @@ static void pwm_dac_init(void) {
 
 static void board_pwm_setup(void) {
 
-  static pwm_3ph_t pwm3ph = {
-    .mode = PWM_3PHASE_MODE_6PWM,
-    .pwm_h = {&brd.pwma, &brd.pwmb, &brd.pwmc},
-  };
 
-  if(pwm_3ph_init(&pwm3ph, 50000, 200) != 0) {
+  printf(timestamp());
+  if(pwm_3ph_init(&brd.mcpwm, 50000, 200) != 0) {
     LOG_FAIL("PWM");
   } else {
     LOG_OK("PWM");
   }
 
-  pwm_3ph_set_duty(&pwm3ph, 0.25, 0.5, 0.75);
-  pwm_3ph_start(&pwm3ph);
+  pwm_3ph_set_duty(&brd.mcpwm, 0.25, 0.5, 0.75);
+  pwm_3ph_start(&brd.mcpwm);
 
   // pwm_init(&brd.pwma, 90000, 200);
   // pwm_init(&brd.pwmb, 90000, 200);
@@ -651,7 +649,7 @@ static void board_pwm_setup(void) {
   // pwm_set_duty(&brd.pwmb, 0.50);
   // pwm_set_duty(&brd.pwmc, 0.80);
   // pwm_swap_output(&brd.pwma);
-  pwm_swap_output(&brd.pwmb);
+  pwm_swap_output(&brd.mcpwm.pwmb);
   // pwm_swap_output(&brd.pwmc);
   
 
@@ -682,32 +680,32 @@ static void board_spi_setup(void) {
 //------------------------------------------------------
 
 
-static uint8_t drv835x_spi_transfer(uint16_t data_tx, uint16_t *data_rx) {
+// static uint8_t drv835x_spi_transfer(uint16_t data_tx, uint16_t *data_rx) {
 
-  gpio_pin_clear(&brd.io.spi4_gd_cs);
-  spi_transfer(&brd.spi4, data_tx, data_rx);
-  gpio_pin_set(&brd.io.spi4_gd_cs);
+//   gpio_pin_clear(&brd.io.spi4_gd_cs);
+//   spi_transfer(&brd.spi4, data_tx, data_rx);
+//   gpio_pin_set(&brd.io.spi4_gd_cs);
 
-  return 0;
-}
+//   return 0;
+// }
 
-static uint8_t drv835x_drv_en(uint8_t state) {
-  if (state) {
-    gpio_pin_set(&brd.io.drive_enable);
-  } else {
-    gpio_pin_clear(&brd.io.drive_enable);
-  }
-  return 0;
-}
+// static uint8_t drv835x_drv_en(uint8_t state) {
+//   if (state) {
+//     gpio_pin_set(&brd.io.drive_enable);
+//   } else {
+//     gpio_pin_clear(&brd.io.drive_enable);
+//   }
+//   return 0;
+// }
 
-struct drv835x_interface drv835x_io = {
-  .drive_enable = drv835x_drv_en,
-  .spi_transfer = drv835x_spi_transfer,
-};
+// struct drv835x_interface drv835x_io = {
+//   .drive_enable = drv835x_drv_en,
+//   .spi_transfer = drv835x_spi_transfer,
+// };
 
 
 static void board_gate_driver_setup(void) {
-  brd.gate_driver.io = &drv835x_io;
+  // brd.gate_driver.io = &drv835x_io;
 }
 
 
@@ -726,6 +724,7 @@ void board_adc_setup(void) {
     .clk_domain = ADC_CLK_DOMAIN_HCLK,
   };
 
+  printf(timestamp());
   if (adc_init(&brd.ain.adc1) == 0) {
     LOG_OK("ADC1");
   } else {

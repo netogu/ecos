@@ -8,13 +8,6 @@ File   : bsp.h
 #include "tusb.h"
 #include "hal.h"
 
-#include "drivers/stm32g4/adc.h"
-#include "drivers/stm32g4/gpio.h"
-#include "drivers/stm32g4/pwm.h"
-#include "drivers/stm32g4/spi.h"
-#include "drivers/power/drv835x.h"
-#include "drivers/stm32g4/uart.h"
-#include "drivers/encoder.h"
 
 //------------------------------------------------------+
 // Board Variant
@@ -50,10 +43,24 @@ const struct board_descriptor {
     gpio_t spi4_clk;
     gpio_t spi4_gd_cs;
     gpio_t spi4_ltc_cs;
+    gpio_t pwm_ah;
+    gpio_t pwm_al;
+    gpio_t pwm_bh;
+    gpio_t pwm_bl;
+    gpio_t pwm_ch;
+    gpio_t pwm_cl;
+    gpio_t adc_pa0;
+    gpio_t adc_pc0;
+    gpio_t adc_pc1;
+    gpio_t lpuart_tx;
+    gpio_t lpuart_rx;
+    gpio_t usart3_tx;
+    gpio_t usart3_rx;
+
   } io;
-  pwm_t pwma;
-  pwm_t pwmb;
-  pwm_t pwmc;
+
+  pwm_3ph_t mcpwm;
+
   struct brd_analog_in_s {
     adc_t adc1;
     adc_input_t vbus;
@@ -62,11 +69,13 @@ const struct board_descriptor {
     adc_input_t temp_b;
     // adc_input_t temp_c;
   } ain;
+
   struct spi spi3;
   struct spi spi4;
-  struct drv835x gate_driver;
+  
   uart_t lpuart1;
   uart_t usart3;
+
   encoder_t encoder;
 };
 
@@ -78,5 +87,6 @@ const struct board_descriptor {
 
 struct board_descriptor *board_get_descriptor(void);
 int board_init(void);
+void board_hw_setup(void);
 uint32_t millis(void);
 void delay_ms(uint32_t ms);

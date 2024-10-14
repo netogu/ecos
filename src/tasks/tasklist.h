@@ -11,11 +11,11 @@
 // Task List
 //--------------------------------------------------------------------+
 
-#define TASK_NAME_TASK_MANAGER          taskmanager
+#define TASK_NAME_TASK_MANAGER          taskman
 #define TASK_NAME_USB                   usb
 #define TASK_NAME_CLI                   cli 
 #define TASK_NAME_LED                   led
-#define TASK_NAME_PWM_CONTROL           pwm_control
+#define TASK_NAME_PWM_CONTROL           pwmcon
 
 #define TASK_PRIORITY_TASK_MANAGER      1
 #define TASK_PRIORITY_USB               2

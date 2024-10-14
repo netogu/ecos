@@ -208,9 +208,6 @@ void uart_init(uart_t *self) {
     uart_clear_fifo(&self->rx_fifo);
     uart_clear_fifo(&self->tx_fifo);
     
-    gpio_pin_init(&self->tx_pin);
-    gpio_pin_init(&self->rx_pin);
-
     if (self->instance == LPUART1) {
         lpuart_init(self);
     } else if (self->instance == USART3) {

@@ -7,8 +7,6 @@
 #define HRTIM_DT_COUNT_PER_NS(__DT_NS__) (__DT_NS__ / 0.73 + 0.5) // From RM0440 Table 221
 
 typedef struct pwm_s {
-    gpio_t pwmh_pin;
-    gpio_t pwml_pin;
     struct pwm_options_s {
         enum pwm_timer_e {
             PWM_TIMER_HRTIM1,
@@ -26,7 +24,9 @@ typedef struct pwm_s {
 } pwm_t;
 
 typedef struct pwm_3phase_s {
-    pwm_t *pwm_h[3];
+    pwm_t pwma;
+    pwm_t pwmb;
+    pwm_t pwmc;
     enum pwm_3phase_mode_e {
         PWM_3PHASE_MODE_3PWM,
         PWM_3PHASE_MODE_6PWM,

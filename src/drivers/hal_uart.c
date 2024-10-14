@@ -75,6 +75,16 @@ char cli_uart_getc(void) {
     return readchar;
 }
 
-size_t cli_uart_tx_pending(void) {
-    return serial_port->tx_fifo.size;
+uint32_t cli_uart_tx_pending(uart_t *port) {
+    // return serial_port->tx_fifo.size;
+    uint32_t size = 0;
+
+    if (port->tx_fifo.head >= serial_port->tx_fifo.tail) {
+        size =  port->tx_fifo.head - serial_port->tx_fifo.tail;
+    } else {
+        size =  (UART_BUFFER_SIZE - port->tx_fifo.tail) + port->tx_fifo.head;
+    }
+
+    return size;
+
 }

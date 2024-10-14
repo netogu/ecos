@@ -149,10 +149,6 @@ int pwm_init(pwm_t *self, uint32_t freq_hz, uint32_t dt_ns) {
   enum pwm_timer_e pwm_timer = self->options.pwm_timer;
   uint16_t pwm_channel = self->options.pwm_channel;
 
-  // Configure PWM Pins
-  gpio_pin_init(&self->pwmh_pin);
-  gpio_pin_init(&self->pwml_pin);
-
   if (pwm_timer == PWM_TIMER_HRTIM1) {
 
     _hrtim1_init();
@@ -315,25 +311,41 @@ int pwm_set_n_cycle_run(pwm_t *self, uint32_t cycles) {
 
 int pwm_3ph_init(pwm_3ph_t *self, uint32_t freq_hz, uint32_t dt_ns) {
 
-    if (self->mode == PWM_3PHASE_MODE_6PWM) {
-      for (int i = 0; i < 3; i++) {
-        pwm_init(self->pwm_h[i], freq_hz, dt_ns);
-      }
-    } else if (self->mode == PWM_3PHASE_MODE_3PWM) {
-      // TODO implement 3 PWM mode
-    } else {
-      // Invalid 3-phase mode
-      return -1;
+  pwm_t *pwms[3] = {
+    &self->pwma,
+    &self->pwmb,
+    &self->pwmc
+  };
+
+  if (self->mode == PWM_3PHASE_MODE_6PWM) {
+
+    for (int i = 0; i < sizeof(pwms)/sizeof(pwms[0]); i++) {
+
+      pwm_init(pwms[i], freq_hz, dt_ns);
+
     }
+
+  } else if (self->mode == PWM_3PHASE_MODE_3PWM) {
+    // TODO implement 3 PWM mode
+  } else {
+    // Invalid 3-phase mode
+    return -1;
+  }
   return 0;
 }
 
 int pwm_3ph_start(pwm_3ph_t *self) {
 
+  pwm_t *pwms[3] = {
+    &self->pwma,
+    &self->pwmb,
+    &self->pwmc
+  };
+
   uint32_t mcr_reg = 0;
-  for (int i = 0; i < 3; i++) {
-    _pwm_enable_outputs(self->pwm_h[i]);
-    mcr_reg |= 1 << (HRTIM_MCR_TACEN_Pos + self->pwm_h[i]->options.pwm_channel);
+  for (int i = 0; i < sizeof(pwms)/sizeof(pwms[0]); i++) {
+    _pwm_enable_outputs(pwms[i]);
+    mcr_reg |= 1 << (HRTIM_MCR_TACEN_Pos + pwms[i]->options.pwm_channel);
 
   }
   // Start Timer
@@ -344,10 +356,16 @@ int pwm_3ph_start(pwm_3ph_t *self) {
 
 int pwm_3ph_stop(pwm_3ph_t *self) {
 
+  pwm_t *pwms[3] = {
+    &self->pwma,
+    &self->pwmb,
+    &self->pwmc
+  };
+
   uint32_t mcr_reg = HRTIM1->sMasterRegs.MCR;
-  for (int i = 0; i < 3; i++) {
-    pwm_stop(self->pwm_h[i]);
-    mcr_reg &= ~(HRTIM_MCR_TACEN + self->pwm_h[i]->options.pwm_channel);
+  for (int i = 0; i < sizeof(pwms)/sizeof(pwms[0]); i++) {
+    pwm_stop(pwms[i]);
+    mcr_reg &= ~(HRTIM_MCR_TACEN + pwms[i]->options.pwm_channel);
 
   }
   HRTIM1->sMasterRegs.MCR = mcr_reg;
@@ -357,8 +375,14 @@ int pwm_3ph_stop(pwm_3ph_t *self) {
 
 int pwm_3ph_set_frequency(pwm_3ph_t *self, uint32_t freq_hz) {
 
-  for (int i = 0; i < 3; i++) {
-    pwm_set_frequency(self->pwm_h[i], freq_hz);
+  pwm_t *pwms[3] = {
+    &self->pwma,
+    &self->pwmb,
+    &self->pwmc
+  };
+
+  for (int i = 0; i < sizeof(pwms)/sizeof(pwms[0]); i++) {
+    pwm_set_frequency(pwms[i], freq_hz);
   }
 
   return 0;
@@ -366,9 +390,9 @@ int pwm_3ph_set_frequency(pwm_3ph_t *self, uint32_t freq_hz) {
 
 int pwm_3ph_set_duty(pwm_3ph_t *self, float d1_u, float d2_u, float d3_u) {
 
-  pwm_set_duty(self->pwm_h[0], d1_u);
-  pwm_set_duty(self->pwm_h[1], d2_u);
-  pwm_set_duty(self->pwm_h[2], d3_u);
+  pwm_set_duty(&self->pwma, d1_u);
+  pwm_set_duty(&self->pwmb, d2_u);
+  pwm_set_duty(&self->pwmc, d3_u);
 
   return 0;
 }

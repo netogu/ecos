@@ -84,7 +84,6 @@
 typedef struct adc_input_s {
     char *name;
     uint8_t channel;
-    gpio_t pin;
     float scale;
     float offset;
     char *units;

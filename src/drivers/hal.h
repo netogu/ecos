@@ -3,7 +3,17 @@
 
 #include <stdint.h>
 #include "rtos.h"
+
+#include "encoder.h"
+
+#include "stm32g4/rcc.h"
 #include "stm32g4/uart.h"
+#include "stm32g4/adc.h"
+#include "stm32g4/gpio.h"
+#include "stm32g4/pwm.h"
+#include "stm32g4/spi.h"
+#include "stm32g4/uart.h"
+
 
 
 #define NOCHAR                  '\0'
@@ -26,7 +36,7 @@ int cli_uart_putc(char tx_char);
 char cli_uart_getc(void);
 int cli_uart_puts(const char *str);
 int cli_printf(const char *format, ...);
-size_t cli_uart_tx_pending(void);
+uint32_t cli_uart_tx_pending(uart_t *port);
 
 
 // ----------------------------- TIMERS -----------------------------
