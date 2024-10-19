@@ -26,7 +26,7 @@ int encoder_init(encoder_t *self) {
     // timer->SMCR |= 0b1111 << TIM_SMCR_SMS_Pos;
 
     //Limit Range to 1024 points
-    timer->ARR = 1024;
+    timer->ARR = 400;
 
     // Enable TIM5
     timer->CR1 |= TIM_CR1_CEN;

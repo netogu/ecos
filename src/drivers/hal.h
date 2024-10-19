@@ -13,6 +13,7 @@
 #include "stm32g4/pwm.h"
 #include "stm32g4/spi.h"
 #include "stm32g4/uart.h"
+#include "stm32g4/cordic.h"
 
 
 

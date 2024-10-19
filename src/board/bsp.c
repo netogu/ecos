@@ -298,7 +298,7 @@ static void board_pwm_setup(void) {
   // pwm_set_duty(&brd.pwmb, 0.50);
   // pwm_set_duty(&brd.pwmc, 0.80);
   // pwm_swap_output(&brd.pwma);
-  pwm_swap_output(&brd.mcpwm.pwmb);
+  // pwm_swap_output(&brd.mcpwm.pwmb);
   // pwm_swap_output(&brd.pwmc);
   
 

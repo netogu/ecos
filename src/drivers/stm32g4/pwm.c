@@ -55,13 +55,14 @@ int pwm_set_duty(pwm_t *self, float duty_u) {
   uint16_t pwm_channel = self->options.pwm_channel;
 
   if ( pwm_timer == PWM_TIMER_HRTIM1) {
-    // const float duty_max = 1.0;
-    // const float duty_min = 0.0;
+    const float duty_max = 0.98;
+    const float duty_min = 0.02;
 
-    // if (duty_u < duty_min) {
-    //   duty_u = duty_min;
-    // }else if (duty_u > duty_max) {
-    //   duty_u = duty_max;
+    if (duty_u < duty_min) {
+      duty_u = duty_min;
+    }else if (duty_u > duty_max) {
+      duty_u = duty_max;
+    }
     // } else {
     //   // Invalid duty cycle
     //   return -1;
