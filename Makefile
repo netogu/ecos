@@ -37,6 +37,7 @@ FREERTOS = src/external/freertos
 # C sources
 C_SOURCES = $(wildcard src/main.c) 
 C_SOURCES += $(wildcard src/board/*.c) 
+C_SOURCES += $(wildcard src/hal/*.c) 
 C_SOURCES += $(wildcard src/shell/*.c) 
 C_SOURCES += $(wildcard src/rtos/*.c) 
 C_SOURCES += $(wildcard src/tasks/*.c) 
@@ -75,6 +76,7 @@ C_INCLUDES =  \
 -Isrc/drivers \
 -Isrc/shell \
 -Isrc/board \
+-Isrc/hal \
 -Isrc/rtos \
 -Isrc/tasks \
 -Isrc/external/CMSIS/Device/ST/STM32G4xx/Include \
