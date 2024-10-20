@@ -6,9 +6,7 @@
  * SPDX-License-Identifier: MIT
  ******************************************************************************/
 
-#include <stdint.h>
-#include "stm32g4xx.h"
-#include "stm32g4/uart.h"
+#include "stm32g4_uart.h"
 
 #define UART_STATUS_OK 0
 #define UART_STATUS_ERROR 1

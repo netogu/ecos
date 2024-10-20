@@ -1,5 +1,8 @@
-#pragma once
+#ifndef STM32G4_COMMON_H
+#define STM32G4_COMMON_H
 
+#include <stdint.h>
+#include "stm32g4xx.h"
 
 #define Set_register_bit(reg, mask) (reg |= (mask))
 
@@ -20,3 +23,5 @@
 
 #define Limit(x, min, max) (x < min ? min : x > max ? max : x)
 #define In_range(x, min, max) (x >= min && x <= max)
+
+#endif

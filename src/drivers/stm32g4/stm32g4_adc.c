@@ -23,9 +23,8 @@
  * SPDX-License-Identifier: MIT
  ******************************************************************************/
 
-#include "drivers/stm32g4/adc.h"
+#include "stm32g4_adc.h"
 #include <string.h> // for memset
-#include "log.h"
 
 #define NULL 0
 

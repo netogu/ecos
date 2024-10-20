@@ -1,7 +1,8 @@
 #pragma once
+#ifndef STM32G4_USBPCD_H
+#define STM32G4_USBPCD_H
 
-#include <stdint.h>
-#include "stm32g4xx.h"
+#include "stm32g4_common.h"
 
 //--------------------------------------------------------------------+
 // USB Peripheral Controller Memory Map
@@ -33,3 +34,6 @@ void usbpcd_init(void);
 void usbpcd_clear_pma(void);
 void usbpcd_set_endpoint(__IO uint16_t *ep, uint16_t value, uint16_t mask);
 void usbpcd_copy_memory(uint16_t *source, uint16_t *target, uint16_t length);
+
+
+#endif // STM32G4_USBPCD_H

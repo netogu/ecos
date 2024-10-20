@@ -1,19 +1,11 @@
 #ifndef DRIVER_STM32G4_HAL_H
 #define DRIVER_STM32G4_HAL_H
 
-#include <stdint.h>
 #include "rtos.h"
+#include "stm32g4.h"
 
 #include "encoder.h"
 
-#include "stm32g4/rcc.h"
-#include "stm32g4/uart.h"
-#include "stm32g4/adc.h"
-#include "stm32g4/gpio.h"
-#include "stm32g4/pwm.h"
-#include "stm32g4/spi.h"
-#include "stm32g4/uart.h"
-#include "stm32g4/cordic.h"
 
 
 

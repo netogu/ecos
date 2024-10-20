@@ -1,8 +1,6 @@
-#include "drivers/stm32g4/common.h"
-#include "drivers/stm32g4/rcc.h"
-#include "drivers/stm32g4/flash.h"
-#include "drivers/stm32g4/pwr.h"
-#include "stm32g4xx.h"
+#include "stm32g4_rcc.h"
+#include "stm32g4_flash.h"
+#include "stm32g4_pwr.h"
 
 enum rcc_oscs {
   RCC_OSC_HSI,

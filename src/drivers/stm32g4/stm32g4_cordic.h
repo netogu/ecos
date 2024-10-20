@@ -1,7 +1,7 @@
-#ifndef CORDIC_H
-#define CORDIC_H
+#ifndef STM32G4_CORDIC_H
+#define STM32G4_CORDIC_H
 
-#include "stm32g4xx.h"
+#include "stm32g4_common.h"
 #include <math.h>
 #define PI 3.141592653589793
 

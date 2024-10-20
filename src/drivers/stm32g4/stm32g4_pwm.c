@@ -1,5 +1,4 @@
-#include "drivers/stm32g4/pwm.h"
-#include <stm32g4xx.h>
+#include "stm32g4_pwm.h"
 
 
 static void _hrtim1_init(void) {

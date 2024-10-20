@@ -1,7 +1,7 @@
-#pragma once
+#ifndef STM32G4_RCC_H
+#define STM32G4_RCC_H
 
-#include <stdint.h>
-#include "stm32g4xx.h"
+#include "stm32g4_common.h"
 
 enum rcc_clk_scales {
   RCC_CLK_DIV1,
@@ -115,3 +115,5 @@ typedef const struct {
 
 void rcc_clock_init(rcc_clock_config_t *cfg);
 void rcc_crs_init(rcc_crs_config_t *cfg);
+
+#endif

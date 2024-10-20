@@ -1,5 +1,4 @@
-#include "drivers/stm32g4/spi.h"
-#include "drivers/stm32g4/common.h"
+#include "stm32g4_spi.h"
 
 
 inline int spi_is_busy(struct spi *spi) {

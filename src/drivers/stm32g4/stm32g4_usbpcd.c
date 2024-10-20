@@ -1,5 +1,4 @@
-#include <stdint.h>
-#include "stm32g4/usbpcd.h"
+#include "stm32g4_usbpcd.h"
 
 
 // #define __USB_TABLE __attribute__((section(".usbtable")))

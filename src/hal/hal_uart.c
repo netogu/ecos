@@ -5,7 +5,6 @@
 #include "hal.h"
 #include <FreeRTOS.h>
 #include <semphr.h>
-#include "stm32g4/uart.h"
 
 #define NOCHAR '\0'
 

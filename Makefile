@@ -61,7 +61,7 @@ C_SOURCES += $(FREERTOS)/portable/MemMang/heap_3.c
 
 # ASM sources
 ASM_SOURCES =  \
-src/drivers/stm32g4/startup.s
+src/drivers/stm32g4/stm32g4_startup.s
 
 
 ######################################
@@ -74,6 +74,7 @@ AS_INCLUDES =
 C_INCLUDES =  \
 -Isrc \
 -Isrc/drivers \
+-Isrc/drivers/stm32g4 \
 -Isrc/shell \
 -Isrc/board \
 -Isrc/hal \
@@ -92,7 +93,7 @@ C_INCLUDES =  \
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = src/board/linker_script.ld
+LDSCRIPT = src/drivers/stm32g4/scripts/stm32g474_linker_script.ld
 
 #######################################
 # binaries

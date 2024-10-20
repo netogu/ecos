@@ -1,7 +1,10 @@
 #pragma once
+#ifndef STM32G4_PWM_H
+#define STM32G4_PWM_H
 
-#include <stdint.h>
-#include "stm32g4/gpio.h"
+
+#include "stm32g4_common.h"
+#include "stm32g4_gpio.h"
 
 
 #define HRTIM_DT_COUNT_PER_NS(__DT_NS__) (__DT_NS__ / 0.73 + 0.5) // From RM0440 Table 221
@@ -66,3 +69,5 @@ int pwm_3ph_set_duty(pwm_3ph_t *self, float d1_u, float d2_u, float d3_u);
 
 // void pwm_set_adc_trigger(pwm_t *pwm, uint32_t adc_trig);
 
+
+#endif // STM32G4_PWM_H

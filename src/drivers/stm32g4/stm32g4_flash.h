@@ -1,5 +1,6 @@
 /* Embedded Flash memory*/
-#pragma once
+#ifndef STM32G4_FLASH_H
+#define STM32G4_FLASH_H
 
 #include <stdint.h>
 #include "stm32g4xx.h"
@@ -11,3 +12,5 @@ void flash_enable_data_cache(void);
 void flash_enable_instruction_cache(void);
 void flash_disable_data_cache(void);
 void flash_disable_instruction_cache(void);
+
+#endif // STM32G4_FLASH_H

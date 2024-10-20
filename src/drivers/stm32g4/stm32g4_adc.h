@@ -1,8 +1,7 @@
-#pragma once
+#ifndef STM32G4_ADC_H
+#define STM32G4_ADC_H
 
-#include <stdint.h>
-#include "drivers/stm32g4/gpio.h"
-
+#include "stm32g4_common.h"
 
 // #define ADC_CLK_DOMAIN_SYSCLK_PLL 0
 
@@ -133,4 +132,4 @@ int adc_stop_injected_sampling(adc_t *self);
 // int adc_stop(struct adc *adc);
 // int adc_deinit(struct adc *adc);
 
-
+#endif

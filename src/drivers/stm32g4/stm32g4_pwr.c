@@ -1,6 +1,4 @@
-#include "drivers/stm32g4/pwr.h"
-#include "drivers/stm32g4/common.h"
-#include "stm32g4xx.h"
+#include "stm32g4_pwr.h"
 
 void pwr_set_vos_range(enum pwr_vos_ranges scale) {
   Modify_register_field(PWR->CR1, PWR_CR1_VOS, scale);

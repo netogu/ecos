@@ -1,9 +1,9 @@
 #pragma once
+#ifndef STM32G4_UART_H
+#define STM32G4_UART_H
 
-#include <stdint.h>
-#include "stm32g4/gpio.h"
-#include "stm32g4xx.h"
 
+#include "stm32g4_common.h"
 
 #define UART_BUFFER_SIZE 512
 
@@ -58,3 +58,5 @@ int uart_start_dma_tx_transfer(uart_t *self, DMA_Channel_TypeDef *dma_channel);
 int uart_fifo_push(uart_fifo_t *self, uint8_t byte);
 int uart_fifo_pop(uart_fifo_t *self, uint8_t *byte);
 uint16_t uart_fifo_get_linear_size(uart_fifo_t *self);
+
+#endif // STM32G4_UART_H

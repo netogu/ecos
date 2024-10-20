@@ -1,4 +1,5 @@
-#pragma once
+#ifndef STM32G4_GPIO_H
+#define STM32G4_GPIO_H
 
 #include <stdint.h>
 #include "stm32g4xx.h"
@@ -148,3 +149,5 @@ gpio_pin_read(gpio_t *pin) {
     return gpio->IDR;
 
 }
+
+#endif // STM32G4_GPIO_H

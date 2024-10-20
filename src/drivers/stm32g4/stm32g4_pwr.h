@@ -1,8 +1,7 @@
-/* Power and Voltage Reference Control*/
-#pragma once
+#ifndef STM32G4_PWR_H
+#define STM32G4_PWR_H
 
-#include <stdint.h>
-#include "stm32g4xx.h"
+#include "stm32g4_common.h"
 
 enum pwr_vos_ranges {
   PWR_VOS_RANGE_X,
@@ -14,3 +13,5 @@ enum pwr_vos_ranges {
 void pwr_enable_boost(void);
 void pwr_disable_boost(void);
 void pwr_set_vos_range(enum pwr_vos_ranges range);
+
+#endif // STM32G4_PWR_H
