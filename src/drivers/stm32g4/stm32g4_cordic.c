@@ -34,8 +34,10 @@ uint32_t  cordic_read(void) {
 
 
 int cordic_deinit(cordic_t *self) {
+    (void) self;
     CORDIC->CSR = 0;
     RCC->AHB1ENR &= ~(RCC_AHB1ENR_CORDICEN);
+    return 0;
 }
 
 int cordic_result_is_ready(void) {

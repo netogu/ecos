@@ -7,3 +7,6 @@
 [submodule "src/external/microshell"]
 	path = src/external/microshell
 	url = https://github.com/marcinbor85/microshell.git
+[submodule "src/external/CMSIS-DSP"]
+	path = src/external/CMSIS-DSP
+	url = https://github.com/ARM-software/CMSIS-DSP.git

@@ -7,10 +7,6 @@
 #define ECO_VERSION_MAJOR 0
 #define ECO_VERSION_MINOR 1
 
-// stringify helper - use xstr() to convert #define to a usable string
-#define str(s) # s
-#define xstr(s) str(s)
-
 const char *shell_head =
 "\r\n"
 USH_SHELL_FONT_COLOR_RED

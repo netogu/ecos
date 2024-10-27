@@ -18,6 +18,8 @@ extern void shell_cmd_top_exec_cb(struct ush_object *self, struct ush_file_descr
 // non-blocking read interface
 static int ush_read(struct ush_object *self, char *ch)
 {
+    (void) self;
+
     char readchar = NOCHAR;
     
 
@@ -40,6 +42,8 @@ static int ush_read(struct ush_object *self, char *ch)
 // non-blocking write interface
 static int ush_write(struct ush_object *self, char ch)
 {
+    (void) self;
+
     #ifdef CLI_USB
     return cli_usb_putc(ch);
     #else
@@ -81,6 +85,9 @@ static const struct ush_descriptor ush_desc = {
 // drive enable callback
 static void drv_en_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
+    (void) self;
+    (void) file;
+
     board_t *brd = board_get_handle();
 
     // arguments count validation
@@ -107,6 +114,10 @@ static void drv_en_callback(struct ush_object *self, struct ush_file_descriptor 
 // drive enable callback
 static void mpwr_en_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
+
+    (void) self; // unused
+    (void) file; // unused
+
     board_t *brd = board_get_handle();
 
     // arguments count validation
@@ -133,6 +144,9 @@ static void mpwr_en_callback(struct ush_object *self, struct ush_file_descriptor
 // ocp threshold callback
 static void ocp_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
+    (void) self; // unused
+    (void) file; // unused
+
     // arguments count validation
     if (argc < 2) {
         // return predefined error message
@@ -141,17 +155,17 @@ static void ocp_exec_callback(struct ush_object *self, struct ush_file_descripto
     }
 
     float threshold_pc = atoi(argv[1])/100.0;
-    if ( threshold_pc > 1.0 || threshold_pc < 0.0 ) {
+    if ( threshold_pc > 1.0f || threshold_pc < 0.0f ) {
         ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
         return;
     }
 
     // TIM20.3 at 50% duty cycle maps to the OCP threshold at 100%
-    float duty = threshold_pc * 1/2.0;
-    duty = (duty > 0.5) ? 0.5 : ((duty < 0.0) ? 0.0 : duty);
+    float duty = threshold_pc * 1/2.0f;
+    duty = (duty > 0.5f) ? 0.5f : ((duty < 0.0f) ? 0.0f : duty);
 
     uint32_t period = TIM20->ARR;
-    duty = period * duty + 0.5;
+    duty = period * duty + 0.5f;
     TIM20->CCR3 = (uint32_t) duty;
 
 }
@@ -159,6 +173,9 @@ static void ocp_exec_callback(struct ush_object *self, struct ush_file_descripto
 // dpt test callback
 static void dpt_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
+    (void) self; // unused
+    (void) file; // unused
+
     board_t *brd = board_get_handle();
 
     // arguments count validation
@@ -198,12 +215,14 @@ static void dpt_exec_callback(struct ush_object *self, struct ush_file_descripto
     pwm_set_duty(pwm, ton*100/(ton + toff));
     pwm_set_n_cycle_run(pwm, n);
     pwm_start(pwm);
-
 }
 
 // PWMA Set Duty Callback
 static void pwma_set_duty_cb(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
+    (void) self; // unused
+    (void) file; // unused
+
     board_t *brd = board_get_handle();
 
     // arguments count validation
@@ -218,26 +237,37 @@ static void pwma_set_duty_cb(struct ush_object *self, struct ush_file_descriptor
     int duty = atoi(argv[1]);
     ush_printf(self, "duty: %d %%\r\n", duty);
 
-    pwm_set_duty(pwm, (float)duty/100.0);
+    pwm_set_duty(pwm, (float)duty/100.0f);
 
 }
-
 
 // reboot cmd file execute callback
 static void reboot_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
+    (void) self; // unused
+    (void) file; // unused
+    (void) argc; // unused
+    (void) argv; // unused
+
     NVIC_SystemReset();
 }
 
 // clear cmd file execute callback
 static void clear_exec_callback(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
+    (void) file; // unused
+    (void) argc; // unused
+    (void) argv; // unused
+
     ush_print(self,"\033[2J\033[1;1H"); 
 }
 
 // info file get data callback
 size_t info_get_data_callback(struct ush_object *self, struct ush_file_descriptor const *file, uint8_t **data)
 {
+    (void) self; // unused
+    (void) file; // unused
+
     static const char *info = "Minimal STM32G4 Shell\r\n";
 
     // return pointer to data
@@ -249,6 +279,9 @@ size_t info_get_data_callback(struct ush_object *self, struct ush_file_descripto
 // ADC_DR file get data callback
 size_t ADC_DR_get_data_callback(struct ush_object *self, struct ush_file_descriptor const *file, uint8_t **data)
 {
+    (void) self; // unused
+    (void) file; // unused
+
     board_t *brd = board_get_handle();
 
     uint16_t value = *brd->ain.vbus.data;
@@ -351,7 +384,8 @@ void shell_init(void)
 }
 
 
-void inline shell_update(void)
+inline
+void shell_update(void)
 {
     // service microshell instance
     ush_service(&ush);
@@ -362,7 +396,7 @@ char * timestamp(void)
 {
     static char timestamp_msg[32];
     uint64_t usec =  timer_us_get();
-    snprintf(timestamp_msg, sizeof(timestamp_msg), "[%15u\t] ", (uint32_t)usec);
+    snprintf(timestamp_msg, sizeof(timestamp_msg), "[%15lu\t] ", (uint32_t)usec);
     return timestamp_msg;
 }
 

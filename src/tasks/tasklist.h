@@ -1,11 +1,9 @@
 #ifndef TASK_LIST_H
 #define TASK_LIST_H
 
-#include <stdbool.h>
 #include "rtos.h"
-
-#define str(s) #s
-#define xstr(s) str(s)
+#include "shell.h"
+#include <stdbool.h>
 
 //--------------------------------------------------------------------+
 // Task List
@@ -34,7 +32,7 @@
 #define TASK_DELAY_USB                  4
 #define TASK_DELAY_CLI                  1
 #define TASK_DELAY_LED                  1000
-#define TASK_DELAY_PWM_CONTROL          250
+#define TASK_DELAY_PWM_CONTROL          1
 
 #define TASK_STACK_SIZE_TASK_MANAGER    1024
 #define TASK_STACK_SIZE_USB             1024

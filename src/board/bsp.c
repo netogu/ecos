@@ -147,7 +147,7 @@ static void board_clock_setup() {
 
 static void board_gpio_setup() {
 
-  for (int i = 0; i < sizeof(brd.io) / sizeof(gpio_t); i++) {
+  for (size_t i = 0; i < sizeof(brd.io) / sizeof(gpio_t); i++) {
     gpio_pin_init((gpio_t *)&brd.io + i);
   }
 }
@@ -215,6 +215,7 @@ static void board_usb_setup(void) {
 //------------------------------------------------------+
 // PWM Config
 //------------------------------------------------------+
+__attribute__((unused))
 static void pwm_dac_init(void) {
   // Enable TIM20 APB Clock
   RCC->APB2ENR |= RCC_APB2ENR_TIM20EN;
@@ -313,6 +314,7 @@ static void board_pwm_setup(void) {
 // SPI Config
 //------------------------------------------------------
 
+__attribute__((unused))
 static void board_spi_setup(void) {
 
   brd.spi3 = (struct spi) {
@@ -370,6 +372,7 @@ static void board_spi_setup(void) {
 // };
 
 
+__attribute__((unused))
 static void board_gate_driver_setup(void) {
   // brd.gate_driver.io = &drv835x_io;
 }

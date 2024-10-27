@@ -43,7 +43,7 @@ static void task_manager(void * parameters) {
     vTaskDelay(50);
 
     // Start all tasks
-    for (int i = 0; i < task_list_size; i++) {
+    for (size_t i = 0; i < task_list_size; i++) {
         if (task_list[i].startup) {
             TaskHandle_t task_handle = task_list[i].init();
             if ( task_handle != NULL) {

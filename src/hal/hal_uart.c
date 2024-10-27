@@ -69,6 +69,7 @@ char cli_uart_getc(void) {
     char readchar = NOCHAR;
     if (xSemaphoreTake(uart_mutex, 10) == pdTRUE) {
         status = uart_read(serial_port, (uint8_t *) &readchar, 1);
+        (void) status;
         xSemaphoreGive(uart_mutex);
     }
     return readchar;

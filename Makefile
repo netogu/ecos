@@ -82,6 +82,7 @@ C_INCLUDES =  \
 -Isrc/tasks \
 -Isrc/external/CMSIS/Device/ST/STM32G4xx/Include \
 -Isrc/external/CMSIS/Include \
+-Isrc/external/CMSIS-DSP/Include \
 -I$(TINYUSB)  \
 -I$(TINYPRINTF) \
 -I$(MICROSHELL) \
@@ -134,17 +135,26 @@ MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI) -D$(DEVICE)
 
 # macros for gcc
 # AS defines
-AS_DEFS = 
+AS_DEFS = \
+-Wall -fdata-sections -ffunction-sections
 
 # # C defines
 C_DEFS =  \
--DSTM32G474xx -std=c11
+-DSTM32G474xx -std=c99 \
+-fshort-enums \
+-Wall -fdata-sections -ffunction-sections \
+-ffast-math \
+-Ofast \
+-Wall -Wextra -Werror \
+-Wdouble-promotion \
+-Wsign-compare \
+#-fshort-wchar \
 
 
 # compile gcc flags
-ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
+ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) 
 
-CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -std=gnu11
+CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) 
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2

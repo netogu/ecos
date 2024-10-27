@@ -4,7 +4,7 @@
 // #define __USB_TABLE __attribute__((section(".usbtable")))
 // #define __USB_BUF __attribute__((section(".usbbuf")))
 
-void usbpcd_init(void) {
+int usbpcd_init(void) {
 
   // Enable IO Clock & GPIO Port
   RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
@@ -33,6 +33,8 @@ void usbpcd_init(void) {
   NVIC_EnableIRQ(USB_HP_IRQn);
   NVIC_EnableIRQ(USB_LP_IRQn);
   NVIC_EnableIRQ(USBWakeUp_IRQn);
+
+  return 0;
 }
 
 void usbpcd_set_endpoint(__IO uint16_t *ep, uint16_t value, uint16_t mask) {

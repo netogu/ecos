@@ -42,6 +42,7 @@ static uint8_t uart_dma_rx_buffer[UART_DMA_RX_BUFFER_SIZE];
 
 
 static void lpuart_init(uart_t *self) {
+    (void)self;
 
     // Set LPUART clock source to PCLK
     RCC->CCIPR &= ~(RCC_CCIPR_LPUART1SEL);
@@ -57,6 +58,7 @@ static void lpuart_init(uart_t *self) {
 }
 
 static void usart3_init(uart_t *self) {
+    (void)self;
     // Set USART3 clock source to PCLK
     RCC->CCIPR &= ~(RCC_CCIPR_USART3SEL);
     RCC->CCIPR |= (UART_CLOCK_SOURCE_PCLK << RCC_CCIPR_USART3SEL_Pos);

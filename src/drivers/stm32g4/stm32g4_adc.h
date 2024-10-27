@@ -86,14 +86,14 @@ typedef struct adc_input_s {
     float scale;
     float offset;
     char *units;
-    uint16_t *data;
+    __IO uint32_t *data;
 } adc_input_t;
 
 typedef struct adc_s {
     uint32_t active_channels_flg;
     uint32_t status;
-    uint16_t regular_result[16];
-    uint16_t injected_result[4];
+    uint32_t regular_result[16];
+    uint32_t injected_result[4];
     uint16_t num_regular_inputs;
     uint16_t num_injected_inputs;
     struct adc_options_s {

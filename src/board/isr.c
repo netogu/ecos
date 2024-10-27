@@ -1,4 +1,5 @@
 #include "bsp.h"
+#include "hal.h"
 #include "tusb.h"
 
 //------------------------------------------------------+
@@ -117,7 +118,6 @@ static inline void uart_receive_byte(uart_t *self) {
 }
 
 static inline void uart_send_byte(uart_t *self) {
-  uint16_t next_tail;
 
   if (self->tx_fifo.size == 0) {
     // If empty, disable TXE interrupt

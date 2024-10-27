@@ -55,8 +55,8 @@ int board_pinmap_set(board_t *brd) {
             .af = GPIO_AF0,},
 
         .test_pin0 = (gpio_t) { 
-            .port = GPIO_PORT_F,
-            .pin = GPIO_PIN_9, 
+            .port = GPIO_PORT_C,
+            .pin = GPIO_PIN_5, 
             .mode = GPIO_MODE_OUTPUT,
             .type = GPIO_TYPE_PUSH_PULL,
             .pull = GPIO_PULL_UP,
@@ -309,4 +309,5 @@ int board_pinmap_set(board_t *brd) {
         },
 
     };
+    return 0;
 }

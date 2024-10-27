@@ -2,7 +2,12 @@
 #include "shell.h"
 
 void shell_cmd_top_exec_cb(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[]) {
+
+    // unused parameters
     (void) self;
+    (void) file;
+    (void) argc;
+    (void) argv;
 
     const char *header = USH_SHELL_FONT_STYLE_BOLD
                              USH_SHELL_FONT_COLOR_BLUE

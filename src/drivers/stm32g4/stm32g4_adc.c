@@ -26,8 +26,6 @@
 #include "stm32g4_adc.h"
 #include <string.h> // for memset
 
-#define NULL 0
-
 #define ADC_STATUS_UNINITIALIZED 0
 #define ADC_STATUS_INITIALIZED 1
 #define ADC_STATUS_SAMPLING 2

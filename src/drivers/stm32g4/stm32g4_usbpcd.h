@@ -30,7 +30,7 @@ typedef struct {
 #define USB_PMA ((usbpd_pma_t *)USB_PMAADDR)
 
 
-void usbpcd_init(void);
+int usbpcd_init(void);
 void usbpcd_clear_pma(void);
 void usbpcd_set_endpoint(__IO uint16_t *ep, uint16_t value, uint16_t mask);
 void usbpcd_copy_memory(uint16_t *source, uint16_t *target, uint16_t length);

@@ -31,4 +31,5 @@ int encoder_init(encoder_t *self) {
     // Enable TIM5
     timer->CR1 |= TIM_CR1_CEN;
 
+    return 0;
 }

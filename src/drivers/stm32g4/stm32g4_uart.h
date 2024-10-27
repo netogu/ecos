@@ -55,6 +55,7 @@ void uart_init_dma(uart_t *self);
 int uart_write(uart_t *self, uint8_t *data, uint16_t size);
 int uart_read(uart_t *self, uint8_t *data, uint16_t size);
 int uart_start_dma_tx_transfer(uart_t *self, DMA_Channel_TypeDef *dma_channel);
+void uart_service_rx_dma(uart_t *self);
 int uart_fifo_push(uart_fifo_t *self, uint8_t byte);
 int uart_fifo_pop(uart_fifo_t *self, uint8_t *byte);
 uint16_t uart_fifo_get_linear_size(uart_fifo_t *self);

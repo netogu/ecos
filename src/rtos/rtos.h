@@ -1,5 +1,5 @@
-#ifndef __RTOS_H
-#define __RTOS_H
+#ifndef RTOS_H
+#define RTOS_H
 
 #include <stdint.h>
 #include <FreeRTOS.h>

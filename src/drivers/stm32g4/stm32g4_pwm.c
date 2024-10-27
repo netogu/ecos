@@ -1,3 +1,4 @@
+
 #include "stm32g4_pwm.h"
 
 
@@ -73,7 +74,7 @@ int pwm_set_duty(pwm_t *self, float duty_u) {
 
     // Center edge modulation by default
     // uint32_t cmp = period_reg/2;
-    uint32_t cmp = (uint32_t)(duty_period + 0.5);
+    uint32_t cmp = (uint32_t)(duty_period + 0.5f);
     HRTIM1->sTimerxRegs[pwm_channel].CMP1xR = cmp;
   }
 
@@ -95,6 +96,7 @@ int pwm_swap_output(pwm_t *self) {
 }
 
 int pwm_enable_fault_input(pwm_t *self, uint32_t fault) {
+  (void) fault;
 
   enum pwm_timer_e pwm_timer = self->options.pwm_timer;
   uint16_t pwm_channel = self->options.pwm_channel;
@@ -319,7 +321,7 @@ int pwm_3ph_init(pwm_3ph_t *self, uint32_t freq_hz, uint32_t dt_ns) {
 
   if (self->mode == PWM_3PHASE_MODE_6PWM) {
 
-    for (int i = 0; i < sizeof(pwms)/sizeof(pwms[0]); i++) {
+    for (size_t i = 0; i < sizeof(pwms)/sizeof(pwms[0]); i++) {
 
       pwm_init(pwms[i], freq_hz, dt_ns);
 
@@ -343,7 +345,7 @@ int pwm_3ph_start(pwm_3ph_t *self) {
   };
 
   uint32_t mcr_reg = 0;
-  for (int i = 0; i < sizeof(pwms)/sizeof(pwms[0]); i++) {
+  for (size_t i = 0; i < sizeof(pwms)/sizeof(pwms[0]); i++) {
     _pwm_enable_outputs(pwms[i]);
     mcr_reg |= 1 << (HRTIM_MCR_TACEN_Pos + pwms[i]->options.pwm_channel);
 
@@ -363,7 +365,7 @@ int pwm_3ph_stop(pwm_3ph_t *self) {
   };
 
   uint32_t mcr_reg = HRTIM1->sMasterRegs.MCR;
-  for (int i = 0; i < sizeof(pwms)/sizeof(pwms[0]); i++) {
+  for (size_t i = 0; i < sizeof(pwms)/sizeof(pwms[0]); i++) {
     pwm_stop(pwms[i]);
     mcr_reg &= ~(HRTIM_MCR_TACEN + pwms[i]->options.pwm_channel);
 
@@ -381,7 +383,7 @@ int pwm_3ph_set_frequency(pwm_3ph_t *self, uint32_t freq_hz) {
     &self->pwmc
   };
 
-  for (int i = 0; i < sizeof(pwms)/sizeof(pwms[0]); i++) {
+  for (size_t i = 0; i < sizeof(pwms)/sizeof(pwms[0]); i++) {
     pwm_set_frequency(pwms[i], freq_hz);
   }
 

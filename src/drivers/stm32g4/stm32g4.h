@@ -9,5 +9,6 @@
 #include "stm32g4_spi.h"
 #include "stm32g4_uart.h"
 #include "stm32g4_cordic.h"
+#include "stm32g4_usbpcd.h"
 
 #endif // STM32G4_H
