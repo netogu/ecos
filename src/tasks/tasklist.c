@@ -14,7 +14,7 @@ const task_descriptor_t task_list[] = {
     {
         .name = xstr(TASK_NAME_USB),
         .init = usb_task_init,
-        .startup = true
+        .startup = false
     },
     {
         .name = xstr(TASK_NAME_LED),

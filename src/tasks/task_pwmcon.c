@@ -88,11 +88,12 @@ static void task_pwm_control(void * parameters) {
     float va;
     float vb;
     float vc;
-    static float vbus = 0.0f;
+    static float vbus = 1.0f;
     static float vd = 0.0f;
     static float vq = 0.0f;
     static uint32_t count = 0;
     static uint32_t count_rate = 0;
+    static bool in_manual = false;
 
     // Check for new messagek
     pwmcon_msg_t msg;
@@ -103,11 +104,28 @@ static void task_pwm_control(void * parameters) {
       count_rate = msg.count_rate;
     }
 
-    //count = brd->encoder.read();
+    float angle_rad;
+    if (msg.manual) {
+      if (!in_manual){
+        count = (count*1024)/100000;
+        brd->encoder.load(count);
+        in_manual = true;
+      }
+      count = brd->encoder.read();
+      angle_rad = count/1024.0f * 2*PI;
+    } else {
+      if (in_manual){
+        count = (count*100000)/1024;
+        in_manual = false;
+      }
+      count += count_rate;
+      if (count > 100000) {
+        count = 0;
+      }
+      angle_rad = count/100000.0f * 2*PI;
+    }
 
     gpio_pin_set(&brd->io.test_pin0);
-    // float angle_rad = count/1024.0 * 2*PI;
-    float angle_rad = count/100000.0f * 2*PI;
     float angle_rad_norm = fast_fmodf(angle_rad, 2.0f*PI) / (2.0f*PI);
     int32_t angle_rad_q31 = f32_to_q31(angle_rad_norm) << 1;
 
@@ -132,10 +150,6 @@ static void task_pwm_control(void * parameters) {
 
     gpio_pin_clear(&brd->io.test_pin0);
 
-    count += count_rate;
-    if (count >= 100000) {
-      count = 0;
-    }
 
     vTaskDelay(TASK_DELAY_PWM_CONTROL);
   }

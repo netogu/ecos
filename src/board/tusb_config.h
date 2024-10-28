@@ -33,6 +33,8 @@
 //--------------------------------------------------------------------+
 // Board Specific Configuration
 //--------------------------------------------------------------------+
+
+#define asm __asm
 #define CFG_TUSB_OS_INC_PATH        external/freertos/include/
 
 #define BOARD_DEVICE_RHPORT_NUM     0

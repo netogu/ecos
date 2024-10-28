@@ -224,6 +224,7 @@ static void _print_pwmcon_msg(struct ush_object *self, pwmcon_msg_t *msg)
     ush_printf(self, "vd = %d mV\n\r", msg->vd_mv);
     ush_printf(self, "vbus = %d mV\n\r", msg->vbus_mv);
     ush_printf(self, "count_rate = %d\n\r", msg->count_rate);
+    ush_printf(self, "manual = %d\n\r", msg->manual);
 }
 // PWMA Set Duty Callback
 static void foc_cmd_cb(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
@@ -271,6 +272,11 @@ static void foc_cmd_cb(struct ush_object *self, struct ush_file_descriptor const
         } else if (strcmp(argv[current_arg], "count_rate") == 0) {
             uint32_t count_rate = atoi(argv[current_arg + 1]);
             msg.count_rate = count_rate;
+            msg_updated = true;
+            current_arg += 2;
+        } else if (strcmp(argv[current_arg], "manual") == 0) {
+            bool manual = atoi(argv[current_arg + 1]);
+            msg.manual = manual;
             msg_updated = true;
             current_arg += 2;
         } else {
