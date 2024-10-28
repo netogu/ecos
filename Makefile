@@ -170,7 +170,7 @@ LIBS = -lc -lm -lnosys
 LIBDIR = 
 LDFLAGS = $(MCU) -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 LDFLAGS += -nostartfiles
-LDFLAGS += --specs=nano.specs --specs=nosys.specs
+LDFLAGS += --specs=nano.specs --specs=nosys.specs -u _print_float -u _scanf_float
 
 
 # default action: build all

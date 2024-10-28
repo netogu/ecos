@@ -1,6 +1,7 @@
 #include "rtos.h"
 #include "bsp.h"
 #include "shell.h"
+#include "taskmsg.h"
 #include <inttypes.h> // for PRIu64
 
 #define NOCHAR '\0'
@@ -61,9 +62,9 @@ static const struct ush_io_interface ush_iface = {
 };
 
 // working buffers allocations (size could be customized)
-    #define BUF_IN_SIZE    64
-    #define BUF_OUT_SIZE   64
-    #define PATH_MAX_SIZE  64
+    #define BUF_IN_SIZE    256
+    #define BUF_OUT_SIZE   256
+    #define PATH_MAX_SIZE  256
 
 static char ush_in_buf[BUF_IN_SIZE];
 static char ush_out_buf[BUF_OUT_SIZE];
@@ -217,27 +218,76 @@ static void dpt_exec_callback(struct ush_object *self, struct ush_file_descripto
     pwm_start(pwm);
 }
 
+static void _print_pwmcon_msg(struct ush_object *self, pwmcon_msg_t *msg)
+{
+    ush_printf(self, "vq = %d mV\n\r", msg->vq_mv);
+    ush_printf(self, "vd = %d mV\n\r", msg->vd_mv);
+    ush_printf(self, "vbus = %d mV\n\r", msg->vbus_mv);
+    ush_printf(self, "count_rate = %d\n\r", msg->count_rate);
+}
 // PWMA Set Duty Callback
-static void pwma_set_duty_cb(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
+static void foc_cmd_cb(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
 {
     (void) self; // unused
     (void) file; // unused
 
     board_t *brd = board_get_handle();
+    (void) brd;
+
+    static pwmcon_msg_t msg ={};
 
     // arguments count validation
-    if (argc < 2) {
-        // return predefined error message
-        ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+    // if (argc < 1) {
+    //     // return predefined error message
+    //     ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+    //     return;
+    // }
+
+
+    if (argc == 1) {
+        _print_pwmcon_msg(self, &msg);
         return;
     }
 
-     pwm_t *pwm = &brd->mcpwm.pwma;
 
-    int duty = atoi(argv[1]);
-    ush_printf(self, "duty: %d %%\r\n", duty);
+    int current_arg = 1;
+    bool msg_updated = false;
+    while (current_arg < argc) {
+        if (strcmp(argv[current_arg], "vq") == 0) {
+            uint32_t vq = atoi(argv[current_arg + 1]);
+            msg.vq_mv = vq;
+            msg_updated = true;
+            current_arg += 2;
+        } else if (strcmp(argv[current_arg], "vd") == 0) {
+            uint32_t vd = atoi(argv[current_arg + 1]);
+            msg.vd_mv = vd;
+            msg_updated = true;
+            current_arg += 2;
+        } else if (strcmp(argv[current_arg], "vbus") == 0) {
+            uint32_t vbus = atoi(argv[current_arg + 1]);
+            msg.vbus_mv = vbus;
+            msg_updated = true;
+            current_arg += 2;
+        } else if (strcmp(argv[current_arg], "count_rate") == 0) {
+            uint32_t count_rate = atoi(argv[current_arg + 1]);
+            msg.count_rate = count_rate;
+            msg_updated = true;
+            current_arg += 2;
+        } else {
+            ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+            return;
+        }
+    }
 
-    pwm_set_duty(pwm, (float)duty/100.0f);
+    if (msg_updated) {
+        _print_pwmcon_msg(self, &msg);
+        task_pwmcon_msg_send(msg);
+    } else {
+        ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
+    }
+
+    return;
+
 
 }
 
@@ -353,14 +403,14 @@ static const struct ush_file_descriptor cmd_files[] = {
     {
         .name = "ocp",
         .description = "sets ocp threshold (%)",
-        .help = "usage: ocp < 0 to 100 >",
+        .help = "usage: ocp < 0 to 100 >\r\n",
         .exec = ocp_exec_callback,
     },
     {
-        .name = "pwma_duty",
-        .description = "set pwma duty cycle (%)",
-        .help = "usage: pwma_duty <duty:0-100>",
-        .exec = pwma_set_duty_cb,
+        .name = "foc",
+        .description = "set foc parameters",
+        .help = "usage: foc [print|vq[mv]|vd[mv]|vbus[mv]|count_rate]\r\n",
+        .exec = foc_cmd_cb,
     }
 };
 

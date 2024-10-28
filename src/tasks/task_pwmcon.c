@@ -7,6 +7,7 @@
 #include "bsp.h"
 #include "hal.h"
 #include "tasklist.h"
+#include "taskmsg.h"
 #include "math.h"
 #include "arm_math.h"
 
@@ -46,6 +47,25 @@ TaskHandle_t task_pwm_control_init(void) {
     }
 }
 
+static float fast_fmodf(float x, float y) {
+    if (y == 0.0f) {
+        return NAN; // Return NaN for undefined behavior
+    }
+
+    // Calculate the integer multiple of y closest to x
+    float quotient = (int)(x / y);  // Cast to int truncates toward zero
+    float result = x - quotient * y;
+
+    // Adjust result if it goes out of range due to truncation
+    if (result < 0.0f && y > 0.0f) {
+        result += y;
+    } else if (result > 0.0f && y < 0.0f) {
+        result += y;
+    }
+
+    return result;
+}
+
 static void task_pwm_control(void * parameters) {   
 
   board_t *brd = board_get_handle();
@@ -61,41 +81,33 @@ static void task_pwm_control(void * parameters) {
 
   cordic_init(&cordic);
 
-  float fast_fmodf(float x, float y) {
-      if (y == 0.0f) {
-          return NAN; // Return NaN for undefined behavior
-      }
-
-      // Calculate the integer multiple of y closest to x
-      float quotient = (int)(x / y);  // Cast to int truncates toward zero
-      float result = x - quotient * y;
-
-      // Adjust result if it goes out of range due to truncation
-      if (result < 0.0f && y > 0.0f) {
-          result += y;
-      } else if (result > 0.0f && y < 0.0f) {
-          result += y;
-      }
-
-      return result;
-  }
-
   while(1) {
 
-    float ialpha;
-    float ibeta;
-    float id = 0.0f;
-    float iq = 1.0f;
-    float ia;
-    float ib;
-    float ic;
+    float valpha;
+    float vbeta;
+    float va;
+    float vb;
+    float vc;
+    static float vbus = 0.0f;
+    static float vd = 0.0f;
+    static float vq = 0.0f;
     static uint32_t count = 0;
+    static uint32_t count_rate = 0;
+
+    // Check for new messagek
+    pwmcon_msg_t msg;
+    if (task_pwmcon_msg_receive(&msg)) {
+      vq = (float)msg.vq_mv/1000.0f; // Convert to volts from mV
+      vd = (float)msg.vd_mv/1000.0f; // Convert to volts from mV
+      vbus = (float)msg.vbus_mv/1000.0f; // Convert to volts from mV
+      count_rate = msg.count_rate;
+    }
 
     //count = brd->encoder.read();
 
     gpio_pin_set(&brd->io.test_pin0);
     // float angle_rad = count/1024.0 * 2*PI;
-    float angle_rad = count/4096.0f * 2*PI;
+    float angle_rad = count/100000.0f * 2*PI;
     float angle_rad_norm = fast_fmodf(angle_rad, 2.0f*PI) / (2.0f*PI);
     int32_t angle_rad_q31 = f32_to_q31(angle_rad_norm) << 1;
 
@@ -103,42 +115,25 @@ static void task_pwm_control(void * parameters) {
     int32_t cos_q31 = cordic_read();
     int32_t sin_q31 = cordic_read();
 
-    float cos = q31_to_f32(cos_q31);
-    float sin = q31_to_f32(sin_q31);
+    float cos_f32 = q31_to_f32(cos_q31);
+    float sin_f32 = q31_to_f32(sin_q31);
 
-    arm_inv_park_f32(id, iq, &ialpha, &ibeta, sin, cos);
-    arm_inv_clarke_f32(ialpha, ibeta, &ia, &ib);
+    arm_inv_park_f32(vd/vbus, vq/vbus, &valpha, &vbeta, sin_f32, cos_f32);
+    arm_inv_clarke_f32(valpha, vbeta, &va, &vb);
 
-    ic = -ia - ib;
-    (void)ic;
+    // a + b + c = 0
+    vc = -va - vb;
+
+    float dc_a = (va + 1.0f)/2.0f;
+    float dc_b = (vb + 1.0f)/2.0f;
+    float dc_c = (vc + 1.0f)/2.0f;
+
+    pwm_3ph_set_duty(&brd->mcpwm, dc_a, dc_b, dc_c);
+
     gpio_pin_clear(&brd->io.test_pin0);
-    // float cos_120 = cos*COS_120D - sin*SIN_120D;
-    // float cos_240 = cos*COS_120D - sin*SIN_240D;
 
-
-
-    // cli_printf("\r\ncount=%u\tangle=%x\tcos(angle)=%x\tsin(angle)=%x", count, angle_rad_q31, cos_q31, sin_q31);
-
-
-    
-    // float duty = count/1024.0;
-
-    // float dutya = fabs(cos);
-    // float dutyb = fabs(cos_120);
-    // float dutyc = fabs(cos_240);
-    // float dutya = (cos + 1.0f)/2.0f;
-    // float dutyb = (cos_120 + 1.0f)/2.0f;
-    // float dutyc = (cos_240 + 1.0f)/2.0f;
-    float dutya = (ia + 1.0f)/2.0f;
-    float dutyb = (ib + 1.0f)/2.0f;
-    float dutyc = (ic + 1.0f)/2.0f;
-    // pwm_set_duty(&brd->mcpwm.pwma, count/1024.0);
-    pwm_3ph_set_duty(&brd->mcpwm, dutya, dutyb, dutyc);
-
-    // cli_printf("\r\nEncoder Count : %u", count);
-
-    count += 1;
-    if (count >= 4096) {
+    count += count_rate;
+    if (count >= 100000) {
       count = 0;
     }
 

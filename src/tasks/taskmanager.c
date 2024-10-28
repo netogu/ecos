@@ -5,6 +5,7 @@
 #include "hal.h"
 #include "tiny_printf.h"
 #include "tasklist.h"
+#include "taskmsg.h"
 
 static TaskHandle_t task_manager_handle;
 static StaticTask_t task_manager_tcb;
@@ -39,6 +40,7 @@ static void task_manager(void * parameters) {
     (void) parameters;
     
     board_hw_setup();
+    task_msg_init();
 
     vTaskDelay(50);
 
