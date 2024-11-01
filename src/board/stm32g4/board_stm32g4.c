@@ -507,6 +507,16 @@ int _write(int file, char *ptr, int len) {
   return len;
 }
 
+int _kill(int pid, int sig) {
+  (void)pid;
+  (void)sig;
+  return -1;
+}
+
+int _getpid() {
+  return 1;
+}
+
 
 
 

@@ -93,7 +93,7 @@ static void task_pwm_control(void * parameters) {
     static float vq = 0.0f;
     static uint32_t count = 0;
     static uint32_t count_rate = 0;
-    static bool in_manual = false;
+    static bool in_manual_control = false;
 
     // Check for new messagek
     pwmcon_msg_t msg;
@@ -106,17 +106,17 @@ static void task_pwm_control(void * parameters) {
 
     float angle_rad;
     if (msg.manual) {
-      if (!in_manual){
+      if (!in_manual_control){
         count = (count*1024)/100000;
         brd->encoder.load(count);
-        in_manual = true;
+        in_manual_control = true;
       }
       count = brd->encoder.read();
       angle_rad = count/1024.0f * 2*PI;
     } else {
-      if (in_manual){
+      if (in_manual_control){
         count = (count*100000)/1024;
-        in_manual = false;
+        in_manual_control = false;
       }
       count += count_rate;
       if (count > 100000) {

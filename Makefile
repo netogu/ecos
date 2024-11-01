@@ -1,41 +1,38 @@
-######################################
-# Target
-######################################
-TARGET = stm32g4-minimal
+#------------------------------------------------+
+#  Target: ecos
+#  MCU: STM32G474xx
+#  Board:
+#------------------------------------------------+
+TARGET = ecos
 DEVICE = STM32G474xx
 
-######################################
-# Building variables
-######################################
-# debug build?
+#------------------------------------------------+
+# Build Variables
+#------------------------------------------------+
 DEBUG = 1
-# optimization
 OPT = -Og
 
-#######################################
-# Debug 
-#######################################
-DEBUGER_PATH = openocd
-DEBUGER_CONF = src/board/openocd.cfg
+#------------------------------------------------+
+# Debuger
+#------------------------------------------------+
+DEBUGER = openocd
+DEBUGER_CONF = src/drivers/stm32g4/scripts/stm32g4_openocd.cfg
 GDB = arm-none-eabi-gdb
 
-#######################################
-# paths
-#######################################
-# Build path
+#------------------------------------------------+
+# Paths
+#------------------------------------------------+
 BUILD_DIR = build
-#
-# Tinyusb Library
 TINYUSB = src/external/tinyusb/src
 MICROSHELL = src/external/microshell/src
 TINYPRINTF = src/external/tiny_printf
 FREERTOS = src/external/freertos
 
-######################################
+#------------------------------------------------+
 # Sources
-######################################
-# C sources
-C_SOURCES = $(wildcard src/main.c) 
+#------------------------------------------------+
+C_SOURCES = $(wildcard src/board/stm32g4/*.c)
+C_SOURCES += $(wildcard src/main.c) 
 C_SOURCES += $(wildcard src/board/*.c) 
 C_SOURCES += $(wildcard src/hal/*.c) 
 C_SOURCES += $(wildcard src/shell/*.c) 
@@ -59,18 +56,17 @@ C_SOURCES += $(wildcard $(FREERTOS)/*.c)
 C_SOURCES += $(FREERTOS)/portable/GCC/ARM_CM4F/port.c
 C_SOURCES += $(FREERTOS)/portable/MemMang/heap_3.c
 
-# ASM sources
+#------------------------------------------------+
+# ASM Sources
+#------------------------------------------------+
 ASM_SOURCES =  \
 src/drivers/stm32g4/stm32g4_startup.s
 
-
-######################################
+#------------------------------------------------+
 # Includes
-######################################
-# AS includes
+#------------------------------------------------+
 AS_INCLUDES = 
 
-# C includes
 C_INCLUDES =  \
 -Isrc \
 -Isrc/drivers \
@@ -90,15 +86,19 @@ C_INCLUDES =  \
 -I$(FREERTOS)/include \
 -I$(FREERTOS)/portable/GCC/ARM_CM4F \
 
-#######################################
-# LDFLAGS
-#######################################
-# link script
+#------------------------------------------------+
+# Linker 
+#------------------------------------------------+
 LDSCRIPT = src/drivers/stm32g4/scripts/stm32g474_linker_script.ld
+LIBS = -lc -lm -lnosys 
+LIBDIR = 
+LDFLAGS = $(MCU) -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
+LDFLAGS += -nostartfiles
+LDFLAGS += --specs=nano.specs --specs=nosys.specs -u _print_float -u _scanf_float
 
-#######################################
-# binaries
-#######################################
+#------------------------------------------------+
+# Toolchain
+#------------------------------------------------+
 PREFIX = arm-none-eabi-
 # PREFIX = ~/Dev/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-
 # The gcc compiler bin path can be either defined in make command via GCC_PATH variable (> make GCC_PATH=xxx)
@@ -117,28 +117,14 @@ endif
 HEX = $(CP) -O ihex
 BIN = $(CP) -O binary -S
 
- 
-#######################################
-# CFLAGS
-#######################################
-# cpu
+#------------------------------------------------+
+# Compiler
+#------------------------------------------------+
 CPU = -mcpu=cortex-m4
-
-# fpu
 FPU = -mfpu=fpv4-sp-d16
-
-# float-abi
 FLOAT-ABI = -mfloat-abi=hard
-
-# mcu
 MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI) -D$(DEVICE)
 
-# macros for gcc
-# AS defines
-AS_DEFS = \
--Wall -fdata-sections -ffunction-sections
-
-# # C defines
 C_DEFS =  \
 -DSTM32G474xx -std=c99 \
 -fshort-enums \
@@ -150,36 +136,27 @@ C_DEFS =  \
 -Wsign-compare \
 #-fshort-wchar \
 
+AS_DEFS = \
+-Wall -fdata-sections -ffunction-sections
 
-# compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) 
-
 CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) 
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
 endif
 
-
 # Generate dependency information
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 CFLAGS += -nostdlib
 
-
-LIBS = -lc -lm -lnosys 
-LIBDIR = 
-LDFLAGS = $(MCU) -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
-LDFLAGS += -nostartfiles
-LDFLAGS += --specs=nano.specs --specs=nosys.specs -u _print_float -u _scanf_float
-
-
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
 
+#------------------------------------------------+
+# Build
+#------------------------------------------------+
 
-#######################################
-# build the application
-#######################################
 # list of objects
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
 vpath %.c $(sort $(dir $(C_SOURCES)))
@@ -208,35 +185,36 @@ $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir $@		
 
-#######################################
-# Binary Size	
-#######################################
+#------------------------------------------------+
+# Size of modules
+#------------------------------------------------+
 binsize: $(OBJECTS)
 	@ echo "Size of modules:"
 	@ $(SZ) $(OBJECTS)
 	@ echo "Size of firmware:"
 	@ $(SZ) $(BUILD_DIR)/$(TARGET).elf
 
-#######################################
-# clean up
-#######################################
+#------------------------------------------------+
+# Clean
+#------------------------------------------------+
 clean:
 	-rm -fR $(BUILD_DIR)
   
-#######################################
-# Flash (openocd)
-#######################################
+#------------------------------------------------+
+# Flash
+#------------------------------------------------+
 flash:
-	$(DEBUGER_PATH) -f $(DEBUGER_CONF) -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
+	$(DEBUGER) -f $(DEBUGER_CONF) -c "program $(BUILD_DIR)/$(TARGET).elf verify reset exit"
 
-#######################################
-# Debug (openocd)
-#######################################
+#------------------------------------------------+
+# Debug
+#------------------------------------------------+
 debug:
-	$(DEBUGER_PATH) -f $(DEBUGER_CONF) & $(GDB) -ex 'target extended-remote localhost:3333' $(BUILD_DIR)/$(TARGET).elf
-#######################################
-# dependencies
-#######################################
+	$(DEBUGER) -f $(DEBUGER_CONF) & $(GDB) -ex 'target extended-remote localhost:3333' $(BUILD_DIR)/$(TARGET).elf
+
+#------------------------------------------------+
+# Dependencies
+#------------------------------------------------+
 -include $(wildcard $(BUILD_DIR)/*.d)
 
 # *** EOF ***
