@@ -45,6 +45,7 @@ static void cli_task(void * parameters) {
     (void) parameters;
 
 
+    vTaskDelay(100);
     // Print Shell Header
     for (size_t i = 0; i < strlen(shell_head); i++) {
         cli_uart_putc(shell_head[i]);

@@ -11,6 +11,7 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 MEMORY
 {
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 128K
+CCMRAM (xrw)   : ORIGIN = 0x10000000, LENGTH = 32K
 FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 512K
 USBRAM (rw)     : ORIGIN = 0x40006000, LENGTH = 1K
 }
@@ -122,6 +123,16 @@ SECTIONS
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
   } >RAM
+
+  .ccmram :
+  {
+    . = ALIGN(4);
+    _sccmram = .;
+    *(.ccmram)
+    *(.ccmram*)
+    . = ALIGN(4);
+    _eccmram = .;
+  } >CCMRAM
 
   .usbbuffer (NOLOAD) :
   {

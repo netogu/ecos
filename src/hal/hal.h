@@ -6,6 +6,9 @@
 
 #include "encoder.h"
 
+#include "hal_timer.h"
+#include "hal_system.h"
+
 
 
 

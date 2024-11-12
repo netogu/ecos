@@ -18,8 +18,8 @@
 #define TASK_PRIORITY_TASK_MANAGER      1
 #define TASK_PRIORITY_USB               2
 #define TASK_PRIORITY_CLI               1
-#define TASK_PRIORITY_LED               4
-#define TASK_PRIORITY_PWM_CONTROL       4
+#define TASK_PRIORITY_LED               1
+#define TASK_PRIORITY_PWM_CONTROL       3
 
 
 #define TASK_REPEAT_TASK_MANAGER        1

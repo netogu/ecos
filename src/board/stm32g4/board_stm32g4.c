@@ -55,13 +55,11 @@ int board_init(void) {
   board_gpio_setup();
   board_uart_setup();
   LOG_CLEAR();
+  printf(timestamp());
   LOG_OK("Core");
 
-  printf("SystemCoreClock: %dMHz\r\n", SystemCoreClock/1000000);
-  printf("\r\n");
 
   return 0;
-
 }
 
 void board_hw_setup(void) {

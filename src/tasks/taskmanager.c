@@ -58,6 +58,20 @@ static void task_manager(void * parameters) {
         }
     }
 
+    system_id_t sys_id;
+    system_get_id(&sys_id);
+
+    cli_printf("\r\nSystem Clock: %dMHz\r\n", SystemCoreClock/1000000);
+    cli_printf("Device ID: (0x%X)", sys_id.device_id);
+    if (sys_id.device_id == 0x469) {
+        cli_printf(" STM32G474RE\r\n");
+    } else {
+        cli_printf(" Unknown\r\n");
+    }
+    cli_printf("Flash Size: %dKB\r\n", sys_id.flash_size_kb);
+    cli_printf("Package Type: %d\r\n", sys_id.package_type);
+    cli_printf("UID: 0x%X 0x%X 0x%X\r\n", sys_id.uid[0], sys_id.uid[1], sys_id.uid[2]);
+
     while (1) {
         vTaskDelay(TASK_DELAY_TASK_MANAGER);
     }
