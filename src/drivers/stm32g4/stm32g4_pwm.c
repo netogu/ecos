@@ -399,5 +399,30 @@ int pwm_3ph_set_duty(pwm_3ph_t *self, float d1_u, float d2_u, float d3_u) {
   return 0;
 }
 
-
+__attribute__((unused))
+static void pwm_dac_init(void) {
+  // Enable TIM20 APB Clock
+  RCC->APB2ENR |= RCC_APB2ENR_TIM20EN;
+  // Enable Auto-Reload
+  TIM20->CR1 |= TIM_CR1_ARPE;
+  // Set count mode to up-count
+  TIM20->CR1 &= ~TIM_CR1_DIR;
+  // Set Prescaler
+  TIM20->PSC = 0;
+  // Set Period
+  TIM20->ARR = SystemCoreClock / 50000;
+  // Set Duty Cycle to 25%
+  TIM20->CCR3 = TIM20->ARR >> 2;
+  // Set CH3 output mode to PWM
+  TIM20->CCMR2 |= TIM_CCMR2_OC3M_1 | TIM_CCMR2_OC3M_2;
+  // Preload disable
+  TIM20->CCMR2 &= ~TIM_CCMR2_OC3PE;
+  // Enable CH3 output
+  TIM20->CCER |= TIM_CCER_CC3E;
+  // Update registers
+  TIM20->EGR |= TIM_EGR_UG;
+  // Enable Counter
+  TIM20->CR1 |= TIM_CR1_CEN;
+  TIM20->BDTR |= TIM_BDTR_MOE;
+}
 

@@ -64,11 +64,17 @@ File   : bsp.h
 
   struct board_ain_s {
     adc_t adc1;
-    adc_input_t vbus;
+    adc_input_t vm_fb;
     adc_t adc2;
+    adc_input_t va_fb;
+    adc_input_t vb_fb;
+    adc_input_t vc_fb;
     adc_input_t temp_a;
     adc_input_t temp_b;
-    // adc_input_t temp_c;
+    adc_t adc3;
+    adc_input_t ia_fb;
+    adc_t adc4;
+    adc_input_t ib_fb;
   } ain;
 
   struct spi spi3;

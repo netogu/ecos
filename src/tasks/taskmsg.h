@@ -10,7 +10,8 @@ typedef struct pwmcon_msg_t {
     uint32_t vd_mv;
     uint32_t vbus_mv;
     uint32_t count_rate;
-    bool     manual;
+    uint32_t mode;
+    uint32_t duty_cmd[3];
 } pwmcon_msg_t;
 
 // PWM Control Queues

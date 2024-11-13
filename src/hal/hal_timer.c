@@ -5,7 +5,7 @@
 #define HAL_TIMER_INTERRUPT_PRIORITY 1
 
 
-typedef struct timer_s {
+typedef struct hal_timer_s {
     TIM_TypeDef *TIM;
     uint32_t period_us;
     enum {
@@ -14,7 +14,7 @@ typedef struct timer_s {
         TIMER_STATE_RUNNING,
     } state;
     void (*on_timeout_cb)(void);
-} timer_t;
+} hal_timer_t;
 
 static union {
   struct {
@@ -24,7 +24,7 @@ static union {
   uint64_t cnt;
 } timer_us_ticks;
 
-static timer_t timer_list[HAL_TIMER_MAX_INSTANCES] =
+static hal_timer_t timer_list[HAL_TIMER_MAX_INSTANCES] =
 {
   {
     .TIM = TIM6,
@@ -40,12 +40,12 @@ static timer_t timer_list[HAL_TIMER_MAX_INSTANCES] =
   }
 };
 
-static int _timer_stm32g4_init(timer_t *self);
+static int _timer_stm32g4_init(hal_timer_t *self);
 
-timer_t * timer_create(uint32_t period_us, void (*on_timeout_cb)(void)) {
+hal_timer_t * timer_create(uint32_t period_us, void (*on_timeout_cb)(void)) {
   // Create a new timer
 
-  timer_t *timer_handle = NULL;
+  hal_timer_t *timer_handle = NULL;
 
   // Check if there is a free timer
   for (uint32_t i = 0; i < HAL_TIMER_MAX_INSTANCES; i++) {
@@ -68,7 +68,7 @@ timer_t * timer_create(uint32_t period_us, void (*on_timeout_cb)(void)) {
 
 }
 
-static int _timer_stm32g4_init(timer_t *self) {
+static int _timer_stm32g4_init(hal_timer_t *self) {
 
   // Initialize the timer
   // Set the timer to the stopped state
@@ -100,13 +100,13 @@ static int _timer_stm32g4_init(timer_t *self) {
   return 0;
 }
 
-void timer_start(timer_t *self) {
+void timer_start(hal_timer_t *self) {
   // Start the timer
   self->state = TIMER_STATE_RUNNING;
   self->TIM->CR1 |= TIM_CR1_CEN;
 }
 
-void timer_stop(timer_t *self) {
+void timer_stop(hal_timer_t *self) {
   // Stop the timer
   self->state = TIMER_STATE_STOPPED;
   self->TIM->CR1 &= ~TIM_CR1_CEN;

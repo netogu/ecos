@@ -39,10 +39,11 @@ TaskHandle_t task_manager_init(void) {
 static void task_manager(void * parameters) {
     (void) parameters;
     
+
     board_hw_setup();
     task_msg_init();
-
     vTaskDelay(50);
+
 
     // Start all tasks
     for (size_t i = 0; i < task_list_size; i++) {
@@ -71,6 +72,7 @@ static void task_manager(void * parameters) {
     cli_printf("Flash Size: %dKB\r\n", sys_id.flash_size_kb);
     cli_printf("Package Type: %d\r\n", sys_id.package_type);
     cli_printf("UID: 0x%X 0x%X 0x%X\r\n", sys_id.uid[0], sys_id.uid[1], sys_id.uid[2]);
+
 
     while (1) {
         vTaskDelay(TASK_DELAY_TASK_MANAGER);

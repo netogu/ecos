@@ -224,7 +224,7 @@ static void _print_pwmcon_msg(struct ush_object *self, pwmcon_msg_t *msg)
     ush_printf(self, "vd = %d mV\n\r", msg->vd_mv);
     ush_printf(self, "vbus = %d mV\n\r", msg->vbus_mv);
     ush_printf(self, "count_rate = %d\n\r", msg->count_rate);
-    ush_printf(self, "manual = %d\n\r", msg->manual);
+    ush_printf(self, "mode = %d\n\r", msg->mode);
 }
 // PWMA Set Duty Callback
 static void foc_cmd_cb(struct ush_object *self, struct ush_file_descriptor const *file, int argc, char *argv[])
@@ -274,10 +274,24 @@ static void foc_cmd_cb(struct ush_object *self, struct ush_file_descriptor const
             msg.count_rate = count_rate;
             msg_updated = true;
             current_arg += 2;
-        } else if (strcmp(argv[current_arg], "manual") == 0) {
-            bool manual = atoi(argv[current_arg + 1]);
-            msg.manual = manual;
+        } else if (strcmp(argv[current_arg], "mode") == 0) {
+            msg.mode = atoi(argv[current_arg + 1]);
             msg_updated = true;
+            current_arg += 2;
+        } else if (strcmp(argv[current_arg], "pwma") == 0) {
+            msg.duty_cmd[0] = atoi(argv[current_arg + 1]);
+            msg_updated = true;
+            msg.mode = 2; // PWMCON_FOC_FORCE_PWM
+            current_arg += 2;
+        } else if (strcmp(argv[current_arg], "pwmb") == 0) {
+            msg.duty_cmd[1] = atoi(argv[current_arg + 1]);
+            msg_updated = true;
+            msg.mode = 2; // PWMCON_FOC_FORCE_PWM
+            current_arg += 2;
+        } else if (strcmp(argv[current_arg], "pwmc") == 0) {
+            msg.duty_cmd[2] = atoi(argv[current_arg + 1]);
+            msg_updated = true;
+            msg.mode = 2; // PWMCON_FOC_FORCE_PWM
             current_arg += 2;
         } else {
             ush_print_status(self, USH_STATUS_ERROR_COMMAND_WRONG_ARGUMENTS);
@@ -340,7 +354,7 @@ size_t ADC_DR_get_data_callback(struct ush_object *self, struct ush_file_descrip
 
     board_t *brd = board_get_handle();
 
-    uint16_t value = *brd->ain.vbus.data;
+    uint16_t value = *brd->ain.vm_fb.data;
     static char dr[32] = "hello world\r\n";
     snprintf(dr, sizeof(dr), "ADC1: %d \r\n", value);
 

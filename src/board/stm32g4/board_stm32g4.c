@@ -213,35 +213,8 @@ static void board_usb_setup(void) {
 //------------------------------------------------------+
 // PWM Config
 //------------------------------------------------------+
-__attribute__((unused))
-static void pwm_dac_init(void) {
-  // Enable TIM20 APB Clock
-  RCC->APB2ENR |= RCC_APB2ENR_TIM20EN;
-  // Enable Auto-Reload
-  TIM20->CR1 |= TIM_CR1_ARPE;
-  // Set count mode to up-count
-  TIM20->CR1 &= ~TIM_CR1_DIR;
-  // Set Prescaler
-  TIM20->PSC = 0;
-  // Set Period
-  TIM20->ARR = SystemCoreClock / 50000;
-  // Set Duty Cycle to 25%
-  TIM20->CCR3 = TIM20->ARR >> 2;
-  // Set CH3 output mode to PWM
-  TIM20->CCMR2 |= TIM_CCMR2_OC3M_1 | TIM_CCMR2_OC3M_2;
-  // Preload disable
-  TIM20->CCMR2 &= ~TIM_CCMR2_OC3PE;
-  // Enable CH3 output
-  TIM20->CCER |= TIM_CCER_CC3E;
-  // Update registers
-  TIM20->EGR |= TIM_EGR_UG;
-  // Enable Counter
-  TIM20->CR1 |= TIM_CR1_CEN;
-  TIM20->BDTR |= TIM_BDTR_MOE;
-}
 
 static void board_pwm_setup(void) {
-
 
   brd.mcpwm = (pwm_3ph_t) {
 
@@ -282,29 +255,8 @@ static void board_pwm_setup(void) {
     LOG_OK("PWM");
   }
 
-  pwm_3ph_set_duty(&brd.mcpwm, 0.25, 0.5, 0.75);
+  pwm_3ph_set_duty(&brd.mcpwm, 0.5f, 0.5f, 0.5f);
   pwm_3ph_start(&brd.mcpwm);
-
-  // pwm_init(&brd.pwma, 90000, 200);
-  // pwm_init(&brd.pwmb, 90000, 200);
-  // pwm_init(&brd.pwmc, 90000, 200);
-
-  // hrtim_pwm_swap_output(&pwma);
-  // hrtim_pwm_enable_fault_input(&pwma, 5);
-
-  // pwm_dac_init();
-  // pwm_set_duty(&brd.pwma, 0.25);
-  // pwm_set_duty(&brd.pwmb, 0.50);
-  // pwm_set_duty(&brd.pwmc, 0.80);
-  // pwm_swap_output(&brd.pwma);
-  // pwm_swap_output(&brd.mcpwm.pwmb);
-  // pwm_swap_output(&brd.pwmc);
-  
-
-  // HRTIM1->sMasterRegs.MCR |= (HRTIM_MCR_TACEN | HRTIM_MCR_TFCEN | HRTIM_MCR_TECEN);
-  // pwm_start(&brd.pwma);
-  // pwm_start(&brd.pwmb);
-  // pwm_start(&brd.pwmc);
 
 }
 
@@ -381,31 +333,42 @@ static void board_gate_driver_setup(void) {
 //------------------------------------------------------
 void board_adc_setup(void) {
   brd.ain = (struct board_ain_s) {
-    //Adc1
-    .vbus = (adc_input_t) {
-      .name = "vbus",
-      .channel = 1,
-      .scale = 1.0,
+    //--- Adc1 ---
+    .vm_fb = (adc_input_t) {
+      .name = "vm_fb",
+      .channel = 2,
+      .scale = 0.019536,
       .offset = 0.0,
       .units = "V",
     },
 
-    //Adc2
+    //--- Adc2 ---
     .temp_a = (adc_input_t) {
       .name = "temp_a",
-      .channel = 6, 
+      .channel = 5, 
       .scale = 1.0,
       .offset = 0.0,
       .units = "C",
     },
 
-    .temp_b = (adc_input_t) {
-      .name = "temp_b",
-      .channel = ADC_CHANNEL_7, 
-      .scale = 1.0,
-      .offset = 0.0,
-      .units = "C",
+    //--- Adc3 ---
+    .ia_fb = (adc_input_t) {
+      .name = "ia_fb",
+      .channel = 5,
+      .scale = 1.0/62.05,
+      .offset = -2047.5/62.05,
+      .units = "A",
     },
+    
+    //--- Adc4 ---
+    .ib_fb = (adc_input_t) {
+      .name = "ib_fb",
+      .channel = 4,
+      .scale = 1.0/62.05,
+      .offset = -2047.5/62.05,
+      .units = "A",
+    },
+
   },
 
   brd.ain.adc1.options = (struct adc_options_s) {
@@ -418,6 +381,16 @@ void board_adc_setup(void) {
     .clk_domain = ADC_CLK_DOMAIN_HCLK,
   };
 
+  brd.ain.adc3.options = (struct adc_options_s) {
+    .instance = ADC3,
+    .clk_domain = ADC_CLK_DOMAIN_HCLK,
+  };
+
+  brd.ain.adc4.options = (struct adc_options_s) {
+    .instance = ADC4,
+    .clk_domain = ADC_CLK_DOMAIN_HCLK,
+  };
+
   printf(timestamp());
   if (adc_init(&brd.ain.adc1) == 0) {
     LOG_OK("ADC1");
@@ -425,14 +398,45 @@ void board_adc_setup(void) {
     LOG_FAIL("ADC1");
   }
 
+  // printf(timestamp());
+  // if (adc_init(&brd.ain.adc2) == 0) {
+  //   LOG_OK("ADC2");
+  // } else {
+  //   LOG_FAIL("ADC2");
+  // }
+
+  // printf(timestamp());
+  // if (adc_init(&brd.ain.adc3) == 0) {
+  //   LOG_OK("ADC3");
+  // } else {
+  //   LOG_FAIL("ADC3");
+  // }
+
+  // printf(timestamp());
+  // if (adc_init(&brd.ain.adc4) == 0) {
+  //   LOG_OK("ADC4");
+  // } else {
+  //   LOG_FAIL("ADC4);
+  // }
+
   // adc_init(&adc2, ADC1);
 
-  adc_add_regular_input(&brd.ain.adc1, &brd.ain.vbus, ADC_REG_SEQ_ORDER_1, ADC_SAMPLE_TIME_6_5_CYCLES);
-  // adc_configure_regular_input(&adc2, &brd.analog_in.temp_a, 0);
-  // adc_configure_regular_input(&adc2, &brd.analog_in.temp_b, 1);
+  // adc_add_injected_input(&brd.ain.adc1, &brd.ain.vm_fb, ADC_REG_SEQ_ORDER_1, ADC_SAMPLE_TIME_6_5_CYCLES);
 
-  // adc_configure_sample_mode(&brd.ain.adc1, ADC_SAMPLE_MODE_SINGLE);
-  brd.ain.vbus.data = &brd.ain.adc1.options.instance->DR;
+  adc_add_regular_input(&brd.ain.adc2, &brd.ain.temp_a, ADC_REG_SEQ_ORDER_1, ADC_SAMPLE_TIME_6_5_CYCLES);
+
+  // adc_add_injected_input(&brd.ain.adc3, &brd.ain.ia_fb, ADC_REG_SEQ_ORDER_1, ADC_SAMPLE_TIME_6_5_CYCLES);
+
+  // adc_add_injected_input(&brd.ain.adc4, &brd.ain.ib_fb, ADC_REG_SEQ_ORDER_1, ADC_SAMPLE_TIME_6_5_CYCLES);
+
+  
+
+
+  brd.ain.vm_fb.data = &brd.ain.adc1.options.instance->DR;
+  brd.ain.vm_fb.data = &brd.ain.adc1.options.instance->DR;
+  brd.ain.ia_fb.data = &brd.ain.adc3.options.instance->JDR1;
+  brd.ain.ib_fb.data = &brd.ain.adc4.options.instance->JDR1;
+  
   adc_start_regular_sampling(&brd.ain.adc1);
 
 }

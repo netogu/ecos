@@ -127,6 +127,9 @@ int adc_calibrate_blocking(adc_t *self) {
 }
 int adc_init(adc_t *self) {
 
+    static bool adc12_clock_initialized = false;
+    static bool adc345_clock_initialized = false;
+
     ADC_TypeDef *adc_regs = self->options.instance;
     memset(self->regular_result, 0, sizeof(self->regular_result));
 
@@ -135,27 +138,36 @@ int adc_init(adc_t *self) {
 
     if (adc_regs == ADC1 || ADC2) {
 
-        RCC->AHB2ENR |= RCC_AHB2ENR_ADC12EN;
+        if (!adc12_clock_initialized){
+            RCC->AHB2ENR |= RCC_AHB2ENR_ADC12EN;
 
-        if (self->options.clk_domain == ADC_CLK_DOMAIN_SYSCLK_PLL) {
-            ADC12_COMMON->CCR &= ~ADC_CCR_CKMODE;
-        } else {
-            ADC12_COMMON->CCR &= ~ADC_CCR_CKMODE;
-            ADC12_COMMON->CCR |= ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1; // Set ADC CLK Domain to HCLK/4
+            if (self->options.clk_domain == ADC_CLK_DOMAIN_SYSCLK_PLL) {
+                ADC12_COMMON->CCR &= ~ADC_CCR_CKMODE;
+            } else {
+                ADC12_COMMON->CCR &= ~ADC_CCR_CKMODE;
+                ADC12_COMMON->CCR |= ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1; // Set ADC CLK Domain to HCLK/4
+            }
+
+            adc12_clock_initialized = true;
+
         }
 
     } else
     if (adc_regs == ADC3 || ADC4 || ADC5) { 
 
-        // ADC_INSTANCE_3, ADC_INSTANCE_4, ADC_INSTANCE_5
-        RCC->AHB2ENR |= RCC_AHB2ENR_ADC345EN;
+        if (!adc345_clock_initialized){
+            // ADC_INSTANCE_3, ADC_INSTANCE_4, ADC_INSTANCE_5
+            RCC->AHB2ENR |= RCC_AHB2ENR_ADC345EN;
 
-        if (self->options.clk_domain == ADC_CLK_DOMAIN_SYSCLK_PLL) {
-            ADC345_COMMON->CCR &= ~ADC_CCR_CKMODE;
-        } else {
-            ADC345_COMMON->CCR &= ~ADC_CCR_CKMODE;
-            ADC345_COMMON->CCR |= ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1; // Set ADC CLK Domain to HCLK/4
+            if (self->options.clk_domain == ADC_CLK_DOMAIN_SYSCLK_PLL) {
+                ADC345_COMMON->CCR &= ~ADC_CCR_CKMODE;
+            } else {
+                ADC345_COMMON->CCR &= ~ADC_CCR_CKMODE;
+                ADC345_COMMON->CCR |= ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1; // Set ADC CLK Domain to HCLK/4
+            }
+            adc345_clock_initialized = true;
         }
+
     }  else {
         return -1;
     }

@@ -5,7 +5,7 @@
 
 #include "stm32g4_common.h"
 
-#define UART_BUFFER_SIZE 512
+#define UART_BUFFER_SIZE 1024
 
 typedef struct uart_fifo_s {
     uint8_t buffer[UART_BUFFER_SIZE];
