@@ -398,26 +398,26 @@ void board_adc_setup(void) {
     LOG_FAIL("ADC1");
   }
 
-  // printf(timestamp());
-  // if (adc_init(&brd.ain.adc2) == 0) {
-  //   LOG_OK("ADC2");
-  // } else {
-  //   LOG_FAIL("ADC2");
-  // }
+  printf(timestamp());
+  if (adc_init(&brd.ain.adc2) == 0) {
+    LOG_OK("ADC2");
+  } else {
+    LOG_FAIL("ADC2");
+  }
 
-  // printf(timestamp());
-  // if (adc_init(&brd.ain.adc3) == 0) {
-  //   LOG_OK("ADC3");
-  // } else {
-  //   LOG_FAIL("ADC3");
-  // }
+  printf(timestamp());
+  if (adc_init(&brd.ain.adc3) == 0) {
+    LOG_OK("ADC3");
+  } else {
+    LOG_FAIL("ADC3");
+  }
 
-  // printf(timestamp());
-  // if (adc_init(&brd.ain.adc4) == 0) {
-  //   LOG_OK("ADC4");
-  // } else {
-  //   LOG_FAIL("ADC4);
-  // }
+  printf(timestamp());
+  if (adc_init(&brd.ain.adc4) == 0) {
+    LOG_OK("ADC4");
+  } else {
+    LOG_FAIL("ADC4");
+  }
 
   // adc_init(&adc2, ADC1);
 

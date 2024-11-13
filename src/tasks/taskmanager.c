@@ -40,9 +40,10 @@ static void task_manager(void * parameters) {
     (void) parameters;
     
 
+    vTaskDelay(50);
     board_hw_setup();
     task_msg_init();
-    vTaskDelay(50);
+    vTaskDelay(100);
 
 
     // Start all tasks
@@ -59,6 +60,8 @@ static void task_manager(void * parameters) {
         }
     }
 
+    vTaskDelay(100);
+
     system_id_t sys_id;
     system_get_id(&sys_id);
 
@@ -70,7 +73,7 @@ static void task_manager(void * parameters) {
         cli_printf(" Unknown\r\n");
     }
     cli_printf("Flash Size: %dKB\r\n", sys_id.flash_size_kb);
-    cli_printf("Package Type: %d\r\n", sys_id.package_type);
+    cli_printf("Package Type: 0x%X\r\n", sys_id.package_type);
     cli_printf("UID: 0x%X 0x%X 0x%X\r\n", sys_id.uid[0], sys_id.uid[1], sys_id.uid[2]);
 
 

@@ -125,6 +125,7 @@ int adc_calibrate_blocking(adc_t *self) {
 
     return 0;
 }
+
 int adc_init(adc_t *self) {
 
     static bool adc12_clock_initialized = false;
@@ -141,9 +142,15 @@ int adc_init(adc_t *self) {
         if (!adc12_clock_initialized){
             RCC->AHB2ENR |= RCC_AHB2ENR_ADC12EN;
 
+
             if (self->options.clk_domain == ADC_CLK_DOMAIN_SYSCLK_PLL) {
+                RCC->CCIPR &= ~(RCC_CCIPR_ADC12SEL);
+                RCC->CCIPR |= RCC_CCIPR_ADC12SEL_0;
                 ADC12_COMMON->CCR &= ~ADC_CCR_CKMODE;
+                
             } else {
+                RCC->CCIPR &= ~(RCC_CCIPR_ADC12SEL);
+                RCC->CCIPR |= RCC_CCIPR_ADC12SEL_1;
                 ADC12_COMMON->CCR &= ~ADC_CCR_CKMODE;
                 ADC12_COMMON->CCR |= ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1; // Set ADC CLK Domain to HCLK/4
             }
@@ -156,12 +163,15 @@ int adc_init(adc_t *self) {
     if (adc_regs == ADC3 || ADC4 || ADC5) { 
 
         if (!adc345_clock_initialized){
-            // ADC_INSTANCE_3, ADC_INSTANCE_4, ADC_INSTANCE_5
             RCC->AHB2ENR |= RCC_AHB2ENR_ADC345EN;
 
             if (self->options.clk_domain == ADC_CLK_DOMAIN_SYSCLK_PLL) {
+                RCC->CCIPR &= ~(RCC_CCIPR_ADC345SEL);
+                RCC->CCIPR |= RCC_CCIPR_ADC345SEL_0;
                 ADC345_COMMON->CCR &= ~ADC_CCR_CKMODE;
             } else {
+                RCC->CCIPR &= ~(RCC_CCIPR_ADC345SEL);
+                RCC->CCIPR |= RCC_CCIPR_ADC345SEL_1;
                 ADC345_COMMON->CCR &= ~ADC_CCR_CKMODE;
                 ADC345_COMMON->CCR |= ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1; // Set ADC CLK Domain to HCLK/4
             }
