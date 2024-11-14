@@ -25,6 +25,7 @@
 
 #include "stm32g4_adc.h"
 #include <string.h> // for memset
+#include <stdio.h>
 
 #define ADC_STATUS_UNINITIALIZED 0
 #define ADC_STATUS_INITIALIZED 1
@@ -117,11 +118,13 @@ int adc_calibrate_blocking(adc_t *self) {
     adc_regs->CR |= ADC_CR_ADCAL;
     while (adc_regs->CR & ADC_CR_ADCAL)
         ; // Wait for the calibration to complete
+    for (volatile uint32_t delay = 0; delay < 100; delay++);
 
     adc_regs->CR |= ADC_CR_ADCALDIF;
     adc_regs->CR |= ADC_CR_ADCAL;
     while (adc_regs->CR & ADC_CR_ADCAL)
         ; // Wait for the calibration to complete
+    for (volatile uint32_t delay = 0; delay < 100; delay++);
 
     return 0;
 }
@@ -137,22 +140,20 @@ int adc_init(adc_t *self) {
     // ADC Clk domain: SYSCLK or PLL
     // Enable the ADC Peripheral Clock
 
-    if (adc_regs == ADC1 || ADC2) {
+    if (adc_regs == ADC1 || adc_regs == ADC2) {
 
         if (!adc12_clock_initialized){
             RCC->AHB2ENR |= RCC_AHB2ENR_ADC12EN;
+            RCC->CCIPR &= ~(RCC_CCIPR_ADC12SEL);
+            ADC12_COMMON->CCR &= ~(ADC_CCR_CKMODE);
 
 
             if (self->options.clk_domain == ADC_CLK_DOMAIN_SYSCLK_PLL) {
-                RCC->CCIPR &= ~(RCC_CCIPR_ADC12SEL);
-                RCC->CCIPR |= RCC_CCIPR_ADC12SEL_0;
-                ADC12_COMMON->CCR &= ~ADC_CCR_CKMODE;
+                // RCC->CCIPR |= RCC_CCIPR_ADC12SEL_0;
                 
             } else {
-                RCC->CCIPR &= ~(RCC_CCIPR_ADC12SEL);
-                RCC->CCIPR |= RCC_CCIPR_ADC12SEL_1;
-                ADC12_COMMON->CCR &= ~ADC_CCR_CKMODE;
-                ADC12_COMMON->CCR |= ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1; // Set ADC CLK Domain to HCLK/4
+                // RCC->CCIPR |= RCC_CCIPR_ADC12SEL_1;
+                ADC12_COMMON->CCR |= (ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1); // Set ADC CLK Domain to HCLK/4
             }
 
             adc12_clock_initialized = true;
@@ -160,40 +161,37 @@ int adc_init(adc_t *self) {
         }
 
     } else
-    if (adc_regs == ADC3 || ADC4 || ADC5) { 
+    if (adc_regs == ADC3 || adc_regs == ADC4 || adc_regs == ADC5) { 
 
         if (!adc345_clock_initialized){
             RCC->AHB2ENR |= RCC_AHB2ENR_ADC345EN;
+            RCC->CCIPR &= ~(RCC_CCIPR_ADC345SEL);
+            ADC345_COMMON->CCR &= ~ADC_CCR_CKMODE;
 
             if (self->options.clk_domain == ADC_CLK_DOMAIN_SYSCLK_PLL) {
-                RCC->CCIPR &= ~(RCC_CCIPR_ADC345SEL);
-                RCC->CCIPR |= RCC_CCIPR_ADC345SEL_0;
-                ADC345_COMMON->CCR &= ~ADC_CCR_CKMODE;
+                // RCC->CCIPR |= RCC_CCIPR_ADC345SEL_0;
             } else {
-                RCC->CCIPR &= ~(RCC_CCIPR_ADC345SEL);
-                RCC->CCIPR |= RCC_CCIPR_ADC345SEL_1;
-                ADC345_COMMON->CCR &= ~ADC_CCR_CKMODE;
-                ADC345_COMMON->CCR |= ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1; // Set ADC CLK Domain to HCLK/4
+                // RCC->CCIPR |= RCC_CCIPR_ADC345SEL_1;
+                ADC345_COMMON->CCR |= (ADC_CCR_CKMODE_0 | ADC_CCR_CKMODE_1); // Set ADC CLK Domain to HCLK/4
             }
             adc345_clock_initialized = true;
         }
-
     }  else {
         return -1;
     }
+
 
     // Exit deep-power mode
     adc_regs->CR &= ~ADC_CR_DEEPPWD;
 
     // Enable the ADC voltage regulator
     adc_regs->CR |= ADC_CR_ADVREGEN;
+// Wait for the ADC voltage regulator to be ready
+// Regulator startup time = 20us (from datasheet)
+    for (volatile uint32_t delay = 0; delay < 15000; delay++);
     // Ensure ADEN = 0
     adc_regs->CR &= ~ADC_CR_ADEN;
 
-// Wait for the ADC voltage regulator to be ready
-// Regulator startup time = 20us (from datasheet)
-    for (int i = 0; i < 4000; i++)
-        __NOP();  
 
     // Calibrate the ADC
     adc_calibrate_blocking(self);
@@ -204,6 +202,33 @@ int adc_init(adc_t *self) {
     return 0;
 }
 
+int adc_enable_injected_input_soc_trigger(adc_t *self) {
+    ADC_TypeDef *adc_regs = self->options.instance;
+    uint32_t reg_val = adc_regs->JSQR;
+
+    const uint32_t hrtim_adc_trig1 = 27;
+
+    reg_val &= ~(ADC_JSQR_JEXTSEL); 
+    reg_val |= (hrtim_adc_trig1 << ADC_JSQR_JEXTSEL_Pos);
+    reg_val |= ADC_JSQR_JEXTEN;
+
+    adc_regs->JSQR = reg_val;
+
+    return 0;
+}
+
+static int adc_config_input_sample_time(adc_t *self, adc_input_t *input, uint16_t sample_time) {
+    // Configure Sample Time
+    ADC_TypeDef *adc_regs = self->options.instance;
+
+    if (input->channel <= 9) {
+        adc_regs->SMPR1 |= sample_time << (ADC_SMPR1_SMP0_Pos + (3 * input->channel));
+    } else {
+        adc_regs->SMPR2 |= sample_time << (ADC_SMPR2_SMP10_Pos + (3 * (input->channel - 10)));
+    }
+
+    return 0;
+}
 
 int adc_add_regular_input(adc_t *self, adc_input_t *input, uint16_t sequence_order, uint16_t sample_time) {
 
@@ -227,13 +252,8 @@ int adc_add_regular_input(adc_t *self, adc_input_t *input, uint16_t sequence_ord
         return -1;
     }
 
-    // Configure Sample Time
+    adc_config_input_sample_time(self, input, sample_time);
 
-    if (input->channel <= 9) {
-        adc_regs->SMPR1 |= sample_time << (ADC_SMPR1_SMP0_Pos + (3 * input->channel));
-    } else {
-        adc_regs->SMPR2 |= sample_time << (ADC_SMPR2_SMP10_Pos + (3 * (input->channel - 10)));
-    }
 
     input->data = &self->regular_result[sequence_order];
 
@@ -242,4 +262,40 @@ int adc_add_regular_input(adc_t *self, adc_input_t *input, uint16_t sequence_ord
 
 
     return 0;
+}
+
+int adc_add_injected_input(adc_t *self, adc_input_t *input, uint16_t sample_time) {
+    ADC_TypeDef *adc_regs = self->options.instance;
+    uint32_t reg_val = adc_regs->JSQR;
+
+    switch (self->num_injected_inputs) {
+        case 0:
+            reg_val |= input->channel << (ADC_JSQR_JSQ1_Pos);
+            break;
+        case 1:
+            reg_val = input->channel << (ADC_JSQR_JSQ2_Pos);
+            break;
+        case 2:
+            reg_val = input->channel << (ADC_JSQR_JSQ3_Pos);
+            break;
+        case 3:
+            reg_val = input->channel << (ADC_JSQR_JSQ4_Pos);
+            break;
+        default:
+            goto error;
+            break;
+    }
+    
+    adc_config_input_sample_time(self, input, sample_time);
+
+    input->data = &self->injected_result[self->num_injected_inputs];
+
+    self->num_injected_inputs++;
+    reg_val &= ~(ADC_JSQR_JL);
+    reg_val |= (self->num_injected_inputs - 1) << ADC_JSQR_JL_Pos;
+    adc_regs->JSQR = reg_val;
+
+    return 0;
+    error:
+    return -1;
 }

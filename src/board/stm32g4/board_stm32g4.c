@@ -256,6 +256,7 @@ static void board_pwm_setup(void) {
   }
 
   pwm_3ph_set_duty(&brd.mcpwm, 0.5f, 0.5f, 0.5f);
+  pwm_enable_adc_trigger_1_on_rst(&brd.mcpwm.pwma);
   pwm_3ph_start(&brd.mcpwm);
 
 }
@@ -421,23 +422,23 @@ void board_adc_setup(void) {
 
   // adc_init(&adc2, ADC1);
 
-  // adc_add_injected_input(&brd.ain.adc1, &brd.ain.vm_fb, ADC_REG_SEQ_ORDER_1, ADC_SAMPLE_TIME_6_5_CYCLES);
+  adc_add_injected_input(&brd.ain.adc1, &brd.ain.vm_fb, ADC_SAMPLE_TIME_6_5_CYCLES);
+  brd.ain.vm_fb.data = &brd.ain.adc1.options.instance->JDR1;
 
   adc_add_regular_input(&brd.ain.adc2, &brd.ain.temp_a, ADC_REG_SEQ_ORDER_1, ADC_SAMPLE_TIME_6_5_CYCLES);
+  brd.ain.temp_a.data = &brd.ain.adc2.options.instance->DR;
 
-  // adc_add_injected_input(&brd.ain.adc3, &brd.ain.ia_fb, ADC_REG_SEQ_ORDER_1, ADC_SAMPLE_TIME_6_5_CYCLES);
-
-  // adc_add_injected_input(&brd.ain.adc4, &brd.ain.ib_fb, ADC_REG_SEQ_ORDER_1, ADC_SAMPLE_TIME_6_5_CYCLES);
-
-  
-
-
-  brd.ain.vm_fb.data = &brd.ain.adc1.options.instance->DR;
-  brd.ain.vm_fb.data = &brd.ain.adc1.options.instance->DR;
+  adc_add_injected_input(&brd.ain.adc3, &brd.ain.ia_fb, ADC_SAMPLE_TIME_6_5_CYCLES);
   brd.ain.ia_fb.data = &brd.ain.adc3.options.instance->JDR1;
-  brd.ain.ib_fb.data = &brd.ain.adc4.options.instance->JDR1;
+
+  adc_add_injected_input(&brd.ain.adc4, &brd.ain.ib_fb, ADC_SAMPLE_TIME_6_5_CYCLES);
+  brd.ain.ib_fb.data = &brd.ain.adc4.options.instance->JDR2;
+
   
-  adc_start_regular_sampling(&brd.ain.adc1);
+  adc_start_regular_sampling(&brd.ain.adc2);
+  adc_enable_injected_input_soc_trigger(&brd.ain.adc1);
+  adc_enable_injected_input_soc_trigger(&brd.ain.adc3);
+  adc_enable_injected_input_soc_trigger(&brd.ain.adc4);
 
 }
 

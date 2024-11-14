@@ -40,7 +40,7 @@ static void task_manager(void * parameters) {
     (void) parameters;
     
 
-    vTaskDelay(50);
+    vTaskDelay(100); //Wait for Shell to catch up
     board_hw_setup();
     task_msg_init();
     vTaskDelay(100);

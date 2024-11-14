@@ -354,12 +354,15 @@ size_t ADC_DR_get_data_callback(struct ush_object *self, struct ush_file_descrip
 
     board_t *brd = board_get_handle();
 
-    uint16_t value = *brd->ain.vm_fb.data;
-    static char dr[32] = "hello world\r\n";
-    snprintf(dr, sizeof(dr), "ADC1: %d \r\n", value);
+    uint32_t vm_fb = *brd->ain.vm_fb.data;
+    uint32_t ia_fb = *brd->ain.ia_fb.data;
+    uint32_t ib_fb = *brd->ain.ib_fb.data;
+    uint32_t temp_a = *brd->ain.temp_a.data;
+
+    static char dr[256];
+    snprintf(dr, sizeof(dr), "vm = %ld\t ia = %ld\t ib = %ld\t temp_a = %ld\r\n", vm_fb, ia_fb, ib_fb, temp_a);
 
     *data = (uint8_t*)dr;
-
 
     // return pointer to data
     // return data size

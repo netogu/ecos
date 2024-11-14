@@ -118,7 +118,8 @@ typedef struct adc_s {
 
 int adc_init(adc_t *self);
 int adc_add_regular_input(adc_t *self, adc_input_t *input, uint16_t sequence_order, uint16_t sample_time);
-int adc_add_injected_input(adc_t *self, adc_input_t *input, uint16_t input_number, uint16_t sample_time);
+int adc_add_injected_input(adc_t *self, adc_input_t *input, uint16_t sample_time);
+int adc_enable_injected_input_soc_trigger(adc_t *self);
 
 int adc_start_regular_sampling(adc_t *self);
 int adc_start_injected_sampling(adc_t *self);

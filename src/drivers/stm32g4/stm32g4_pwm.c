@@ -138,14 +138,6 @@ int pwm_enable_fault_input(pwm_t *self, uint32_t fault) {
   return 0;
 }
 
-/**
- * @brief Initialize PWM object 
- * 
- * @param self 
- * @param freq_hz  Frequency in Hz
- * @param dt_ns    Deadtime in ns
- * @return int     0 on success
- */
 int pwm_init(pwm_t *self, uint32_t freq_hz, uint32_t dt_ns) {
   
   enum pwm_timer_e pwm_timer = self->options.pwm_timer;
@@ -220,12 +212,6 @@ int pwm_init(pwm_t *self, uint32_t freq_hz, uint32_t dt_ns) {
   return 0;
 }
 
-/**
- * @brief Start PWM
- * 
- * @param self pwm_t object
- * @return int 0 on success
- */
 int pwm_start(pwm_t *self) {
 
   enum pwm_timer_e pwm_timer = self->options.pwm_timer;
@@ -241,12 +227,6 @@ int pwm_start(pwm_t *self) {
   return 0;
 }
 
-/** 
- * @brief Stop PWM
- * 
- * @param self pwm_t object
- * @return int 0 on success
-*/
 int pwm_stop(pwm_t *self) {
   
   enum pwm_timer_e pwm_timer = self->options.pwm_timer;
@@ -309,6 +289,41 @@ int pwm_set_n_cycle_run(pwm_t *self, uint32_t cycles) {
   }
 
   return 0;
+}
+
+int pwm_enable_adc_trigger_1_on_rst(pwm_t *self) {
+
+  enum pwm_timer_e pwm_timer = self->options.pwm_timer;
+  uint16_t pwm_channel = self->options.pwm_channel;
+
+  if (pwm_timer != PWM_TIMER_HRTIM1) { 
+    goto error;
+  }
+
+  switch (pwm_channel) {
+    case PWM_HRTIM_TIM_A:
+      // HRTIM1->sCommonRegs.CR1 = (1) << HRTIM_CR1_ADC1USRC_Pos;
+      HRTIM1->sCommonRegs.ADC1R |= HRTIM_ADC1R_AD1TARST;
+      HRTIM1->sTimerxRegs[0].TIMxCR2 |= (1) << HRTIM_TIMCR2_ADROM_Pos;
+      break;
+    case PWM_HRTIM_TIM_B:
+      HRTIM1->sCommonRegs.CR1 = (1) << HRTIM_CR1_ADC1USRC_Pos;
+      HRTIM1->sCommonRegs.ADC1R |= HRTIM_ADC1R_AD1TBRST;
+      break;
+    case PWM_HRTIM_TIM_F:
+      HRTIM1->sCommonRegs.CR1 = (1) << HRTIM_CR1_ADC1USRC_Pos;
+      HRTIM1->sCommonRegs.ADC1R |= HRTIM_ADC1R_AD1TFRST;
+      break;
+    default:
+      goto error;
+      break;
+
+  }
+
+  return 0;
+  error:
+  return -1;
+
 }
 
 int pwm_3ph_init(pwm_3ph_t *self, uint32_t freq_hz, uint32_t dt_ns) {
