@@ -57,7 +57,8 @@ int pwm_set_deadtime(pwm_t *self, uint32_t dt_ns);
 int pwm_set_n_cycle_run(pwm_t *self, uint32_t cycles);
 int pwm_enable_fault_input(pwm_t *self, uint32_t fault);
 int pwm_swap_output(pwm_t *self);
-int pwm_enable_adc_trigger_1_on_rst(pwm_t *self);
+int pwm_enable_adc_trigger(pwm_t *self);
+int pwm_enable_interrupt(pwm_t *self);
 
 // ------------------------------------------------------
 // 3-Phase PWM

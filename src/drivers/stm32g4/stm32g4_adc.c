@@ -129,13 +129,86 @@ int adc_calibrate_blocking(adc_t *self) {
     return 0;
 }
 
+int adc_register_input(adc_t *self, adc_input_t *input, uint16_t input_type, uint16_t sample_time) {
+
+    if (input_type == ADC_INPUT_TYPE_REGULAR) {
+
+        if ((self->num_regular_inputs + 1) > ADC_REG_INPUT_MAX) {
+            goto error;
+        }
+        self->regular_input[self->num_regular_inputs].input = input;
+        self->regular_input[self->num_regular_inputs].sample_time = sample_time;
+        self->num_regular_inputs++;
+
+    } else
+
+    if (input_type == ADC_INPUT_TYPE_INJECTED) {
+
+        if ((self->num_injected_inputs +1) > ADC_INJ_INPUT_MAX) {
+            goto error;
+        }
+        self->injected_input[self->num_injected_inputs].input = input;
+        self->injected_input[self->num_injected_inputs].sample_time = sample_time;
+        self->num_injected_inputs++;
+        
+    } else {
+        goto error;
+    }
+
+    return 0;
+    error:
+    return -1;
+
+}
+
+static int adc_config_input_sample_time(adc_t *self) {
+    // Configure Sample Time
+    ADC_TypeDef *adc_regs = self->options.instance;
+
+    uint32_t smpr1_reg = 0;
+    uint32_t smpr2_reg = 0;
+
+    if (self->num_regular_inputs > 0) {
+
+        for (uint32_t i = 0; i < self->num_regular_inputs; i++) {
+            uint8_t channel = self->regular_input[i].input->channel;
+            uint16_t sample_time = self->regular_input[i].sample_time;
+            if (channel <= 9) {
+                smpr1_reg |= sample_time << (ADC_SMPR1_SMP0_Pos + (3 * channel));
+            } else {
+                smpr2_reg |= sample_time << (ADC_SMPR2_SMP10_Pos + (3 * (channel - 10)));
+            }
+        }
+    }
+
+    if (self->num_injected_inputs > 0) {
+
+        for (uint32_t i = 0; i < self->num_injected_inputs; i++) {
+            uint8_t channel = self->injected_input[i].input->channel;
+            uint16_t sample_time = self->injected_input[i].sample_time;
+            if (channel <= 9) {
+                smpr1_reg |= sample_time << (ADC_SMPR1_SMP0_Pos + (3 * channel));
+            } else {
+                smpr2_reg |= sample_time << (ADC_SMPR2_SMP10_Pos + (3 * (channel - 10)));
+            }
+        }
+
+    }
+
+    adc_regs->SMPR1 = smpr1_reg;
+    adc_regs->SMPR2 = smpr2_reg;
+
+    return 0;
+}
+
+
 int adc_init(adc_t *self) {
 
     static bool adc12_clock_initialized = false;
     static bool adc345_clock_initialized = false;
+    int status;
 
     ADC_TypeDef *adc_regs = self->options.instance;
-    memset(self->regular_result, 0, sizeof(self->regular_result));
 
     // ADC Clk domain: SYSCLK or PLL
     // Enable the ADC Peripheral Clock
@@ -194,7 +267,22 @@ int adc_init(adc_t *self) {
 
 
     // Calibrate the ADC
-    adc_calibrate_blocking(self);
+    if(adc_calibrate_blocking(self) != 0) {
+        return -1;
+    }
+
+    // Configure Inputs
+    if(adc_config_input_sample_time(self) != 0) {
+        return -1;
+    }
+
+    // Configure Regular Input Sequence
+    // Configure Injected Input Sequence
+    // Configure Triggers
+    // Enable HW Triggers
+    adc_regs->CFGR &= ~(ADC_CFGR_JQDIS);
+
+
 
     // Enable the ADC
     adc_enable(self);
@@ -207,27 +295,17 @@ int adc_enable_injected_input_soc_trigger(adc_t *self) {
     uint32_t reg_val = adc_regs->JSQR;
 
     const uint32_t hrtim_adc_trig1 = 27;
+    adc_regs->CFGR &= ~(ADC_CFGR_JQDIS);
 
-    reg_val &= ~(ADC_JSQR_JEXTSEL); 
+    reg_val &= ~(ADC_JSQR_JEXTSEL) | ~(ADC_JSQR_JEXTEN); 
     reg_val |= (hrtim_adc_trig1 << ADC_JSQR_JEXTSEL_Pos);
-    reg_val |= ADC_JSQR_JEXTEN;
+    reg_val |= (2 << ADC_JSQR_JEXTEN_Pos);
 
     adc_regs->JSQR = reg_val;
 
     return 0;
 }
 
-static int adc_config_input_sample_time(adc_t *self, adc_input_t *input, uint16_t sample_time) {
-    // Configure Sample Time
-    ADC_TypeDef *adc_regs = self->options.instance;
-
-    if (input->channel <= 9) {
-        adc_regs->SMPR1 |= sample_time << (ADC_SMPR1_SMP0_Pos + (3 * input->channel));
-    } else {
-        adc_regs->SMPR2 |= sample_time << (ADC_SMPR2_SMP10_Pos + (3 * (input->channel - 10)));
-    }
-
-    return 0;
 }
 
 int adc_add_regular_input(adc_t *self, adc_input_t *input, uint16_t sequence_order, uint16_t sample_time) {
@@ -287,8 +365,6 @@ int adc_add_injected_input(adc_t *self, adc_input_t *input, uint16_t sample_time
     }
     
     adc_config_input_sample_time(self, input, sample_time);
-
-    input->data = &self->injected_result[self->num_injected_inputs];
 
     self->num_injected_inputs++;
     reg_val &= ~(ADC_JSQR_JL);

@@ -255,8 +255,9 @@ static void board_pwm_setup(void) {
     LOG_OK("PWM");
   }
 
+  pwm_enable_adc_trigger(&brd.mcpwm.pwma);
   pwm_3ph_set_duty(&brd.mcpwm, 0.5f, 0.5f, 0.5f);
-  pwm_enable_adc_trigger_1_on_rst(&brd.mcpwm.pwma);
+  pwm_enable_interrupt(&brd.mcpwm.pwma);
   pwm_3ph_start(&brd.mcpwm);
 
 }
@@ -392,6 +393,11 @@ void board_adc_setup(void) {
     .clk_domain = ADC_CLK_DOMAIN_HCLK,
   };
 
+  adc_register_input(&brd.ain.adc1, &brd.ain.vm_fb, ADC_INPUT_TYPE_INJECTED, ADC_SAMPLE_TIME_6_5_CYCLES);
+  adc_register_input(&brd.ain.adc2, &brd.ain.temp_a, ADC_INPUT_TYPE_REGULAR, ADC_SAMPLE_TIME_6_5_CYCLES);
+  adc_register_input(&brd.ain.adc3, &brd.ain.ia_fb, ADC_INPUT_TYPE_INJECTED, ADC_SAMPLE_TIME_6_5_CYCLES);
+  adc_register_input(&brd.ain.adc4, &brd.ain.ib_fb, ADC_INPUT_TYPE_INJECTED, ADC_SAMPLE_TIME_6_5_CYCLES);
+
   printf(timestamp());
   if (adc_init(&brd.ain.adc1) == 0) {
     LOG_OK("ADC1");
@@ -432,13 +438,21 @@ void board_adc_setup(void) {
   brd.ain.ia_fb.data = &brd.ain.adc3.options.instance->JDR1;
 
   adc_add_injected_input(&brd.ain.adc4, &brd.ain.ib_fb, ADC_SAMPLE_TIME_6_5_CYCLES);
-  brd.ain.ib_fb.data = &brd.ain.adc4.options.instance->JDR2;
+  brd.ain.ib_fb.data = &brd.ain.adc4.options.instance->JDR1;
 
-  
+   
   adc_start_regular_sampling(&brd.ain.adc2);
+  // adc_start_injected_sampling(&brd.ain.adc1);
+  // adc_start_injected_sampling(&brd.ain.adc3);
+  // adc_start_injected_sampling(&brd.ain.adc4);
   adc_enable_injected_input_soc_trigger(&brd.ain.adc1);
   adc_enable_injected_input_soc_trigger(&brd.ain.adc3);
   adc_enable_injected_input_soc_trigger(&brd.ain.adc4);
+  
+  adc_enable(&brd.ain.adc1);
+  adc_enable(&brd.ain.adc2);
+  adc_enable(&brd.ain.adc3);
+  adc_enable(&brd.ain.adc4);
 
 }
 

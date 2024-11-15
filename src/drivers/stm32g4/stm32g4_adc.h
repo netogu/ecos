@@ -43,28 +43,8 @@
 #define ADC_CHANNEL_VBAT_DIV_3 _FLAG(23)
 #define ADC_CHANNEL_VREFINT _FLAG(24)
 
-#define ADC_REG_SEQ_ORDER_1 1
-#define ADC_REG_SEQ_ORDER_2 2
-#define ADC_REG_SEQ_ORDER_3 3
-#define ADC_REG_SEQ_ORDER_4 4
-#define ADC_REG_SEQ_ORDER_5 5
-#define ADC_REG_SEQ_ORDER_6 6
-#define ADC_REG_SEQ_ORDER_7 7
-#define ADC_REG_SEQ_ORDER_8 8
-#define ADC_REG_SEQ_ORDER_9 9
-#define ADC_REG_SEQ_ORDER_10 10
-#define ADC_REG_SEQ_ORDER_11 11
-#define ADC_REG_SEQ_ORDER_12 12
-#define ADC_REG_SEQ_ORDER_13 13
-#define ADC_REG_SEQ_ORDER_14 14
-#define ADC_REG_SEQ_ORDER_15 15
-#define ADC_REG_SEQ_ORDER_16 16
-#define ADC_REG_SEQ_ORDER_MAX 16
+#define ADC_REG_INPUT_MAX 16
 
-#define ADC_INJ_INPUT_1 1
-#define ADC_INJ_INPUT_2 2
-#define ADC_INJ_INPUT_3 3
-#define ADC_INJ_INPUT_4 4
 #define ADC_INJ_INPUT_MAX 4
 
 #define ADC_SAMPLE_TIME_2_5_CYCLES 0
@@ -76,7 +56,8 @@
 #define ADC_SAMPLE_TIME_247_5_CYCLES 6
 #define ADC_SAMPLE_TIME_640_5_CYCLES 7
 
-
+#define ADC_INPUT_TYPE_REGULAR  0
+#define ADC_INPUT_TYPE_INJECTED 1
 
 #define ADC_MAX_CHANNELS 18
 
@@ -90,12 +71,19 @@ typedef struct adc_input_s {
 } adc_input_t;
 
 typedef struct adc_s {
-    uint32_t active_channels_flg;
-    uint32_t status;
-    uint32_t regular_result[16];
-    uint32_t injected_result[4];
+    struct {
+     adc_input_t *input;
+     uint16_t sample_time;
+    } regular_input[ADC_REG_INPUT_MAX];
+
+    struct {
+     adc_input_t *input;
+     uint16_t sample_time;
+    } injected_input[ADC_INJ_INPUT_MAX];
+
     uint16_t num_regular_inputs;
     uint16_t num_injected_inputs;
+
     struct adc_options_s {
         ADC_TypeDef *instance;
         enum adc_clk_domains_e {
@@ -117,6 +105,8 @@ typedef struct adc_s {
 
 
 int adc_init(adc_t *self);
+int adc_enable(adc_t *self);
+int adc_register_input(adc_t *self, adc_input_t *input, uint16_t input_type, uint16_t sample_time);
 int adc_add_regular_input(adc_t *self, adc_input_t *input, uint16_t sequence_order, uint16_t sample_time);
 int adc_add_injected_input(adc_t *self, adc_input_t *input, uint16_t sample_time);
 int adc_enable_injected_input_soc_trigger(adc_t *self);

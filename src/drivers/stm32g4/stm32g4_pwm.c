@@ -180,7 +180,7 @@ int pwm_init(pwm_t *self, uint32_t freq_hz, uint32_t dt_ns) {
     tim_regs->TIMxCR |= prescale << HRTIM_TIMCR_CK_PSC_Pos;
 
     // Set PWM Mode to Center Aligned
-    tim_regs->TIMxCR2 |= HRTIM_TIMCR2_UDM;
+    tim_regs->TIMxCR2 |= HRTIM_TIMCR2_UDM | (2 << HRTIM_TIMCR2_ROM_Pos); // up/down mode, update only on period
     tim_regs->SETx1R = HRTIM_SET1R_CMP1;
     period = (SystemCoreClock / freq_hz * (32 >> prescale) + 1) / 2;
 
@@ -201,7 +201,7 @@ int pwm_init(pwm_t *self, uint32_t freq_hz, uint32_t dt_ns) {
     // Configure Deadtime
     tim_regs->DTxR |= (1 << HRTIM_DTR_DTPRSC_Pos); // tDTG = tHRTIM/4
     // From Rm0440 table 221
-    uint32_t dt_cnt = (uint32_t)(dt_ns / 1.47 + 0.5); 
+    uint32_t dt_cnt = (uint32_t)((float)dt_ns / 1.47f + 0.5f); 
     tim_regs->DTxR |= (dt_cnt << HRTIM_DTR_DTF_Pos) | (dt_cnt << HRTIM_DTR_DTR_Pos);
     // Enable Deadtime
     tim_regs->OUTxR |= HRTIM_OUTR_DTEN;
@@ -291,20 +291,17 @@ int pwm_set_n_cycle_run(pwm_t *self, uint32_t cycles) {
   return 0;
 }
 
-int pwm_enable_adc_trigger_1_on_rst(pwm_t *self) {
+int pwm_enable_adc_trigger(pwm_t *self) {
 
-  enum pwm_timer_e pwm_timer = self->options.pwm_timer;
-  uint16_t pwm_channel = self->options.pwm_channel;
-
-  if (pwm_timer != PWM_TIMER_HRTIM1) { 
+  if (self->options.pwm_timer != PWM_TIMER_HRTIM1) { 
     goto error;
   }
 
-  switch (pwm_channel) {
+  switch (self->options.pwm_channel) {
     case PWM_HRTIM_TIM_A:
-      // HRTIM1->sCommonRegs.CR1 = (1) << HRTIM_CR1_ADC1USRC_Pos;
-      HRTIM1->sCommonRegs.ADC1R |= HRTIM_ADC1R_AD1TARST;
-      HRTIM1->sTimerxRegs[0].TIMxCR2 |= (1) << HRTIM_TIMCR2_ADROM_Pos;
+      HRTIM1->sCommonRegs.CR1 = (1) << HRTIM_CR1_ADC1USRC_Pos;
+      HRTIM1->sCommonRegs.ADC1R |= HRTIM_ADC1R_AD1TAPER;
+      HRTIM1->sTimerxRegs[0].TIMxCR2 |= (1 << HRTIM_TIMCR2_ADROM_Pos); //event generated at 0
       break;
     case PWM_HRTIM_TIM_B:
       HRTIM1->sCommonRegs.CR1 = (1) << HRTIM_CR1_ADC1USRC_Pos;
@@ -323,6 +320,17 @@ int pwm_enable_adc_trigger_1_on_rst(pwm_t *self) {
   return 0;
   error:
   return -1;
+
+}
+
+int pwm_enable_interrupt(pwm_t *self) {
+
+  (void) self;
+
+  HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_A].TIMxDIER |= HRTIM_TIMDIER_UPDIE;
+  NVIC_EnableIRQ(HRTIM1_TIMA_IRQn);
+
+  return 0;
 
 }
 
