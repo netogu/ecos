@@ -14,7 +14,7 @@ int cordic_init(cordic_t *self) {
     // CORDIC->CSR |= CORDIC_CSR_SCALE_0;
 
     // Set Function
-    csr_reg |= self->function << CORDIC_CSR_FUNC;
+    csr_reg |= self->function << CORDIC_CSR_FUNC_Pos;
 
 
     CORDIC->CSR = csr_reg;

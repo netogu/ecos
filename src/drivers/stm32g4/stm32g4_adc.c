@@ -207,6 +207,7 @@ int adc_init(adc_t *self) {
     static bool adc12_clock_initialized = false;
     static bool adc345_clock_initialized = false;
     int status;
+    (void) status;
 
     ADC_TypeDef *adc_regs = self->options.instance;
 
@@ -306,72 +307,72 @@ int adc_enable_injected_input_soc_trigger(adc_t *self) {
     return 0;
 }
 
-}
 
-int adc_add_regular_input(adc_t *self, adc_input_t *input, uint16_t sequence_order, uint16_t sample_time) {
+// #define ADC_REG_SEQ_ORDER_MAX 16
+// int adc_add_regular_input(adc_t *self, adc_input_t *input, uint16_t sequence_order, uint16_t sample_time) {
 
-    ADC_TypeDef *adc_regs = self->options.instance;
+//     ADC_TypeDef *adc_regs = self->options.instance;
 
-    // Configure Sequence Order
+//     // Configure Sequence Order
 
-    if (self->num_regular_inputs >= ADC_REG_SEQ_ORDER_MAX) {
-        return -1;
-    }
+//     if (self->num_regular_inputs >= ADC_REG_SEQ_ORDER_MAX) {
+//         return -1;
+//     }
 
-    if (sequence_order <= 4) {
-        adc_regs->SQR1 = input->channel << (ADC_SQR1_SQ1_Pos + (sequence_order - 1) * 6);
-    } else if (sequence_order <= 9) {
-        adc_regs->SQR2 = input->channel << (ADC_SQR2_SQ5_Pos + (sequence_order - 5) * 6);
-    } else if (sequence_order <= 14) {
-        adc_regs->SQR3 = input->channel << (ADC_SQR3_SQ10_Pos + (sequence_order - 10) * 6);
-    } else if (sequence_order <= 16) {
-        adc_regs->SQR4 = input->channel << (ADC_SQR4_SQ15_Pos + (sequence_order - 15) * 6);
-    } else {
-        return -1;
-    }
+//     if (sequence_order <= 4) {
+//         adc_regs->SQR1 = input->channel << (ADC_SQR1_SQ1_Pos + (sequence_order - 1) * 6);
+//     } else if (sequence_order <= 9) {
+//         adc_regs->SQR2 = input->channel << (ADC_SQR2_SQ5_Pos + (sequence_order - 5) * 6);
+//     } else if (sequence_order <= 14) {
+//         adc_regs->SQR3 = input->channel << (ADC_SQR3_SQ10_Pos + (sequence_order - 10) * 6);
+//     } else if (sequence_order <= 16) {
+//         adc_regs->SQR4 = input->channel << (ADC_SQR4_SQ15_Pos + (sequence_order - 15) * 6);
+//     } else {
+//         return -1;
+//     }
 
-    adc_config_input_sample_time(self, input, sample_time);
-
-
-    input->data = &self->regular_result[sequence_order];
-
-    self->num_regular_inputs++;
-    adc_regs->SQR1 |= (self->num_regular_inputs - 1) << ADC_SQR1_L_Pos;
+//     adc_config_input_sample_time(self, input, sample_time);
 
 
-    return 0;
-}
+//     input->data = &self->regular_result[sequence_order];
 
-int adc_add_injected_input(adc_t *self, adc_input_t *input, uint16_t sample_time) {
-    ADC_TypeDef *adc_regs = self->options.instance;
-    uint32_t reg_val = adc_regs->JSQR;
+//     self->num_regular_inputs++;
+//     adc_regs->SQR1 |= (self->num_regular_inputs - 1) << ADC_SQR1_L_Pos;
 
-    switch (self->num_injected_inputs) {
-        case 0:
-            reg_val |= input->channel << (ADC_JSQR_JSQ1_Pos);
-            break;
-        case 1:
-            reg_val = input->channel << (ADC_JSQR_JSQ2_Pos);
-            break;
-        case 2:
-            reg_val = input->channel << (ADC_JSQR_JSQ3_Pos);
-            break;
-        case 3:
-            reg_val = input->channel << (ADC_JSQR_JSQ4_Pos);
-            break;
-        default:
-            goto error;
-            break;
-    }
+
+//     return 0;
+// }
+
+// int adc_add_injected_input(adc_t *self, adc_input_t *input, uint16_t sample_time) {
+//     ADC_TypeDef *adc_regs = self->options.instance;
+//     uint32_t reg_val = adc_regs->JSQR;
+
+//     switch (self->num_injected_inputs) {
+//         case 0:
+//             reg_val |= input->channel << (ADC_JSQR_JSQ1_Pos);
+//             break;
+//         case 1:
+//             reg_val = input->channel << (ADC_JSQR_JSQ2_Pos);
+//             break;
+//         case 2:
+//             reg_val = input->channel << (ADC_JSQR_JSQ3_Pos);
+//             break;
+//         case 3:
+//             reg_val = input->channel << (ADC_JSQR_JSQ4_Pos);
+//             break;
+//         default:
+//             goto error;
+//             break;
+//     }
     
-    adc_config_input_sample_time(self, input, sample_time);
+//     adc_config_input_sample_time(self, input, sample_time);
 
-    self->num_injected_inputs++;
-    reg_val &= ~(ADC_JSQR_JL);
-    reg_val |= (self->num_injected_inputs - 1) << ADC_JSQR_JL_Pos;
-    adc_regs->JSQR = reg_val;
+//     self->num_injected_inputs++;
+//     reg_val &= ~(ADC_JSQR_JL);
+//     reg_val |= (self->num_injected_inputs - 1) << ADC_JSQR_JL_Pos;
+//     adc_regs->JSQR = reg_val;
 
-    return 0;
-    error:
-    return -1;
-}
+//     return 0;
+//     error:
+//     return -1;
+// }
