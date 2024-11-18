@@ -6,7 +6,7 @@ File   : bsp.h
 #pragma once
 
 #include "hal.h"
-
+#include "shell.h"
 
 //------------------------------------------------------+
 // Board Variant
@@ -24,9 +24,9 @@ File   : bsp.h
 //------------------------------------------------------
 // GPIOs
 //------------------------------------------------------
- typedef struct board_s {
+typedef struct board_s {
 
-  struct board_io_s {
+  struct board_dio_s {
     gpio_t led_red;
     gpio_t led_green;
     gpio_t led_blue;
@@ -58,42 +58,39 @@ File   : bsp.h
     gpio_t usart3_rx;
     gpio_t enc_a_pin;
     gpio_t enc_b_pin;
-  } io;
+  } dio;
 
-  pwm_3ph_t mcpwm;
-
-  struct board_ain_s {
-    adc_t adc1;
+  struct board_ai_s {
     adc_input_t vm_fb;
-    adc_t adc2;
     adc_input_t va_fb;
     adc_input_t vb_fb;
     adc_input_t vc_fb;
     adc_input_t temp_a;
     adc_input_t temp_b;
-    adc_t adc3;
     adc_input_t ia_fb;
-    adc_t adc4;
     adc_input_t ib_fb;
-  } ain;
+  } ai;
 
-  struct spi spi3;
-  struct spi spi4;
-  
-  uart_t lpuart1;
-  uart_t usart3;
+  struct board_hw_t {
+    pwm_3ph_t mcpwm;
+    encoder_t encoder;
+  } hw;
 
-  encoder_t encoder;
+  struct board_com_t {
+    uart_t console;
+  } com;
+
 } board_t;
 
 // extern struct gpio io;
 // extern struct hrtim_pwm pwma, pwmb, pwmc;
 // extern struct spi spi3, spi4;
-// extern struct drv835x gate_driver; 
-
+// extern struct drv835x gate_driver;
 
 board_t *board_get_handle(void);
 int board_init(void);
 void board_hw_setup(void);
-uint32_t millis(void);
-void delay_ms(uint32_t ms);
+
+int board_load_pinmap(board_t *self);
+
+int board_start_bootloader(board_t *self);

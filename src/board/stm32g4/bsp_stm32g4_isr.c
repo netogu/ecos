@@ -15,7 +15,6 @@ struct global_isr_counter {
   uint32_t lpuart1_idle;
 } g_isr_counter;
 
-
 void HRTIM1_TIMA_IRQHandler(void) {
 
   /* REP Interrupt Routine - TIMA */
@@ -95,24 +94,18 @@ void HRTIM1_TIMF_IRQHandler(void) {
 
 void USB_HP_IRQHandler(void) { tud_int_handler(0); }
 
-void USB_LP_IRQHandler(void) {
-  tud_int_handler(0);
-}
+void USB_LP_IRQHandler(void) { tud_int_handler(0); }
 
-void USBWakeUp_IRQHandler(void) {
-  tud_int_handler(0);
-}
-
+void USBWakeUp_IRQHandler(void) { tud_int_handler(0); }
 
 //--------------------------------------------------------------------+
 // UART interrupt Handler
 //--------------------------------------------------------------------+
 
-
 static inline void uart_receive_byte(uart_t *self) {
   uint8_t data;
 
-  data = (uint8_t) self->instance->RDR & 0xFF;
+  data = (uint8_t)self->instance->RDR & 0xFF;
   uart_fifo_push(&self->rx_fifo, data);
   // Clear RXNE flag by reading data
 }
@@ -130,7 +123,6 @@ static inline void uart_send_byte(uart_t *self) {
     self->instance->TDR = tx_byte;
     // ISR Cleared by writing data to TDR
   }
-
 }
 
 void LPUART1_IRQHandler(void) {
@@ -143,7 +135,6 @@ void LPUART1_IRQHandler(void) {
     g_isr_counter.lpuart1_rx++;
   }
 
-
   // Ready to send byte on LPUART1
   if (LPUART1->ISR & USART_ISR_TXE) {
     // uart_send_byte(&brd->lpuart1);
@@ -155,11 +146,9 @@ void LPUART1_IRQHandler(void) {
   if (LPUART1->ISR & USART_ISR_IDLE) {
     // Clear the IDLE flag
     LPUART1->ICR |= USART_ICR_IDLECF;
-    uart_service_rx_dma(&brd->lpuart1);
+    uart_service_rx_dma(&brd->com.console);
     g_isr_counter.lpuart1_idle++;
   }
-
-
 }
 
 void USART3_IRQHandler(void) {
@@ -168,13 +157,13 @@ void USART3_IRQHandler(void) {
 
   // Received a byte on USART3
   if (USART3->ISR & USART_ISR_RXNE) {
-    uart_receive_byte(&brd->usart3);
+    uart_receive_byte(&brd->com.console);
     g_isr_counter.usart3_rx++;
   }
 
   // Ready to send byte on USART3
   if (USART3->ISR & USART_ISR_TXE) {
-    uart_send_byte(&brd->usart3);
+    uart_send_byte(&brd->com.console);
     g_isr_counter.usart3_tx++;
   }
 
@@ -182,10 +171,9 @@ void USART3_IRQHandler(void) {
   if (USART3->ISR & USART_ISR_IDLE) {
     // Clear the IDLE flag
     USART3->ICR |= USART_ICR_IDLECF;
-    uart_service_rx_dma(&brd->usart3);
+    uart_service_rx_dma(&brd->com.console);
     g_isr_counter.usart3_idle++;
   }
-
 }
 
 void DMA1_Channel2_IRQHandler(void) {
@@ -195,41 +183,42 @@ void DMA1_Channel2_IRQHandler(void) {
   if (DMA1->ISR & DMA_ISR_TCIF2) {
     // Service the RX DMA buffer
     DMA1->IFCR |= DMA_IFCR_CTCIF2;
-    uart_service_rx_dma(&brd->lpuart1);
+    uart_service_rx_dma(&brd->com.console);
   }
 
   if (DMA1->ISR & DMA_ISR_HTIF2) {
     // Service the RX DMA buffer
     DMA1->IFCR |= DMA_IFCR_CHTIF2;
-    uart_service_rx_dma(&brd->lpuart1);
+    uart_service_rx_dma(&brd->com.console);
   }
-
 }
 
 void DMA1_Channel3_IRQHandler(void) {
-  
-    board_t *brd = board_get_handle();
-  
-    if (DMA1->ISR & DMA_ISR_TCIF3) {
-      // Service the TX DMA buffer
-      DMA1->IFCR |= DMA_IFCR_CTCIF3;
-      // Advance the tail pointer to account for the data sent
-      brd->lpuart1.tx_fifo.tail = (brd->lpuart1.tx_fifo.tail + brd->lpuart1.tx_dma_current_transfer_size) % (UART_BUFFER_SIZE);
-      // Update the current transfer size
-      // brd->lpuart1.tx_fifo.size -= brd->lpuart1.tx_dma_current_transfer_size;
-      brd->lpuart1.tx_dma_current_transfer_size = 0;
-      // Transfer what may be left in the buffer
-      uart_start_dma_tx_transfer(&brd->lpuart1, DMA1_Channel3);
-    }
 
-    if (DMA1->ISR & DMA_ISR_HTIF3) {
-      // Service the TX DMA buffer
-      DMA1->IFCR |= DMA_IFCR_CHTIF3;
-    }
+  board_t *brd = board_get_handle();
 
-    if (DMA1->ISR & DMA_ISR_TEIF3) {
-      // Service the TX DMA buffer
-      DMA1->IFCR |= DMA_IFCR_CTEIF3;
-    }
-  
+  if (DMA1->ISR & DMA_ISR_TCIF3) {
+    // Service the TX DMA buffer
+    DMA1->IFCR |= DMA_IFCR_CTCIF3;
+    // Advance the tail pointer to account for the data sent
+    brd->com.console.tx_fifo.tail =
+        (brd->com.console.tx_fifo.tail +
+         brd->com.console.tx_dma_current_transfer_size) %
+        (UART_BUFFER_SIZE);
+    // Update the current transfer size
+    // brd->lpuart1.tx_fifo.size -= brd->lpuart1.tx_dma_current_transfer_size;
+    brd->com.console.tx_dma_current_transfer_size = 0;
+    // Transfer what may be left in the buffer
+    uart_start_dma_tx_transfer(&brd->com.console, DMA1_Channel3);
+  }
+
+  if (DMA1->ISR & DMA_ISR_HTIF3) {
+    // Service the TX DMA buffer
+    DMA1->IFCR |= DMA_IFCR_CHTIF3;
+  }
+
+  if (DMA1->ISR & DMA_ISR_TEIF3) {
+    // Service the TX DMA buffer
+    DMA1->IFCR |= DMA_IFCR_CTEIF3;
+  }
 }
