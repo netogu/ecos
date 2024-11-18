@@ -1,12 +1,15 @@
 #ifndef STM32G4_COMMON_H
 #define STM32G4_COMMON_H
 
-#include <stdint.h>
+#include "tiny_printf.h"
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "stm32g4xx.h"
+
+#define Set_Bit SET_BIT
 
 #define Set_register_bit(reg, mask) (reg |= (mask))
 
@@ -24,10 +27,9 @@
     reg = r;                                                                   \
   }
 
-
 #define Limit(x, min, max) (x < min ? min : x > max ? max : x)
 
 static inline bool In_range(int x, int min, int max) {
-    return (x >= min) && (x <= max);
+  return (x >= min) && (x <= max);
 }
 #endif
