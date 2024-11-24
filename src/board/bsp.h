@@ -61,9 +61,13 @@ typedef struct board_s {
   } dio;
 
   struct board_ai_s {
+    gpio_t adc1_1;
     adc_input_t vm_fb;
+    gpio_t adc2_2;
     adc_input_t va_fb;
+    gpio_t adc3_12;
     adc_input_t vb_fb;
+    gpio_t adc4_3;
     adc_input_t vc_fb;
     adc_input_t temp_a;
     adc_input_t temp_b;

@@ -119,12 +119,12 @@ int adc_calibrate_blocking(adc_t *self) {
   for (volatile uint32_t delay = 0; delay < 100; delay++)
     ;
 
-  adc_regs->CR |= ADC_CR_ADCALDIF;
-  adc_regs->CR |= ADC_CR_ADCAL;
-  while (adc_regs->CR & ADC_CR_ADCAL)
-    ; // Wait for the calibration to complete
-  for (volatile uint32_t delay = 0; delay < 100; delay++)
-    ;
+  // adc_regs->CR |= ADC_CR_ADCALDIF;
+  // adc_regs->CR |= ADC_CR_ADCAL;
+  // while (adc_regs->CR & ADC_CR_ADCAL)
+  //   ; // Wait for the calibration to complete
+  // for (volatile uint32_t delay = 0; delay < 100; delay++)
+  //   ;
 
   return 0;
 }
@@ -137,6 +137,7 @@ int adc_register_input(adc_t *self, adc_input_t *input, char input_type,
     if ((self->num_regular_inputs + 1) > ADC_REG_INPUT_MAX) {
       goto error;
     }
+
     self->regular_inputs[self->num_regular_inputs].input = input;
     self->regular_inputs[self->num_regular_inputs].sample_time = sample_time;
     self->num_regular_inputs++;
@@ -207,7 +208,6 @@ int adc_init(adc_t *self) {
   static bool adc12_clock_initialized = false;
   static bool adc345_clock_initialized = false;
   int status;
-  (void)status;
 
   ADC_TypeDef *adc_regs = (ADC_TypeDef *)self->regs;
 
@@ -251,30 +251,24 @@ int adc_init(adc_t *self) {
   // Regulator startup time = 20us (from datasheet)
   for (volatile uint32_t delay = 0; delay < 15000; delay++)
     ;
+
   // Ensure ADEN = 0
   adc_regs->CR &= ~ADC_CR_ADEN;
 
   // Calibrate the ADC
-  if (0 != adc_calibrate_blocking(self)) {
-    return -1;
-  }
+  status = adc_calibrate_blocking(self);
 
   // Configure Inputs
-  if (0 != adc_configure_input_sample_time(self)) {
-    return -1;
-  }
+  status = adc_configure_input_sample_time(self);
 
   // Configure Input Sequence
-  if (0 != adc_configure_regular_input_sequence(self)) {
-    return -1;
-  }
-
-  if (0 != adc_configure_injected_input_sequence(self)) {
-    return -1;
-  }
+  status = adc_configure_regular_input_sequence(self);
+  status = adc_configure_injected_input_sequence(self);
 
   // Configure Triggers
-  if (0 != adc_configure_injected_conversion_pwm_trigger(self)) {
+  // status = adc_configure_injected_conversion_pwm_trigger(self);
+
+  if (0 != status) {
     return -1;
   }
 
@@ -298,14 +292,14 @@ static int adc_configure_regular_input_sequence(const adc_t *self) {
 
       adc_input_t *input = self->regular_inputs[i].input;
 
-      if (i <= 4) {
-        sqr1 |= input->channel << (ADC_SQR1_SQ1_Pos + (i - 1) * 6);
-      } else if (i <= 9) {
-        sqr2 |= input->channel << (ADC_SQR2_SQ5_Pos + (i - 5) * 6);
-      } else if (i <= 14) {
-        sqr3 |= input->channel << (ADC_SQR3_SQ10_Pos + (i - 10) * 6);
-      } else if (i <= 16) {
-        sqr4 |= input->channel << (ADC_SQR4_SQ15_Pos + (i - 15) * 6);
+      if (i < 4) {
+        sqr1 |= input->channel << (ADC_SQR1_SQ1_Pos + (i) * 6);
+      } else if (i < 9) {
+        sqr2 |= input->channel << (ADC_SQR2_SQ5_Pos + (i - 4) * 6);
+      } else if (i < 14) {
+        sqr3 |= input->channel << (ADC_SQR3_SQ10_Pos + (i - 9) * 6);
+      } else if (i < 16) {
+        sqr4 |= input->channel << (ADC_SQR4_SQ15_Pos + (i - 14) * 6);
       } else {
         return -1;
       }
@@ -346,18 +340,18 @@ adc_configure_injected_conversion_pwm_trigger(adc_t *self) {
 static int adc_configure_injected_input_sequence(adc_t *self) {
 
   ADC_TypeDef *adc_regs = (ADC_TypeDef *)self->regs;
-  const size_t jsq_offset = ADC_JSQR_JSQ2_Pos - ADC_JSQR_JSQ1_Pos;
-  const size_t jdr_offset = adc_regs->JDR2 - adc_regs->JDR1;
-  uint32_t reg_val = adc_regs->JSQR;
-  reg_val &= ~(ADC_JSQR_JSQ1);
+  const size_t jsq_offset_bits = 6;
+  const size_t jdr_offset_bytes = 4;
+
+  uint32_t reg_val = 0;
 
   if (self->num_injected_inputs > 0) {
 
     for (uint16_t i = 0; i < self->num_injected_inputs; i++) {
       reg_val |= self->injected_inputs[i].input->channel
-                 << (ADC_JSQR_JSQ1_Pos + i * jsq_offset);
+                 << (ADC_JSQR_JSQ1_Pos + i * jsq_offset_bits);
       self->injected_inputs[i].input->data =
-          ((uint32_t *)&adc_regs->JDR1 + i * jdr_offset);
+          ((uint32_t *)(&adc_regs->JDR1 + i * jdr_offset_bytes));
     }
   }
 

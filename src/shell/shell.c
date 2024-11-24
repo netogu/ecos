@@ -1,5 +1,6 @@
 #include "shell.h"
 #include "bsp.h"
+#include "hal.h"
 #include "rtos.h"
 #include "taskmsg.h"
 #include <inttypes.h> // for PRIu64
@@ -354,7 +355,8 @@ size_t ADC_DR_get_data_callback(struct ush_object *self,
   uint32_t temp_a = *brd->ai.temp_a.data;
 
   static char dr[256];
-  snprintf(dr, sizeof(dr), "vm = %ld\t ia = %ld\t ib = %ld\t temp_a = %ld\r\n",
+
+  snprintf(dr, sizeof(dr), "vm = %ld\t ia = %ld\t ib = %ld\t temp_a =%ld\r\n",
            vm_fb, ia_fb, ib_fb, temp_a);
 
   *data = (uint8_t *)dr;
