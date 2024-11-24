@@ -272,38 +272,6 @@ int board_load_pinmap(board_t *brd) {
               .af = GPIO_AF7,
           },
 
-      .adc_pa0 =
-          (gpio_t){
-              .port = GPIO_PORT_A,
-              .pin = GPIO_PIN_0,
-              .mode = GPIO_MODE_ANALOG,
-              .type = GPIO_TYPE_PUSH_PULL,
-              .pull = GPIO_PULL_NONE,
-              .speed = GPIO_SPEED_LOW,
-              .af = GPIO_AF0,
-          },
-
-      .adc_pc0 =
-          (gpio_t){
-              .port = GPIO_PORT_C,
-              .pin = GPIO_PIN_0,
-              .mode = GPIO_MODE_ANALOG,
-              .type = GPIO_TYPE_PUSH_PULL,
-              .pull = GPIO_PULL_NONE,
-              .speed = GPIO_SPEED_LOW,
-
-          },
-
-      .adc_pc1 =
-          (gpio_t){
-              .port = GPIO_PORT_C,
-              .pin = GPIO_PIN_1,
-              .mode = GPIO_MODE_ANALOG,
-              .type = GPIO_TYPE_PUSH_PULL,
-              .pull = GPIO_PULL_NONE,
-              .speed = GPIO_SPEED_LOW,
-              .af = GPIO_AF0,
-          },
       .enc_a_pin =
           (gpio_t){
               .port = GPIO_PORT_A,

@@ -1,5 +1,6 @@
 #include "bsp.h"
 #include "hal.h"
+#include "stm32g4_pwm.h"
 #include "tusb.h"
 
 //------------------------------------------------------+
@@ -20,16 +21,17 @@ void HRTIM1_TIMA_IRQHandler(void) {
   /* REP Interrupt Routine - TIMA */
   if (HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_A].TIMxISR & HRTIM_TIMISR_REP) {
     // Disable continuous mode
-    HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_A].TIMxCR &= ~(HRTIM_TIMCR_CONT);
-    // Clear REP interrupt
-    HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_A].TIMxICR |= HRTIM_TIMICR_REPC;
+    // HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_A].TIMxCR &= ~(HRTIM_TIMCR_CONT);
+    // // Clear REP interrupt
+    // HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_A].TIMxICR |= HRTIM_TIMICR_REPC;
   }
 
   /* RESET Roll-Over Interupt */
   if (HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_A].TIMxISR & HRTIM_TIMISR_RST) {
+    board_t *brd = board_get_handle();
     // Togle test pin
-    // gpio_pin_set(&io.test_pin1);
-    // gpio_pin_clear(&io.test_pin1);
+    gpio_pin_set(&brd->dio.test_pin0);
+    gpio_pin_clear(&brd->dio.test_pin0);
     // Clear RST interrupt
     HRTIM1->sTimerxRegs[PWM_HRTIM_TIM_A].TIMxICR |= HRTIM_TIMICR_RSTC;
   }

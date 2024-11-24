@@ -57,7 +57,8 @@ void board_pwm_setup(void) {
   }
 
   pwm_3ph_set_duty(&brd->hw.mcpwm, 0.5f, 0.5f, 0.5f);
-  // pwm_enable_adc_trigger_1_on_rst(brd.hw.mcpwm.pwma);
+  pwm_enable_adc_trigger(&brd->hw.mcpwm.pwma);
+  pwm_enable_period_interrupt(&brd->hw.mcpwm.pwma);
   pwm_3ph_start(&brd->hw.mcpwm);
 }
 

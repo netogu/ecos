@@ -2,6 +2,7 @@
 #include "log.h"
 #include "stm32g474xx.h"
 #include "stm32g4_adc.h"
+#include "stm32g4_gpio.h"
 
 static adc_t adc1 = {.regs = ADC1};
 static adc_t adc2 = {.regs = ADC2};
@@ -116,7 +117,7 @@ void board_adc_setup(void) {
 
   adc_register_input(&adc1, &brd->ai.vm_fb, 'r', ADC_SAMPLE_TIME_247_5_CYCLES);
   adc_register_input(&adc2, &brd->ai.temp_a, 'r', ADC_SAMPLE_TIME_247_5_CYCLES);
-  adc_register_input(&adc3, &brd->ai.ia_fb, 'i', ADC_SAMPLE_TIME_247_5_CYCLES);
+  adc_register_input(&adc3, &brd->ai.ia_fb, 'i', ADC_SAMPLE_TIME_2_5_CYCLES);
   adc_register_input(&adc4, &brd->ai.ib_fb, 'i', ADC_SAMPLE_TIME_247_5_CYCLES);
   // adc_register_input(&adc2, &brd->ai.temp_a, 'r',
   // ADC_SAMPLE_TIME_247_5_CYCLES); adc_register_input(&adc3, &brd->ai.ia_fb,
@@ -153,9 +154,24 @@ void board_adc_setup(void) {
   } else {
     LOG_FAIL("ADC4");
   }
+  // Enable EOC interrupt
+  {
+    ADC_TypeDef *adc_regs = (ADC_TypeDef *)adc3.regs;
+    adc_regs->IER |= ADC_IER_JEOSIE;
+    NVIC_EnableIRQ(ADC3_IRQn);
+  }
 
   adc_start_regular_sampling(&adc1);
   adc_start_regular_sampling(&adc2);
   adc_start_injected_sampling(&adc3);
   adc_start_injected_sampling(&adc4);
+}
+
+void ADC3_IRQHandler(void) {
+  if (ADC3->ISR & ADC_ISR_JEOS) {
+    board_t *brd = board_get_handle();
+    gpio_pin_set(&brd->dio.test_pin0);
+    gpio_pin_clear(&brd->dio.test_pin0);
+    ADC3->ISR |= ADC_ISR_JEOS;
+  }
 }

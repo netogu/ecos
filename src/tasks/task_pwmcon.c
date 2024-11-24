@@ -243,7 +243,7 @@ static void task_pwm_control(void *parameters) {
 
   // Create and start Task Timer
   hal_timer_t *task_pwmcon_timer =
-      timer_create(1000, task_pwmcon_timer_callback);
+      timer_create(2000, task_pwmcon_timer_callback);
   if (task_pwmcon_timer) {
     timer_start(task_pwmcon_timer);
   } else {

@@ -266,7 +266,7 @@ int adc_init(adc_t *self) {
   status = adc_configure_injected_input_sequence(self);
 
   // Configure Triggers
-  // status = adc_configure_injected_conversion_pwm_trigger(self);
+  status = adc_configure_injected_conversion_pwm_trigger(self);
 
   if (0 != status) {
     return -1;
@@ -318,8 +318,7 @@ static int adc_configure_regular_input_sequence(const adc_t *self) {
   return 0;
 }
 
-__attribute__((unused)) static int
-adc_configure_injected_conversion_pwm_trigger(adc_t *self) {
+static int adc_configure_injected_conversion_pwm_trigger(adc_t *self) {
 
   const uint32_t hrtim_adc_trig1 = 27;
 
@@ -328,9 +327,9 @@ adc_configure_injected_conversion_pwm_trigger(adc_t *self) {
 
   adc_regs->CFGR &= ~(ADC_CFGR_JQDIS);
 
-  reg_val &= ~(ADC_JSQR_JEXTSEL) | ~(ADC_JSQR_JEXTEN);
+  reg_val &= ~(ADC_JSQR_JEXTSEL | ADC_JSQR_JEXTEN);
   reg_val |= (hrtim_adc_trig1 << ADC_JSQR_JEXTSEL_Pos);
-  reg_val |= (2 << ADC_JSQR_JEXTEN_Pos);
+  reg_val |= (1 << ADC_JSQR_JEXTEN_Pos);
 
   adc_regs->JSQR = reg_val;
 
